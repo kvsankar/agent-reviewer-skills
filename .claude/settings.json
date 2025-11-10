@@ -1,0 +1,28 @@
+{
+  "skills": [
+    {
+      "name": "functional-python-reviewer",
+      "path": "./functional-python-reviewer"
+    },
+    {
+      "name": "security-privacy-reviewer",
+      "path": "./security-privacy-reviewer"
+    },
+    {
+      "name": "refactoring-reviewer",
+      "path": "./refactoring-reviewer"
+    },
+    {
+      "name": "zen-of-python-reviewer",
+      "path": "./zen-of-python-reviewer"
+    },
+    {
+      "name": "format-refactoring-reviewer",
+      "path": "./format-refactoring-reviewer"
+    },
+    {
+      "name": "python-test-reviewer",
+      "path": "./python-test-reviewer"
+    }
+  ]
+}
