@@ -1,10 +1,38 @@
-# Claude Code Skills - Python Code Reviewer Collection
+# Claude Code Skills Collection
 
-A curated collection of high-quality Claude Code skills for reviewing Python code. Each skill focuses on a specific aspect of code quality, providing detailed analysis and actionable recommendations.
+A curated collection of high-quality Claude Code skills for code review, requirements analysis, and software quality. Each skill focuses on a specific aspect of software development, providing detailed analysis and actionable recommendations.
 
 ## 🎯 Available Skills
 
-### 1. **Functional Python Reviewer**
+### 1. **Agile Requirements Reviewer**
+Reviews software specifications, user stories, and use cases using agile requirements best practices.
+
+**Focus Areas:**
+- INVEST criteria for user stories
+- Use case quality and completeness
+- Problem domain focus (WHAT not HOW)
+- Requirements clarity and testability
+- Detection of over-engineering and gold-plating
+
+**Use when:** Reviewing requirements, user stories, specifications, or acceptance criteria
+
+---
+
+### 2. **Functional JavaScript Reviewer**
+Reviews JavaScript/TypeScript code using functional programming principles.
+
+**Focus Areas:**
+- Pure functions and immutability
+- Array methods (map, filter, reduce)
+- Function composition
+- Avoiding side effects
+- Functional patterns in JavaScript
+
+**Use when:** Applying functional programming patterns in JavaScript/TypeScript projects
+
+---
+
+### 3. **Functional Python Reviewer**
 Reviews Python code for functional programming patterns and best practices.
 
 **Focus Areas:**
@@ -17,7 +45,7 @@ Reviews Python code for functional programming patterns and best practices.
 
 ---
 
-### 2. **Security & Privacy Reviewer**
+### 4. **Security & Privacy Reviewer**
 Comprehensive security and privacy review covering OWASP Top 10 and data protection.
 
 **Focus Areas:**
@@ -30,7 +58,7 @@ Comprehensive security and privacy review covering OWASP Top 10 and data protect
 
 ---
 
-### 3. **Refactoring Reviewer**
+### 5. **Refactoring Reviewer**
 Identifies refactoring opportunities to improve code quality, readability, and maintainability.
 
 **Focus Areas:**
@@ -43,7 +71,7 @@ Identifies refactoring opportunities to improve code quality, readability, and m
 
 ---
 
-### 4. **Zen of Python Reviewer**
+### 6. **Zen of Python Reviewer**
 Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 **Focus Areas:**
@@ -56,7 +84,7 @@ Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 ---
 
-### 5. **Format/Style Refactoring Reviewer**
+### 7. **Format/Style Refactoring Reviewer**
 Solves formatting and style issues through refactoring, not just line wrapping.
 
 **Focus Areas:**
@@ -69,7 +97,7 @@ Solves formatting and style issues through refactoring, not just line wrapping.
 
 ---
 
-### 6. **Python Test Reviewer**
+### 8. **Python Test Reviewer**
 Reviews Python tests for quality and suggests multiple testing strategies.
 
 **Focus Areas:**
@@ -84,21 +112,41 @@ Reviews Python tests for quality and suggests multiple testing strategies.
 
 ## 🚀 Installation
 
-### Personal Installation (Available in All Projects)
+### Automated Installation (Recommended)
+
+The easiest way to install all skills to both Windows and WSL:
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
+cd claude-skills-public
+
+# Run the installation script
+python install_skills.py
+```
+
+This will automatically:
+- Install all 8 skills to `~/.claude/skills/` on Windows
+- Install all 8 skills to `~/.claude/skills/` on WSL (if available)
+- Handle existing installations by replacing them with the latest version
+
+### Manual Installation
+
+#### Personal Installation (Available in All Projects)
 
 Copy the entire collection to your personal Claude directory:
 
 ```bash
 # Linux/Mac
-git clone https://github.com/YOUR_USERNAME/claude-skills.git
-cp -r claude-skills ~/.claude/skills/
+git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
+cp -r claude-skills-public/*-reviewer ~/.claude/skills/
 
 # Windows (PowerShell)
-git clone https://github.com/YOUR_USERNAME/claude-skills.git
-Copy-Item -Recurse "claude-skills" "$env:USERPROFILE\.claude\skills\"
+git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
+Copy-Item -Recurse "claude-skills-public\*-reviewer" "$env:USERPROFILE\.claude\skills\"
 ```
 
-### Project Installation (For Teams)
+#### Project Installation (For Teams)
 
 Clone into your project's `.claude/skills/` directory:
 
@@ -106,7 +154,7 @@ Clone into your project's `.claude/skills/` directory:
 cd your-project
 mkdir -p .claude/skills
 cd .claude/skills
-git clone https://github.com/YOUR_USERNAME/claude-skills.git
+git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
 ```
 
 Then update your project's `.claude/settings.json`:
@@ -116,7 +164,7 @@ Then update your project's `.claude/settings.json`:
   "skills": [
     {
       "name": "security-privacy-reviewer",
-      "path": "./.claude/skills/claude-skills/security-privacy-reviewer"
+      "path": "./.claude/skills/claude-skills-public/security-privacy-reviewer"
     }
   ]
 }
@@ -139,15 +187,18 @@ cp -r functional-python-reviewer .claude/skills/
 Once installed, skills activate automatically based on keywords in your requests:
 
 ```
+"Review this user story for quality"
 "Review this code for security issues"
 "Make this code more Pythonic"
 "Refactor this to be more maintainable"
 "Review these tests for quality"
 "Fix this line length issue through refactoring"
+"Apply functional patterns to this JavaScript"
 ```
 
 Or invoke directly:
 ```
+"Use the agile-requirements-reviewer on this specification"
 "Use the security reviewer on this file"
 "Apply functional Python patterns here"
 ```
@@ -174,12 +225,14 @@ These skills focus on **depth and quality**:
 ### Authoritative Sources
 
 Based on established resources:
+- **IEEE 830, BABOK** - Requirements engineering standards
+- **INVEST Criteria** - Agile user story best practices
 - **PEP 8, PEP 20** - Python style and philosophy
 - **OWASP Top 10** - Security standards
 - **Refactoring Guru** - Refactoring patterns
 - **Martin Fowler** - Software design principles
 - **pytest Documentation** - Testing best practices
-- **Hypothesis** - Property-based testing
+- **Functional Programming Principles** - For JavaScript and Python
 
 ## 🏗️ Skill Architecture
 
@@ -239,14 +292,16 @@ This collection is provided as-is for use with Claude Code. Individual skills in
 
 ## 🙏 Acknowledgments
 
-These skills build upon the work of many contributors to Python and software engineering best practices:
+These skills build upon the work of many contributors to software engineering best practices:
 
+- **IEEE & IIBA** - Requirements engineering standards (IEEE 830, BABOK)
+- **Agile Community** - INVEST criteria and agile requirements practices
 - **Python Software Foundation** - PEP 8, PEP 20, Python documentation
 - **OWASP Foundation** - Security standards and guidelines
 - **Refactoring Guru** - Refactoring patterns catalog
 - **Martin Fowler** - Software design and testing principles
 - **pytest Development Team** - Testing framework and documentation
-- **Testing Community** - Established testing patterns and practices
+- **Functional Programming Community** - FP principles and patterns
 
 ## 📞 Support
 
@@ -256,4 +311,4 @@ For issues or questions:
 
 ---
 
-**Quality code reviews for better Python projects.**
+**Quality reviews for better software projects.**
