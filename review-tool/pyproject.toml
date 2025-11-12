@@ -1,0 +1,55 @@
+[project]
+name = "claude-skills-reviewer"
+version = "1.0.0"
+description = "Agentic code review tool using AI providers (Claude, OpenAI, Gemini) with Claude Code skills"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "Claude Code Skills Contributors" }
+]
+
+dependencies = [
+    # Core dependencies
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0.0",
+]
+
+[project.optional-dependencies]
+# AI Provider dependencies - install what you need
+claude = [
+    "anthropic>=0.39.0",
+]
+openai = [
+    "openai>=1.0.0",
+]
+gemini = [
+    "google-generativeai>=0.3.0",
+]
+
+# Install all providers
+all = [
+    "anthropic>=0.39.0",
+    "openai>=1.0.0",
+    "google-generativeai>=0.3.0",
+]
+
+# Development dependencies
+dev = [
+    "pytest>=7.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+review = "review:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.uv]
+dev-dependencies = []

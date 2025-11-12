@@ -18,7 +18,23 @@ Reviews software specifications, user stories, and use cases using agile require
 
 ---
 
-### 2. **Functional JavaScript Reviewer**
+### 2. **Django Reviewer**
+Comprehensive production readiness review for Django projects focusing on security, performance, and scalability.
+
+**Focus Areas:**
+- OWASP Top 10 and Django-specific security
+- Database optimization and N+1 query prevention
+- Django REST Framework API best practices
+- Production configuration and deployment
+- Performance and caching strategies
+- Authentication and authorization
+- Testing and code quality
+
+**Use when:** Reviewing Django projects for production deployment, security audits, or performance optimization
+
+---
+
+### 3. **Functional JavaScript Reviewer**
 Reviews JavaScript/TypeScript code using functional programming principles.
 
 **Focus Areas:**
@@ -32,7 +48,7 @@ Reviews JavaScript/TypeScript code using functional programming principles.
 
 ---
 
-### 3. **Functional Python Reviewer**
+### 4. **Functional Python Reviewer**
 Reviews Python code for functional programming patterns and best practices.
 
 **Focus Areas:**
@@ -45,7 +61,7 @@ Reviews Python code for functional programming patterns and best practices.
 
 ---
 
-### 4. **Security & Privacy Reviewer**
+### 5. **Security & Privacy Reviewer**
 Comprehensive security and privacy review covering OWASP Top 10 and data protection.
 
 **Focus Areas:**
@@ -58,7 +74,7 @@ Comprehensive security and privacy review covering OWASP Top 10 and data protect
 
 ---
 
-### 5. **Refactoring Reviewer**
+### 6. **Refactoring Reviewer**
 Identifies refactoring opportunities to improve code quality, readability, and maintainability.
 
 **Focus Areas:**
@@ -71,7 +87,7 @@ Identifies refactoring opportunities to improve code quality, readability, and m
 
 ---
 
-### 6. **Zen of Python Reviewer**
+### 7. **Zen of Python Reviewer**
 Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 **Focus Areas:**
@@ -84,7 +100,7 @@ Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 ---
 
-### 7. **Format/Style Refactoring Reviewer**
+### 8. **Format/Style Refactoring Reviewer**
 Solves formatting and style issues through refactoring, not just line wrapping.
 
 **Focus Areas:**
@@ -97,7 +113,7 @@ Solves formatting and style issues through refactoring, not just line wrapping.
 
 ---
 
-### 8. **Python Test Reviewer**
+### 9. **Python Test Reviewer**
 Reviews Python tests for quality and suggests multiple testing strategies.
 
 **Focus Areas:**
@@ -126,8 +142,8 @@ python install_skills.py
 ```
 
 This will automatically:
-- Install all 8 skills to `~/.claude/skills/` on Windows
-- Install all 8 skills to `~/.claude/skills/` on WSL (if available)
+- Install all 9 skills to `~/.claude/skills/` on Windows
+- Install all 9 skills to `~/.claude/skills/` on WSL (if available)
 - Handle existing installations by replacing them with the latest version
 
 ### Manual Installation
@@ -188,6 +204,8 @@ Once installed, skills activate automatically based on keywords in your requests
 
 ```
 "Review this user story for quality"
+"Review this Django view for security and performance"
+"Check this Django model for N+1 queries"
 "Review this code for security issues"
 "Make this code more Pythonic"
 "Refactor this to be more maintainable"
@@ -199,9 +217,51 @@ Once installed, skills activate automatically based on keywords in your requests
 Or invoke directly:
 ```
 "Use the agile-requirements-reviewer on this specification"
+"Use the django-reviewer on this Django project"
 "Use the security reviewer on this file"
 "Apply functional Python patterns here"
 ```
+
+## 🤖 Agentic Review Tool
+
+**NEW:** Automated code review tool that reviews GitHub repositories using Claude Code skills!
+
+Generate comprehensive markdown review reports for any public GitHub repository:
+
+```bash
+# Navigate to review-tool directory
+cd review-tool
+
+# Set your API key
+export ANTHROPIC_API_KEY='your-key-here'
+
+# Review a Django project
+uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --output-dir reports
+
+# Multiple reviewers at once
+uv run review.py --repo https://github.com/user/project \
+  --reviewer django-reviewer \
+  --reviewer security-privacy-reviewer \
+  --output-dir reports
+```
+
+**Features:**
+- 🔍 Automatically discovers and reviews relevant files
+- 📊 Generates detailed markdown reports with findings
+- 🎯 Supports all 9 reviewers
+- ⚡ Can run multiple reviewers in one command
+- 🛡️ Includes security, performance, and quality analysis
+- 📦 Uses uv for fast, modern Python management
+
+**Perfect for:**
+- Demonstrating skill capabilities with real examples
+- Automated code review in CI/CD
+- Learning from popular open source projects
+- Security audits and pre-production checks
+
+👉 **See [review-tool/README.md](./review-tool/README.md) for complete documentation**
+
+---
 
 ## 📚 Skill Details
 
@@ -225,6 +285,9 @@ These skills focus on **depth and quality**:
 ### Authoritative Sources
 
 Based on established resources:
+- **Django Documentation** - Official Django patterns, security, and best practices
+- **Two Scoops of Django** - Django community best practices
+- **Django REST Framework** - API design and implementation
 - **IEEE 830, BABOK** - Requirements engineering standards
 - **INVEST Criteria** - Agile user story best practices
 - **PEP 8, PEP 20** - Python style and philosophy
@@ -294,6 +357,9 @@ This collection is provided as-is for use with Claude Code. Individual skills in
 
 These skills build upon the work of many contributors to software engineering best practices:
 
+- **Django Software Foundation** - Django documentation, security guidelines, best practices
+- **Two Scoops of Django authors** - Django community standards and patterns
+- **Django REST Framework contributors** - API design best practices
 - **IEEE & IIBA** - Requirements engineering standards (IEEE 830, BABOK)
 - **Agile Community** - INVEST criteria and agile requirements practices
 - **Python Software Foundation** - PEP 8, PEP 20, Python documentation

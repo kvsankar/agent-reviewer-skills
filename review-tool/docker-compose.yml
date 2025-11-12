@@ -1,0 +1,72 @@
+# Docker Compose for Claude Code Skills Review Tool
+#
+# Usage:
+#   # Build
+#   docker-compose build
+#
+#   # Run review
+#   docker-compose run --rm reviewer \
+#     --repo https://github.com/user/repo \
+#     --reviewer python \
+#     --provider claude \
+#     --agentic
+#
+#   # With environment file
+#   docker-compose --env-file .env run --rm reviewer --repo URL --reviewer python --agentic
+
+version: '3.8'
+
+services:
+  reviewer:
+    build:
+      context: ..  # Build from parent directory (claude-skills-public/)
+      dockerfile: review-tool/Dockerfile
+    image: claude-reviewer:latest
+    container_name: claude-reviewer
+
+    # Mount reviews directory for output
+    volumes:
+      - ./reviews:/app/reviews
+
+      # Mount Claude Code credentials for CLI authentication (read-only)
+      # This allows using your Claude Code subscription without API key
+      - ~/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+
+      # Optional: Mount custom tags.yaml
+      # - ./tags.yaml:/app/tags.yaml:ro
+
+    # Environment variables (or use .env file)
+    environment:
+      # Claude (default provider for agentic mode)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+      # OpenAI (future support)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+      # Gemini (future support)
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+
+      # Container detection (already set in Dockerfile)
+      - IN_CONTAINER=true
+
+    # Security: run as non-root in production
+    # user: "1000:1000"
+
+    # Resource limits (optional)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+
+    # Network isolation (optional - for extra security)
+    # network_mode: none
+
+    # Disable network except for API calls (recommended for security)
+    # networks:
+    #   - review-network
+
+# Optional: Isolated network
+# networks:
+#   review-network:
+#     driver: bridge

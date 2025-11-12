@@ -1,0 +1,38 @@
+# Environment
+.env
+
+# Review output (default directory)
+reviews/
+
+# Legacy reports directory (if users still use it)
+reports/
+
+# Backups
+*.md.backup
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments (if used)
+venv/
+env/
+ENV/
+.venv
+
+# uv
+.uv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
