@@ -106,12 +106,12 @@ def check_prerequisites() -> bool:
     return all_good
 
 
-def check_claude_cli_mode(use_cli: bool) -> bool:
-    """Check Claude CLI prerequisites if using CLI mode"""
-    if not use_cli:
+def check_oauth_mode(use_oauth: bool) -> bool:
+    """Check OAuth prerequisites if using OAuth mode"""
+    if not use_oauth:
         return True
 
-    print_header("Checking Claude CLI Mode Prerequisites")
+    print_header("Checking OAuth Mode Prerequisites")
 
     all_good = True
 
@@ -272,19 +272,32 @@ def run_review(args: argparse.Namespace) -> int:
     if args.keep_repo:
         docker_cmd.append('--keep-repo')
 
-    if args.agentic:
-        docker_cmd.append('--agentic')
+    # Handle legacy flags (convert to new format)
+    if hasattr(args, 'use_claude_cli') and args.use_claude_cli:
+        args.auth = 'oauth'
+    if hasattr(args, 'no_agentic') and args.no_agentic:
+        args.mode = 'batch'
+    if hasattr(args, 'agentic') and args.agentic:
+        args.mode = 'agentic'
 
-    if args.use_claude_cli:
-        docker_cmd.append('--use-claude-cli')
+    # Pass new flags to container
+    docker_cmd.extend(['--auth', args.auth])
+    docker_cmd.extend(['--mode', args.mode])
 
     print_info(f"Repository: {args.repo}")
     print_info(f"Reviewers: {', '.join(args.reviewer)}")
 
-    if args.use_claude_cli:
-        print_info("Mode: Claude CLI (using your Claude Code subscription)")
+    # Auth mode
+    if args.auth == 'oauth':
+        print_info("Auth: OAuth (using ~/.claude credentials)")
     else:
-        print_info("Mode: API Key")
+        print_info("Auth: API Key (using ANTHROPIC_API_KEY)")
+
+    # Review mode
+    if args.mode == 'batch':
+        print_info("Mode: Batch (sends all files at once - may fail with large repos)")
+    else:
+        print_info("Mode: Agentic (AI explores repo with tools)")
 
     print()
 
@@ -309,20 +322,23 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Using Claude CLI (recommended - no API key needed)
-  %(prog)s --repo https://github.com/django/django --reviewer django-reviewer --use-claude-cli
-
-  # Using API key
+  # OAuth + Batch (default - uses ~/.claude, no API key needed)
   %(prog)s --repo https://github.com/user/repo --reviewer python
 
-  # Multiple reviewers
-  %(prog)s --repo https://github.com/user/repo --reviewer django --reviewer security --use-claude-cli
+  # API Key + Agentic (recommended for large repos - AI explores with tools)
+  %(prog)s --repo https://github.com/user/repo --reviewer python --auth apikey --mode agentic
 
-  # Agentic mode (Claude explores with tools)
-  %(prog)s --repo https://github.com/user/repo --reviewer python --agentic --use-claude-cli
+  # OAuth + Batch (explicit)
+  %(prog)s --repo https://github.com/user/repo --reviewer python --auth oauth --mode batch
+
+  # API Key + Batch
+  %(prog)s --repo https://github.com/user/repo --reviewer python --auth apikey --mode batch
+
+  # Multiple reviewers
+  %(prog)s --repo https://github.com/user/repo --reviewer django --reviewer security
 
   # Specific model
-  %(prog)s --repo https://github.com/user/repo --reviewer python --model claude-opus-4-20250514 --use-claude-cli
+  %(prog)s --repo https://github.com/user/repo --reviewer python --model claude-opus-4-20250514
 
 Available reviewers:
   - agile-requirements-reviewer: Requirements and user stories
@@ -377,16 +393,23 @@ For more details, see:
     )
 
     parser.add_argument(
-        '--agentic',
-        action='store_true',
-        help='Enable agentic mode (AI explores repo with tools)'
+        '--auth',
+        choices=['oauth', 'apikey'],
+        default='oauth',
+        help='Authentication: "oauth" (uses ~/.claude, default) or "apikey" (uses ANTHROPIC_API_KEY)'
     )
 
     parser.add_argument(
-        '--use-claude-cli',
-        action='store_true',
-        help='Use Claude CLI with ~/.claude credentials (no API key needed)'
+        '--mode',
+        choices=['agentic', 'batch'],
+        default='agentic',
+        help='Review mode: "agentic" (AI explores with tools, default) or "batch" (sends all files at once)'
     )
+
+    # Legacy flags (hidden)
+    parser.add_argument('--use-claude-cli', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--no-agentic', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--agentic', action='store_true', help=argparse.SUPPRESS)
 
     parser.add_argument(
         '--skip-checks',
@@ -446,8 +469,11 @@ For more details, see:
             print_error("Prerequisites check failed")
             return 1
 
-        if not check_claude_cli_mode(args.use_claude_cli):
-            print_error("Claude CLI prerequisites check failed")
+        # Handle legacy flags for prerequisite checks
+        use_oauth = (args.auth == 'oauth') or (hasattr(args, 'use_claude_cli') and args.use_claude_cli)
+
+        if not check_oauth_mode(use_oauth):
+            print_error("OAuth prerequisites check failed")
             return 1
 
         if not setup_environment():

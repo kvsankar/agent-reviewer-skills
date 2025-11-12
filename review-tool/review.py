@@ -295,9 +295,9 @@ class ClaudeProvider(AIProvider):
 
     def __init__(self, api_key: Optional[str] = None, model: str = "claude-sonnet-4-20250514", agentic: bool = False, repo_path: Path = None, use_cli: bool = False):
         self.model = model
-        self.agentic = agentic
         self.repo_path = repo_path
         self.use_cli = use_cli
+        self.agentic = agentic
         self.package_version = get_package_version('anthropic')
 
         if use_cli:
@@ -347,7 +347,7 @@ class ClaudeProvider(AIProvider):
         """
         Agentic review mode - Claude explores repo with bash tools.
 
-        WARNING: Uses dangerouslyDisableSandbox=True
+        WARNING: Uses dangerouslyDisableSandbox=True (SDK) or --dangerously-skip-permissions (CLI)
         Only safe in container environment!
         """
         print("  [AGENTIC] Claude will explore the repository with bash tools")
@@ -391,46 +391,80 @@ Current working directory is the repository root. All bash commands will execute
 Begin your review now.
 """
 
-            # Call Claude with bash tool access - DANGEROUS MODE
-            print("  [AGENTIC] Calling Claude with bash tool access (dangerous mode enabled)")
-
-            message = self.client.messages.create(
-                model=self.model,
-                max_tokens=16000,
-                temperature=0,
-                tools=[{
-                    "type": "bash_20241022",
-                    "name": "bash"
-                }],
-                messages=[{
-                    "role": "user",
-                    "content": agentic_prompt
-                }],
-                # DANGEROUS: Disable sandbox - only safe in container!
-                betas=["pdfs-2024-09-25", "prompt-caching-2024-07-31", "computer-use-2024-10-22"]
-            )
-
-            # Process response and tool use
-            response_text = []
-            tool_uses = 0
-
-            for block in message.content:
-                if hasattr(block, 'type'):
-                    if block.type == 'text':
-                        response_text.append(block.text)
-                    elif block.type == 'tool_use':
-                        tool_uses += 1
-                        print(f"  [AGENTIC] Tool use #{tool_uses}: {block.name}")
-
-            print(f"  [AGENTIC] Review complete - {tool_uses} tool uses")
-
-            return '\n\n'.join(response_text) if response_text else "No review text generated"
+            # CLI mode or SDK mode?
+            if self.use_cli:
+                return self._review_agentic_cli(agentic_prompt)
+            else:
+                return self._review_agentic_sdk(agentic_prompt)
 
         except Exception as e:
             return f"Error during agentic review: {str(e)}"
         finally:
             # Always return to original directory
             os.chdir(original_cwd)
+
+    def _review_agentic_sdk(self, agentic_prompt: str) -> str:
+        """Agentic mode using Python SDK"""
+        # Call Claude with bash tool access - DANGEROUS MODE
+        print("  [AGENTIC/SDK] Calling Claude with bash tool access (dangerous mode enabled)")
+
+        message = self.client.messages.create(
+            model=self.model,
+            max_tokens=16000,
+            temperature=0,
+            tools=[{
+                "type": "bash_20241022",
+                "name": "bash"
+            }],
+            messages=[{
+                "role": "user",
+                "content": agentic_prompt
+            }],
+            # DANGEROUS: Disable sandbox - only safe in container!
+            betas=["pdfs-2024-09-25", "prompt-caching-2024-07-31", "computer-use-2024-10-22"],
+            dangerouslyDisableSandbox=True
+        )
+
+        # Process response and tool use
+        response_text = []
+        tool_uses = 0
+
+        for block in message.content:
+            if hasattr(block, 'type'):
+                if block.type == 'text':
+                    response_text.append(block.text)
+                elif block.type == 'tool_use':
+                    tool_uses += 1
+                    print(f"  [AGENTIC/SDK] Tool use #{tool_uses}: {block.name}")
+
+        print(f"  [AGENTIC/SDK] Review complete - {tool_uses} tool uses")
+
+        return '\n\n'.join(response_text) if response_text else "No review text generated"
+
+    def _review_agentic_cli(self, agentic_prompt: str) -> str:
+        """Agentic mode using Claude CLI with --dangerously-skip-permissions"""
+        print("  [AGENTIC/CLI] Calling Claude CLI with bash tools (dangerous permissions)")
+
+        # Call claude CLI with --print mode, --tools for bash access, --dangerously-skip-permissions
+        # This allows Claude to use bash tools without approval prompts
+        result = subprocess.run(
+            ['claude', '--print', '--model', self.model, '--tools', 'Bash', '--dangerously-skip-permissions'],
+            input=agentic_prompt,
+            capture_output=True,
+            text=True,
+            timeout=600  # 10 minute timeout for exploration
+        )
+
+        if result.returncode != 0:
+            error_msg = f"Error calling Claude CLI (exit code {result.returncode}):\n"
+            if result.stderr:
+                error_msg += f"STDERR: {result.stderr}\n"
+            if result.stdout:
+                error_msg += f"STDOUT: {result.stdout}\n"
+            return error_msg
+
+        print("  [AGENTIC/CLI] Review complete")
+        return result.stdout
 
     def review_cli(self, skill_prompt: str, code_context: str, repo_url: str) -> str:
         """
@@ -467,7 +501,18 @@ Focus on the most critical issues first.
             )
 
             if result.returncode != 0:
-                return f"Error calling Claude CLI: {result.stderr}"
+                error_msg = f"Error calling Claude CLI (exit code {result.returncode}):\n"
+                if result.stderr:
+                    error_msg += f"STDERR: {result.stderr}\n"
+                if result.stdout:
+                    error_msg += f"STDOUT: {result.stdout}\n"
+                if not result.stderr and not result.stdout:
+                    error_msg += "No error output captured. This usually means:\n"
+                    error_msg += "  - Claude CLI authentication issue (try: claude login)\n"
+                    error_msg += "  - Token expired (open Claude Code to refresh)\n"
+                    error_msg += "  - Network connectivity issue\n"
+                    error_msg += f"  - Command: claude --print --model {self.model} --tools '' --dangerously-skip-permissions\n"
+                return error_msg
 
             return result.stdout
 
@@ -761,20 +806,23 @@ Examples:
     )
 
     parser.add_argument(
-        '--agentic',
-        action='store_true',
-        help='Enable agentic mode (AI explores repo with tools). '
-             'Requires container environment for safety. '
-             'Currently supports Claude only. More expensive but thorough.'
+        '--auth',
+        choices=['oauth', 'apikey'],
+        default='oauth',
+        help='Authentication method: "oauth" (uses ~/.claude credentials, default) or "apikey" (uses ANTHROPIC_API_KEY)'
     )
 
     parser.add_argument(
-        '--use-claude-cli',
-        action='store_true',
-        help='Use Claude CLI with ~/.claude credentials instead of API key. '
-             'Allows Claude Code subscription users to review without API keys. '
-             'Requires Claude CLI installed and credentials mounted in container.'
+        '--mode',
+        choices=['agentic', 'batch'],
+        default='agentic',
+        help='Review mode: "agentic" (AI explores repo with tools, default) or "batch" (sends all files at once)'
     )
+
+    # Legacy support for old flags (hidden, will be converted)
+    parser.add_argument('--use-claude-cli', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--no-agentic', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--agentic', action='store_true', help=argparse.SUPPRESS)
 
     parser.add_argument(
         '--list-reviewers',
@@ -783,6 +831,12 @@ Examples:
     )
 
     args = parser.parse_args()
+
+    # Handle legacy flags (convert to new format)
+    if args.use_claude_cli:
+        args.auth = 'oauth'
+    if args.no_agentic:
+        args.mode = 'batch'
 
     # Handle --list-reviewers flag
     if args.list_reviewers:
@@ -795,44 +849,66 @@ Examples:
     if not args.reviewer:
         parser.error('--reviewer is required (use --list-reviewers to see available reviewers)')
 
-    # Check CLI mode requirements
-    if args.use_claude_cli:
-
+    # Check OAuth mode requirements
+    if args.auth == 'oauth':
         # Check if credentials file exists (will be mounted in container)
         creds_file = Path.home() / '.claude' / '.credentials.json'
         if not creds_file.exists():
-            print("[-] Error: Claude credentials not found")
+            print("[-] Error: OAuth credentials not found")
             print(f"    Expected at: {creds_file}")
             print("")
             print("In Docker, make sure credentials are mounted:")
-            print("  - ~/.claude/.credentials.json:/root/.claude/.credentials.json:ro")
+            print("  - ~/.claude/.credentials.json:/home/appuser/.claude/.credentials.json:ro")
             print("")
             print("Or authenticate locally: claude login")
+            print("")
+            print("To use API key mode instead:")
+            print("  ./review-cli.py --repo URL --reviewer TAG --auth apikey")
             sys.exit(1)
 
-        print("[+] Claude CLI mode enabled")
+        print(f"[+] Authentication: OAuth (Claude CLI)")
+
+    # Check API key mode requirements
+    if args.auth == 'apikey':
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not api_key:
+            print("[-] Error: ANTHROPIC_API_KEY not found")
+            print("")
+            print("Set your API key:")
+            print("  export ANTHROPIC_API_KEY=sk-ant-your-key-here")
+            print("Or add to .env file")
+            print("")
+            print("Get your API key from: https://console.anthropic.com/")
+            print("")
+            print("To use OAuth mode instead:")
+            print("  ./review-cli.py --repo URL --reviewer TAG --auth oauth --mode batch")
+            sys.exit(1)
+
+        print(f"[+] Authentication: API Key")
+
+    # Set review mode
+    use_agentic = (args.mode == 'agentic')
+    print(f"[+] Review mode: {args.mode.capitalize()}")
 
     # Check agentic mode requirements
-    if args.agentic:
+    if use_agentic:
         # Check if in container
         in_container = os.environ.get('IN_CONTAINER', '').lower() == 'true'
 
         if not in_container:
             print("=" * 60)
-            print("[!] WARNING: Agentic Mode Requires Container")
+            print("[!] ERROR: Agentic Mode Requires Container")
             print("=" * 60)
-            print("Agentic mode enables Claude to run bash commands with full access.")
+            print("Agentic mode enables Claude to run bash commands.")
             print("This is potentially dangerous outside a container.")
             print("")
             print("Please run in Docker:")
-            print("  docker-compose run --rm reviewer --repo URL --reviewer TAG --agentic")
+            print("  ./review-cli.py --repo URL --reviewer TAG --auth apikey --mode agentic")
             print("")
-            print("Or use the Python wrapper:")
-            print("  ./review-cli.py --repo URL --reviewer TAG --agentic --use-claude-cli")
+            print("Or disable agentic mode:")
+            print("  ./review-cli.py --repo URL --reviewer TAG --mode batch")
             print("=" * 60)
             sys.exit(1)
-
-        print("[+] Agentic mode enabled (containerized environment detected)")
 
     # Load reviewer tags from YAML configuration
     tags_dict = load_reviewer_tags()
@@ -886,7 +962,8 @@ Examples:
             sys.exit(1)
 
         # Create provider (after cloning, so we have repo_path for agentic mode)
-        provider = create_provider(args.model, args.agentic, temp_dir, args.use_claude_cli)
+        use_cli = (args.auth == 'oauth')
+        provider = create_provider(args.model, use_agentic, temp_dir, use_cli)
         print(f"\n[+] Using {provider.name}")
 
         # Initialize review agent with provider
