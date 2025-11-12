@@ -5,20 +5,19 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 ## Quick Start
 
 ```bash
-# One command to review any repository
+# One command to review any repository (uses OAuth + Agentic mode by default)
 ./review-cli.py \
   --repo https://github.com/simonw/datasette \
-  --reviewer python \
-  --use-claude-cli
+  --reviewer python
 ```
 
 ## Features
 
-- ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth
+- ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth (default)
 - ✅ **Zero Setup** - Python wrapper handles everything automatically
+- ✅ **Agentic Mode** - Claude explores repositories with bash tools (default)
 - ✅ **Multiple Reviewers** - Run 6+ specialized reviewers in parallel
 - ✅ **Fresh Context** - Each reviewer gets independent analysis
-- ✅ **Agentic Mode** - Claude explores repositories with bash tools
 - ✅ **Containerized** - Safe Docker environment for all operations
 - ✅ **Volume Mounts** - No rebuilds needed for code changes
 
@@ -27,7 +26,8 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 ### Prerequisites
 
 - Docker and Docker Compose
-- Claude Code (for CLI mode - recommended)
+- Claude Code (for OAuth mode - recommended, default)
+- OR: Anthropic API key (for API key mode)
 
 ### Setup
 
@@ -35,8 +35,11 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 git clone <repository-url>
 cd claude-skills/review-tool
 
-# That's it! The wrapper handles the rest
-./review-cli.py --repo <URL> --reviewer python --use-claude-cli
+# Authenticate with Claude (one-time)
+claude login
+
+# That's it! Run your first review
+./review-cli.py --repo <URL> --reviewer python
 ```
 
 ## Usage
@@ -44,10 +47,10 @@ cd claude-skills/review-tool
 ### Basic Review
 
 ```bash
+# Default: OAuth + Agentic (best for most repos)
 ./review-cli.py \
   --repo https://github.com/django/django \
-  --reviewer django-reviewer \
-  --use-claude-cli
+  --reviewer django-reviewer
 ```
 
 ### Multiple Reviewers with Tags
@@ -56,18 +59,29 @@ cd claude-skills/review-tool
 # 'python' expands to 6 reviewers
 ./review-cli.py \
   --repo https://github.com/pallets/flask \
-  --reviewer python \
-  --use-claude-cli
+  --reviewer python
 ```
 
-### Agentic Mode (Deep Analysis)
+### Batch Mode (Small Repos)
 
 ```bash
+# Sends all files at once (faster but may fail on large repos)
+./review-cli.py \
+  --repo https://github.com/user/small-repo \
+  --reviewer python \
+  --mode batch
+```
+
+### API Key Mode
+
+```bash
+# Use API key instead of OAuth
+export ANTHROPIC_API_KEY='sk-ant-your-key-here'
+
 ./review-cli.py \
   --repo https://github.com/user/repo \
   --reviewer python \
-  --agentic \
-  --use-claude-cli
+  --auth apikey
 ```
 
 ### Specific Model
@@ -76,8 +90,7 @@ cd claude-skills/review-tool
 ./review-cli.py \
   --repo https://github.com/user/repo \
   --reviewer django \
-  --model claude-opus-4-20250514 \
-  --use-claude-cli
+  --model claude-opus-4-20250514
 ```
 
 ## Available Reviewers
@@ -107,34 +120,63 @@ cd claude-skills/review-tool
 
 **Customize tags:** Edit `tags.yaml` to create your own combinations.
 
-## Authentication
+## Authentication & Modes
 
-### Option 1: Claude CLI (Recommended)
+### Authentication (--auth)
 
-Uses your Claude Code subscription - no API keys needed.
-
+**OAuth (default, recommended):**
 ```bash
-# Authenticate once
-claude login
-
-# Use with --use-claude-cli flag
-./review-cli.py --repo URL --reviewer NAME --use-claude-cli
-```
-
-### Option 2: API Key
-
-```bash
-# Set environment variable
-export ANTHROPIC_API_KEY='sk-ant-your-key-here'
-
-# Run without --use-claude-cli flag
+# Uses ~/.claude credentials - no API key needed
+claude login  # One-time setup
 ./review-cli.py --repo URL --reviewer NAME
+# or explicitly: --auth oauth
 ```
+
+**API Key:**
+```bash
+# Uses ANTHROPIC_API_KEY environment variable
+export ANTHROPIC_API_KEY='sk-ant-your-key-here'
+./review-cli.py --repo URL --reviewer NAME --auth apikey
+```
+
+### Review Modes (--mode)
+
+**Agentic (default, recommended):**
+- Claude explores repo with bash tools (ls, cat, grep)
+- Handles large repos well
+- More thorough analysis
+- Costs more (~$1-5 per review)
+
+```bash
+# Default mode
+./review-cli.py --repo URL --reviewer NAME
+# or explicitly: --mode agentic
+```
+
+**Batch:**
+- Sends all files at once
+- Faster (~30 seconds)
+- May fail with "prompt too long" on large repos
+- Cheaper (~$0.15-0.50 per review)
+
+```bash
+./review-cli.py --repo URL --reviewer NAME --mode batch
+```
+
+### Supported Combinations
+
+| Auth | Mode | Use Case |
+|------|------|----------|
+| **oauth** | **agentic** | ✅ **Default** - Best for most repos, no API key needed |
+| oauth | batch | Small repos, no API key needed |
+| apikey | agentic | Large repos with API key |
+| apikey | batch | Small repos with API key |
 
 ## What Gets Reviewed
 
-- **Files:** 50 most recently modified files matching reviewer patterns
-- **Analysis:** Full file contents (up to 500 lines per file)
+- **Agentic Mode:** Claude explores and reads relevant files autonomously
+- **Batch Mode:** 50 most recently modified files matching reviewer patterns
+- **Analysis:** Full file contents (up to 500 lines per file in batch mode)
 - **Output:** Structured markdown with examples and recommendations
 
 ## Output Format
@@ -162,12 +204,13 @@ Each review includes:
 ```
 --repo REPO              Repository URL (required)
 --reviewer REVIEWER      Reviewer or tag (can specify multiple)
+--auth MODE              Authentication: oauth|apikey (default: oauth)
+--mode MODE              Review mode: agentic|batch (default: agentic)
 --model MODEL            Claude model (sonnet-4 or opus-4)
 --output-dir DIR         Output directory (default: reviews)
 --keep-repo              Keep cloned repository
---agentic                Enable agentic mode
---use-claude-cli         Use Claude CLI auth (recommended)
 --skip-checks            Skip prerequisite checks
+--list-reviewers         List all available reviewers and tags
 ```
 
 ### Docker Direct (`docker-compose`)
@@ -176,42 +219,45 @@ Each review includes:
 docker-compose run --rm reviewer \
   --repo URL \
   --reviewer NAME \
-  --use-claude-cli
+  --auth oauth \
+  --mode agentic
 ```
 
 ## Advanced Usage
 
-### Agentic Mode
+### Agentic Mode Details
 
-Agentic mode allows Claude to explore the repository with bash tools for deeper analysis:
+Agentic mode (default) allows Claude to explore the repository with bash tools:
 
 ```bash
 ./review-cli.py \
   --repo https://github.com/large/codebase \
-  --reviewer python \
-  --agentic \
-  --use-claude-cli
+  --reviewer python
 ```
 
-**Features:**
-- Claude explores repository structure autonomously
-- Searches for patterns across unlimited files
-- More thorough analysis for complex codebases
-- Costs more (~$1-5 per review)
+**How it works:**
+- Claude uses `ls`, `find` to discover files
+- Uses `cat`, `head`, `tail` to read code
+- Uses `grep` to search patterns
+- Explores incrementally based on findings
 
-**Requirements:**
-- Must run in container (safety)
-- Only supports batch mode (50 files per reviewer)
+**Features:**
+- Handles repositories of any size
+- More thorough analysis
+- Discovers patterns across entire codebase
+- Adapts exploration based on what it finds
 
 **Comparison:**
 
-| Feature | Batch Mode | Agentic Mode |
-|---------|------------|--------------|
+| Feature | Batch Mode | Agentic Mode (Default) |
+|---------|------------|------------------------|
 | Speed | ~30 seconds | ~2-5 minutes |
 | Cost | $0.15-0.50 | $1-5 |
 | Files | 50 max | Unlimited |
+| Large repos | May fail | ✅ Works |
 | Thoroughness | Good | Excellent |
-| Container | Optional | Required |
+| Container | Required | Required |
+| Auth | Both | Both |
 
 ### Custom Tags
 
@@ -234,7 +280,7 @@ frontend:
 Then use:
 
 ```bash
-./review-cli.py --repo URL --reviewer backend --use-claude-cli
+./review-cli.py --repo URL --reviewer backend
 ```
 
 ### CI/CD Integration
@@ -251,12 +297,14 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run Code Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           cd review-tool
           ./review-cli.py \
             --repo ${{ github.repository }} \
             --reviewer security \
-            --use-claude-cli
+            --auth apikey
 ```
 
 ### Batch Reviews
@@ -266,8 +314,7 @@ jobs:
 for repo in django flask fastapi; do
   ./review-cli.py \
     --repo https://github.com/user/$repo \
-    --reviewer python \
-    --use-claude-cli
+    --reviewer python
 done
 ```
 
@@ -290,13 +337,14 @@ done
 │  │  review.py (Main Script)                       │    │
 │  │  - Clones repository                           │    │
 │  │  - Loads reviewer skills from /skills          │    │
-│  │  - Discovers matching files                    │    │
+│  │  - Agentic: Claude explores with bash tools    │    │
+│  │  - Batch: Discovers matching files             │    │
 │  │  - Calls Claude for each reviewer              │    │
 │  │  - Generates markdown reports                  │    │
 │  └────────────────────────────────────────────────┘    │
 │                                                          │
 │  Mounted Volumes:                                       │
-│  - ~/.claude → /home/appuser/.claude (credentials)     │
+│  - ~/.claude → /home/appuser/.claude (OAuth creds)     │
 │  - ../skills → /skills (reviewer templates)             │
 │  - ./reviews → /app/reviews (output)                   │
 │  - ./review.py → /app/review.py (live code)           │
@@ -307,7 +355,7 @@ done
 
 The container runs as your user (not root) to avoid permission issues:
 
-1. `test-setup.sh` creates `.env` with `USER_ID` and `GROUP_ID`
+1. Wrapper creates `.env` with `USER_ID` and `GROUP_ID`
 2. Docker uses these values: `user: "${USER_ID}:${GROUP_ID}"`
 3. Files created in container are owned by you on the host
 
@@ -344,12 +392,13 @@ sudo rm -rf reviews
 docker-compose build --no-cache
 ```
 
-### "Agentic mode requires container"
+### "Prompt too long" error
 
-Agentic mode must run in Docker for safety. Use the Python wrapper:
+Use agentic mode (default) instead of batch mode:
 
 ```bash
-./review-cli.py --repo URL --reviewer NAME --agentic --use-claude-cli
+./review-cli.py --repo URL --reviewer NAME
+# Agentic mode is already the default!
 ```
 
 ## Examples
@@ -359,8 +408,7 @@ Agentic mode must run in Docker for safety. Use the Python wrapper:
 ```bash
 ./review-cli.py \
   --repo https://github.com/django/django \
-  --reviewer django \
-  --use-claude-cli
+  --reviewer django
 ```
 
 **Output:** 1 comprehensive Django production readiness review
@@ -370,8 +418,7 @@ Agentic mode must run in Docker for safety. Use the Python wrapper:
 ```bash
 ./review-cli.py \
   --repo https://github.com/simonw/datasette \
-  --reviewer python \
-  --use-claude-cli
+  --reviewer python
 ```
 
 **Output:** 6 independent reviews covering:
@@ -387,26 +434,29 @@ Agentic mode must run in Docker for safety. Use the Python wrapper:
 ```bash
 ./review-cli.py \
   --repo https://github.com/your-org/app \
-  --reviewer security-privacy-reviewer \
-  --use-claude-cli
+  --reviewer security-privacy-reviewer
 ```
 
 **Output:** Security-focused review with vulnerability analysis
 
 ## Cost Estimates
 
-Using Claude CLI (your Claude Code subscription):
+Using OAuth (your Claude Code subscription):
 
-| Review Type | Estimated Cost |
-|-------------|----------------|
-| Single reviewer | $0.15 - $0.50 |
-| Python tag (6 reviewers) | $1.00 - $3.00 |
-| Agentic mode | $1.00 - $5.00 |
+| Review Type | Agentic Mode | Batch Mode |
+|-------------|--------------|------------|
+| Single reviewer | $1 - $5 | $0.15 - $0.50 |
+| Python tag (6 reviewers) | $6 - $30 | $1 - $3 |
+
+Using API Key:
+- Same costs charged to your API account
+- More control over usage limits
 
 Costs vary by:
 - Repository size
 - Number of files
 - Model choice (Sonnet vs Opus)
+- Review mode (Agentic vs Batch)
 
 ## Development
 
@@ -416,7 +466,6 @@ Costs vary by:
 review-tool/
 ├── review-cli.py          # Python wrapper (user-facing)
 ├── review.py              # Core review logic (runs in container)
-├── test-setup.sh          # Setup verification script
 ├── Dockerfile             # Container definition
 ├── docker-compose.yml     # Docker orchestration
 ├── tags.yaml              # Reviewer tag definitions
@@ -451,7 +500,7 @@ review-tool/
 
 4. Use it:
    ```bash
-   ./review-cli.py --repo URL --reviewer my-custom-reviewer --use-claude-cli
+   ./review-cli.py --repo URL --reviewer my-custom-reviewer
    ```
 
 ### Volume-Based Development
@@ -470,10 +519,10 @@ Just edit files and run - changes take effect immediately.
 ## FAQ
 
 **Q: Do I need an API key?**
-A: No! Use `--use-claude-cli` with your Claude Code subscription (recommended).
+A: No! Use the default OAuth mode with your Claude Code subscription (recommended).
 
 **Q: How many files are reviewed?**
-A: 50 most recently modified files matching the reviewer's patterns.
+A: Agentic mode (default) explores as many files as needed. Batch mode reviews 50 most recent files.
 
 **Q: Can I review private repositories?**
 A: Yes, if you can clone them (SSH keys, credentials, etc.).
@@ -493,11 +542,13 @@ A: Yes, to Claude's API for review. Use appropriate repositories.
 **Q: Can I customize the output format?**
 A: Yes, edit the skill templates in `../*/SKILL.md` files.
 
+**Q: Why use agentic mode?**
+A: It's the default because it handles repos of any size and provides thorough analysis. Batch mode may fail with "prompt too long" on larger repos.
+
 ## Support
 
-- **Test setup:** `./test-setup.sh`
+- **List reviewers:** `./review-cli.py --list-reviewers`
 - **Documentation:** This README
-- **Implementation notes:** `STATUS.md`
 - **Help:** `./review-cli.py --help`
 
 ## License
@@ -510,12 +561,12 @@ Built with:
 - [Claude](https://claude.ai) - AI code review
 - [Docker](https://docker.com) - Containerization
 - [Python](https://python.org) - Scripting
-- [Claude Code](https://claude.com/claude-code) - CLI authentication
+- [Claude Code](https://claude.com/claude-code) - OAuth authentication
 
 ---
 
 **Ready to review!**
 
 ```bash
-./review-cli.py --repo <YOUR_REPO_URL> --reviewer python --use-claude-cli
+./review-cli.py --repo <YOUR_REPO_URL> --reviewer python
 ```
