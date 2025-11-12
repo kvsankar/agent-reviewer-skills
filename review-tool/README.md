@@ -439,6 +439,33 @@ Use agentic mode (default) instead of batch mode:
 
 **Output:** Security-focused review with vulnerability analysis
 
+## Sample Reviews
+
+The `sample_reviews/` directory contains real review examples from popular open-source projects:
+
+**HTTPie** (6 Python reviewers):
+- [httpie/httpie](https://github.com/httpie/httpie) - Modern command-line HTTP client
+- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security
+- Total: 91KB of analysis
+
+**Datasette** (6 Python reviewers):
+- [simonw/datasette](https://github.com/simonw/datasette) - Data exploration tool
+- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security
+- Total: 101KB of analysis
+
+**Chandrayaan3** (JavaScript reviewer):
+- [kvsankar/chandrayaan3](https://github.com/kvsankar/chandrayaan3) - ISRO mission visualization
+- Review: functional JavaScript patterns
+- Total: 11KB of analysis
+
+All samples generated using default OAuth + Agentic mode. Each review demonstrates:
+- Mnemonic IDs for findings (e.g., USE-CONST, IMMUT-COPY)
+- Concrete code examples with before/after
+- Severity ratings and impact analysis
+- Specific, actionable recommendations
+
+Browse `sample_reviews/` to see what reviews look like before running your own.
+
 ## Cost Estimates
 
 Using OAuth (your Claude Code subscription):
@@ -470,6 +497,7 @@ review-tool/
 ├── docker-compose.yml     # Docker orchestration
 ├── tags.yaml              # Reviewer tag definitions
 ├── reviews/               # Output directory
+├── sample_reviews/        # Example reviews from real projects
 └── README.md              # This file
 ```
 
