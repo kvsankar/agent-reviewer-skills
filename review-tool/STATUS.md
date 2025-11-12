@@ -1,7 +1,9 @@
 # Implementation Status - Claude CLI Authentication
 
 **Date:** 2025-11-12
-**Status:** ✅ Implementation Complete - Ready for Testing in WSL
+**Status:** ✅ Implementation Complete - Ready for Testing in Ubuntu VM
+
+**Latest Update:** Encountered Docker Desktop WSL compatibility issue. Switching to Ubuntu VM for testing.
 
 ---
 
@@ -73,49 +75,109 @@ Script saves: As markdown report
 - End-to-end test with small repo
 - Verify review output
 
-### 🐛 Issue Encountered
+### 🐛 Issues Encountered
+
+#### Issue 1: Docker Desktop in Windows PowerShell
 - Docker Desktop not responding in Windows PowerShell
-- **Solution:** Test in WSL instead
+- **Solution:** Attempted WSL instead
+
+#### Issue 2: Docker Desktop in WSL (2025-11-12)
+- **Problem:** Docker client URL encoding bug
+- **Symptom:** `/var/run/docker.sock` encoded as `%2Fvar%2Frun%2Fdocker.sock`
+- **Error:** `request returned Internal Server Error for API route`
+- **Root Cause:** Docker Desktop for Windows client in WSL has compatibility issues
+- **Confirmed:**
+  - Docker service is running (active)
+  - Socket file exists with correct permissions
+  - User is in docker group
+  - Credentials file exists at `~/.claude/.credentials.json`
+  - All code is validated and ready
+- **Solution:** Switch to native Ubuntu VM for testing
 
 ---
 
-## Testing in WSL
+## Testing in Ubuntu VM (RECOMMENDED)
 
-### Step 1: Navigate to Project
+The implementation is complete and ready to test. Use a native Ubuntu VM to avoid Docker Desktop compatibility issues.
 
+### Prerequisites
 ```bash
-cd /mnt/c/sankar/projects/claude-skills-public
+# On Ubuntu VM
+# 1. Docker installed (native, not Docker Desktop)
+# 2. Claude CLI installed: npm install -g @anthropic-ai/claude-cli
+# 3. Clone the repository
+# 4. Copy credentials file from Windows (if needed)
 ```
 
-### Step 2: Verify Credentials File
+### Step 1: Setup on Ubuntu VM
 
 ```bash
-# Check Windows credentials are accessible from WSL
+# Install Docker (if not already installed)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+# Log out and back in
+
+# Clone repository
+git clone <your-repo-url>
+cd claude-skills
+
+# Copy Claude credentials from Windows (if needed)
+# Option A: If you have credentials file from Windows
+mkdir -p ~/.claude
+# Copy .credentials.json from Windows to ~/.claude/
+
+# Option B: Login with Claude CLI on Ubuntu
+npm install -g @anthropic-ai/claude-cli
+claude login
+```
+
+### Step 2: Verify Setup
+
+```bash
+# Verify Docker works
+docker ps
+
+# Verify credentials file exists
 ls -la ~/.claude/.credentials.json
 
-# Or check Windows path
-ls -la /mnt/c/Users/kvsan/.claude/.credentials.json
-
-# If using Windows credentials from WSL, update docker-compose.yml:
-# - /mnt/c/Users/kvsan/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+# Should show: -rw------- 1 user user 348 ... /home/user/.claude/.credentials.json
 ```
 
 ### Step 3: Build Container
 
 ```bash
-cd /mnt/c/sankar/projects/claude-skills-public
+# Navigate to project root
+cd ~/claude-skills  # or wherever you cloned it
 
-# Build with CLI support
+# Build Docker image with Claude CLI support
 docker build -f review-tool/Dockerfile -t claude-reviewer .
 
-# Should see:
-# - Installing Node.js
-# - Installing Claude CLI
-# - Installing Python packages
-# - Success!
+# Expected output:
+# [+] Building ...
+#  => [1/10] FROM docker.io/library/python:3.12-slim
+#  => [2/10] RUN apt-get update && apt-get install -y git curl nodejs npm
+#  => [3/10] RUN npm install -g @anthropic-ai/claude-cli
+#  => [4/10] RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+#  => [5/10] COPY *-reviewer/ /skills/
+#  => [6/10] COPY review-tool/ /app/
+#  => [7/10] RUN uv pip install --system python-dotenv pyyaml anthropic
+#  => [8/10] RUN mkdir -p /app/reviews /root/.claude
+#  => exporting to image
+#  => => naming to docker.io/library/claude-reviewer
 ```
 
-**Expected build time:** 3-5 minutes
+**Expected build time:** 3-5 minutes (first time)
+
+**Verification:**
+```bash
+# Verify Claude CLI is installed in container
+docker run --rm claude-reviewer which claude
+# Should output: /usr/local/bin/claude
+
+docker run --rm claude-reviewer claude --version
+# Should output: Claude CLI version X.X.X
+```
 
 ### Step 4: Test with Small Repo
 
@@ -375,18 +437,18 @@ Document the error:
 ## Key Commands Reference
 
 ```bash
-# Build
-cd /mnt/c/sankar/projects/claude-skills-public
+# Build (from project root)
+cd ~/claude-skills  # or your clone location
 docker build -f review-tool/Dockerfile -t claude-reviewer .
 
-# Test (quick)
+# Test (quick - single reviewer)
 cd review-tool
 docker-compose run --rm reviewer \
   --repo https://github.com/pallets/click \
   --reviewer refactoring-reviewer \
   --use-claude-cli
 
-# Test (comprehensive)
+# Test (comprehensive - all Python reviewers)
 docker-compose run --rm reviewer \
   --repo https://github.com/pallets/click \
   --reviewer python \
@@ -409,4 +471,50 @@ cat reviews/*.md | head -100
 
 ---
 
-**Ready to test in WSL! 🚀**
+## Summary & Next Actions
+
+### ✅ What's Complete
+1. **Full Implementation** - All code written and validated
+   - Claude CLI authentication mode
+   - OAuth token support via `~/.claude/.credentials.json`
+   - `--use-claude-cli` flag
+   - Docker setup with Node.js and Claude CLI
+   - Complete documentation
+2. **Files Ready**
+   - `Dockerfile` - Installs Claude CLI
+   - `docker-compose.yml` - Mounts credentials
+   - `review.py` - CLI authentication logic
+   - All documentation files
+
+### 🎯 Next Steps (On Ubuntu VM)
+1. **Setup Ubuntu VM**
+   - Install native Docker (not Docker Desktop)
+   - Clone repository
+   - Setup Claude credentials
+
+2. **Build & Test**
+   ```bash
+   cd ~/claude-skills
+   docker build -f review-tool/Dockerfile -t claude-reviewer .
+   cd review-tool
+   docker-compose run --rm reviewer \
+     --repo https://github.com/pallets/click \
+     --reviewer refactoring-reviewer \
+     --use-claude-cli
+   ```
+
+3. **Verify Success**
+   - Check `reviews/` directory for generated markdown files
+   - Verify content quality (not errors)
+   - Confirm `[CLI]` indicator in output
+
+### 🔧 Troubleshooting Reference
+- **Build issues:** See "Troubleshooting" section above
+- **Auth issues:** Check credentials file exists and is not expired
+- **Docker issues:** Ensure native Docker (not Desktop) is used
+
+---
+
+**Ready to test in Ubuntu VM! 🚀**
+
+**All code committed and ready for testing on proper Ubuntu environment.**
