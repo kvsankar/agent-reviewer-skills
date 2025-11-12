@@ -1,344 +1,247 @@
-# Agentic Code Review Tool
+# Claude Code Skills Review Tool
 
-Automated code review tool that uses Claude Code skills to review GitHub repositories and generate comprehensive markdown reports.
+AI-powered code review using Claude with specialized review skills. No API keys needed - uses your Claude Code subscription.
 
-**Two modes:**
-- **Standard Mode**: Fast, predictable, works with all providers (Claude, OpenAI, Gemini)
-- **Agentic Mode**: AI explores repo with bash tools (container required, Claude only)
+## Quick Start
 
-**Two authentication options for Claude:**
-- **API Key**: Use `ANTHROPIC_API_KEY` (get from console.anthropic.com)
-- **Claude CLI**: Use your Claude Code subscription (no API key needed) - see [CLAUDE-CLI.md](./CLAUDE-CLI.md)
+```bash
+# One command to review any repository
+./review-cli.py \
+  --repo https://github.com/simonw/datasette \
+  --reviewer python \
+  --use-claude-cli
+```
 
-## 🎯 Quick Start
+## Features
+
+- ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth
+- ✅ **Zero Setup** - Python wrapper handles everything automatically
+- ✅ **Multiple Reviewers** - Run 6+ specialized reviewers in parallel
+- ✅ **Fresh Context** - Each reviewer gets independent analysis
+- ✅ **Agentic Mode** - Claude explores repositories with bash tools
+- ✅ **Containerized** - Safe Docker environment for all operations
+- ✅ **Volume Mounts** - No rebuilds needed for code changes
+
+## Installation
 
 ### Prerequisites
 
-- **Python 3.8+**
-- **Git** installed and in PATH
-- **uv** package manager ([installation](https://github.com/astral-sh/uv))
-- **API Key** for your chosen provider:
-  - **Claude**: https://console.anthropic.com/
-  - **OpenAI**: https://platform.openai.com/api-keys
-  - **Gemini**: https://makersuite.google.com/
+- Docker and Docker Compose
+- Claude Code (for CLI mode - recommended)
 
-### Installation
+### Setup
 
 ```bash
-# 1. Navigate to review-tool directory
-cd review-tool
+git clone <repository-url>
+cd claude-skills/review-tool
 
-# 2. Set your API key (choose one)
-export ANTHROPIC_API_KEY='your-api-key-here'  # For Claude
-export OPENAI_API_KEY='your-api-key-here'     # For OpenAI
-export GOOGLE_API_KEY='your-api-key-here'     # For Gemini
-
-# 3. Install dependencies with uv (choose your provider)
-uv pip install python-dotenv pyyaml anthropic        # For Claude
-uv pip install python-dotenv pyyaml openai           # For OpenAI
-uv pip install python-dotenv pyyaml google-generativeai  # For Gemini
-
-# Note: pyyaml is required for tag support
-
-# Done! No virtual environment needed with uv
+# That's it! The wrapper handles the rest
+./review-cli.py --repo <URL> --reviewer python --use-claude-cli
 ```
 
-### Basic Usage
+## Usage
 
-The tool displays the provider and version when running:
-```
-[+] Using Claude (claude-sonnet-4-20250514) [anthropic v0.40.0]
-```
+### Basic Review
 
 ```bash
-# Review a Django project with Claude (default)
-uv run review.py \
+./review-cli.py \
   --repo https://github.com/django/django \
   --reviewer django-reviewer \
-  --provider claude
-
-# Review with OpenAI GPT-4
-uv run review.py \
-  --repo https://github.com/django/django \
-  --reviewer django-reviewer \
-  --provider openai \
-  --model gpt-4
-
-# Multiple reviewers at once with Gemini
-uv run review.py \
-  --repo https://github.com/user/project \
-  --reviewer django-reviewer \
-  --reviewer security-privacy-reviewer \
-  --provider gemini
-
-# Custom output directory and keep the cloned repo
-uv run review.py \
-  --repo https://github.com/user/project \
-  --reviewer refactoring-reviewer \
-  --provider claude \
-  --output-dir my-reviews \
-  --keep-repo
+  --use-claude-cli
 ```
 
-## 📋 Available Reviewers
-
-| Reviewer | File Patterns | Best For |
-|----------|---------------|----------|
-| `agile-requirements-reviewer` | `*.md`, `requirements.txt`, `docs/*.md` | Documentation, requirements |
-| `django-reviewer` | `*.py`, `models.py`, `views.py`, `settings/*.py` | Django projects |
-| `format-refactoring-reviewer` | `*.py` | Python style issues |
-| `functional-javascript-reviewer` | `*.js`, `*.jsx`, `*.ts`, `*.tsx` | JS/TS projects |
-| `functional-python-reviewer` | `*.py` | Python FP patterns |
-| `python-test-reviewer` | `test_*.py`, `tests/*.py` | Python tests |
-| `refactoring-reviewer` | `*.py` | Python refactoring |
-| `security-privacy-reviewer` | `*.py`, `*.js`, `*.ts`, `*.java`, `*.go` | Security audits |
-| `zen-of-python-reviewer` | `*.py` | Pythonic code style |
-
-## 🏷️ Reviewer Tags
-
-Use tags to run multiple related reviewers at once. Each reviewer runs with fresh context.
-
-**Tags are defined in `tags.yaml` - customize them for your needs!**
-
-| Tag | Reviewers | Use Case |
-|-----|-----------|----------|
-| `python` | 6 Python reviewers | Complete Python review (refactoring, FP, style, tests, security) |
-| `quality` | 3 quality reviewers | Code quality and best practices |
-| `django` | 4 reviewers | Django application review (Django, refactoring, security, tests) |
-| `security` / `privacy` | 1 reviewer | Security and privacy audit |
-| `functional` / `fp` | 2 FP reviewers | Functional programming patterns |
-| `testing` / `tests` | 1 reviewer | Test quality review |
-| `javascript` / `js` | 1 reviewer | JavaScript/TypeScript functional patterns |
-| `requirements` / `docs` | 1 reviewer | Requirements and documentation |
-| `complete` / `all` | All 9 reviewers | Exhaustive review |
-
-**Examples:**
-```bash
-# All Python reviewers
-uv run review.py --repo URL --reviewer python --provider claude
-
-# Django + quality checks
-uv run review.py --repo URL --reviewer django --reviewer quality --provider claude
-
-# Complete review with all reviewers
-uv run review.py --repo URL --reviewer complete --provider claude
-```
-
-**Customize tags:** Edit `tags.yaml` to create your own combinations. See [TAGS.md](./TAGS.md) for complete guide.
-
-## 🤖 Agentic Mode (Advanced)
-
-Enable AI to explore repositories dynamically with bash tools - more thorough but requires Docker.
+### Multiple Reviewers with Tags
 
 ```bash
-# Build container
-docker build -f review-tool/Dockerfile -t claude-reviewer .
-
-# Run agentic review
-docker run --rm \
-  -v $(pwd)/review-tool/reviews:/app/reviews \
-  -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \
-  claude-reviewer \
-  --repo https://github.com/django/django \
+# 'python' expands to 6 reviewers
+./review-cli.py \
+  --repo https://github.com/pallets/flask \
   --reviewer python \
-  --agentic
+  --use-claude-cli
 ```
 
-**Or use docker-compose:**
-```bash
-cd review-tool
-docker-compose build
-docker-compose run --rm reviewer --repo URL --reviewer python --agentic
-```
-
-**Agentic vs Standard:**
-- **Agentic**: AI explores with ls/cat/grep (~2-5 min, $1-5, Claude only, container required)
-- **Standard**: Fixed files sent to AI (~30 sec, $0.33, all providers, runs anywhere)
-
-See [AGENTIC.md](./AGENTIC.md) for complete guide.
-
-## 💡 Usage Examples
-
-### Example 1: Django Security & Performance Review
+### Agentic Mode (Deep Analysis)
 
 ```bash
-uv run review.py \
-  --repo https://github.com/django/django \
-  --reviewer django-reviewer \
-  --reviewer security-privacy-reviewer \
-  --provider claude
-```
-
-### Example 2: Python Code Quality Assessment with OpenAI
-
-```bash
-uv run review.py \
-  --repo https://github.com/psf/requests \
-  --reviewer refactoring-reviewer \
-  --reviewer zen-of-python-reviewer \
-  --reviewer python-test-reviewer \
-  --provider openai \
-  --model gpt-4
-```
-
-### Example 3: JavaScript Functional Patterns with Gemini
-
-```bash
-uv run review.py \
-  --repo https://github.com/user/react-app \
-  --reviewer functional-javascript-reviewer \
-  --provider gemini
-```
-
-### Example 4: Requirements Review
-
-```bash
-uv run review.py \
-  --repo https://github.com/user/specs \
-  --reviewer agile-requirements-reviewer \
-  --provider claude
-```
-
-### Example 5: Complete Python Review with Tags
-
-```bash
-# Use the 'python' tag to run all 5 Python reviewers
-uv run review.py \
-  --repo https://github.com/psf/requests \
+./review-cli.py \
+  --repo https://github.com/user/repo \
   --reviewer python \
-  --provider claude
-
-# Generates 5 separate reports with fresh context for each
+  --agentic \
+  --use-claude-cli
 ```
 
-### Example 6: Django Full Stack Review
+### Specific Model
 
 ```bash
-# Combine Django and quality tags
-uv run review.py \
-  --repo https://github.com/user/django-app \
+./review-cli.py \
+  --repo https://github.com/user/repo \
   --reviewer django \
-  --reviewer quality \
-  --provider claude
-
-# Expands to 5 reviewers: django, security, refactoring, zen-of-python, format-refactoring
+  --model claude-opus-4-20250514 \
+  --use-claude-cli
 ```
 
-### Example 7: Compare Providers on Same Repository
+## Available Reviewers
+
+### Individual Reviewers
+
+| Reviewer | Focus Area |
+|----------|------------|
+| `agile-requirements-reviewer` | Requirements, user stories, specifications |
+| `django-reviewer` | Django production readiness |
+| `format-refactoring-reviewer` | Python code style and formatting |
+| `functional-javascript-reviewer` | JavaScript functional patterns |
+| `functional-python-reviewer` | Python functional programming |
+| `python-test-reviewer` | Test quality and coverage |
+| `refactoring-reviewer` | General Python refactoring |
+| `security-privacy-reviewer` | Security and privacy issues |
+| `zen-of-python-reviewer` | Zen of Python principles |
+
+### Tags (Multiple Reviewers)
+
+| Tag | Expands To |
+|-----|------------|
+| `python` | All 6 Python reviewers |
+| `javascript` | All JavaScript reviewers |
+| `security` | Security-focused reviewers |
+| `django` | Django-specific reviewers |
+
+**Customize tags:** Edit `tags.yaml` to create your own combinations.
+
+## Authentication
+
+### Option 1: Claude CLI (Recommended)
+
+Uses your Claude Code subscription - no API keys needed.
 
 ```bash
-# Run with Claude
-uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --provider claude
+# Authenticate once
+claude login
 
-# Run with OpenAI
-uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --provider openai --model gpt-4
-
-# Run with Gemini
-uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --provider gemini
-
-# Compare the three generated reports!
+# Use with --use-claude-cli flag
+./review-cli.py --repo URL --reviewer NAME --use-claude-cli
 ```
 
-## 📊 Output
+### Option 2: API Key
 
-Reports are generated as markdown files in the `reviews/` directory (default):
+```bash
+# Set environment variable
+export ANTHROPIC_API_KEY='sk-ant-your-key-here'
+
+# Run without --use-claude-cli flag
+./review-cli.py --repo URL --reviewer NAME
+```
+
+## What Gets Reviewed
+
+- **Files:** 50 most recently modified files matching reviewer patterns
+- **Analysis:** Full file contents (up to 500 lines per file)
+- **Output:** Structured markdown with examples and recommendations
+
+## Output Format
+
+Reviews are saved to `reviews/` directory:
 
 ```
 reviews/
-├── django-django-django-reviewer-claude-20250112_143022.md
-├── django-django-security-privacy-reviewer-claude-20250112_143525.md
-├── psf-requests-refactoring-reviewer-openai-20250112_144018.md
-└── user-repo-django-reviewer-gemini-20250112_144530.md
+├── simonw-datasette-refactoring-reviewer-claude-20251112_084305.md
+├── simonw-datasette-security-privacy-reviewer-claude-20251112_084815.md
+└── ...
 ```
 
-**Filename format:** `{user}-{repo}-{reviewer}-{provider}-{timestamp}.md`
+Each review includes:
+- Executive summary
+- Strengths identified
+- Issues with severity levels
+- Code examples (before/after)
+- Specific recommendations
 
-Each report includes:
-- **Repository metadata** (URL, date, reviewer, provider)
-- **Critical issues** with mnemonic IDs (e.g., SEC-SQL, PERF-N+1)
-- **Before/after code examples**
-- **Explanations** of why issues matter
-- **Best practice** recommendations
+## Command-Line Options
 
-## ⚙️ Command Line Options
+### Python Wrapper (`review-cli.py`)
 
 ```
-usage: review.py [-h] --repo REPO --reviewer REVIEWER
-                 [--provider {claude,openai,gemini}] [--model MODEL]
-                 [--output-dir OUTPUT_DIR] [--keep-repo]
-
-required arguments:
-  --repo REPO           GitHub repository URL to review
-  --reviewer REVIEWER   Reviewer(s) or tag(s) to use (can specify multiple times)
-                        Tags are defined in tags.yaml and can be customized
-                        See TAGS.md for details
-
-optional arguments:
-  --provider PROVIDER   AI provider: claude, openai, or gemini (default: claude)
-  --model MODEL         Model to use (provider-specific, uses defaults if not specified)
-                        - Claude: claude-sonnet-4-20250514 (default), claude-opus-4-20250514
-                        - OpenAI: gpt-4-turbo-preview (default), gpt-4, gpt-3.5-turbo
-                        - Gemini: gemini-pro (default), gemini-1.5-pro
-  --output-dir DIR      Output directory for reports (default: reviews)
-  --keep-repo           Keep cloned repository after review
-  -h, --help            Show help message
+--repo REPO              Repository URL (required)
+--reviewer REVIEWER      Reviewer or tag (can specify multiple)
+--model MODEL            Claude model (sonnet-4 or opus-4)
+--output-dir DIR         Output directory (default: reviews)
+--keep-repo              Keep cloned repository
+--agentic                Enable agentic mode
+--use-claude-cli         Use Claude CLI auth (recommended)
+--skip-checks            Skip prerequisite checks
 ```
 
-## 🔧 How It Works
+### Docker Direct (`docker-compose`)
 
-1. **Clone Repository** - Creates temp dir, clones repo with `--depth 1`
-2. **Discover Files** - Finds files matching reviewer patterns
-3. **Load Skill** - Loads skill guidelines from `../[reviewer]/SKILL.md`
-4. **Prepare Context** - Formats code files (max 50 files, 500 lines each)
-5. **Call AI Provider** - Sends skill + code to chosen provider (Claude/OpenAI/Gemini)
-6. **Generate Report** - Saves markdown report with provider and timestamp
-7. **Cleanup** - Removes temp directory (unless `--keep-repo`)
-
-## 🤖 AI Providers
-
-The tool supports three AI providers with different strengths:
-
-| Provider | Best For | Cost | Models |
-|----------|----------|------|--------|
-| **Claude** | Code analysis, security, Django | $$$ | Sonnet 4, Opus 4 |
-| **OpenAI** | General purpose, fast | $$ | GPT-4, GPT-4 Turbo |
-| **Gemini** | Cost-effective, high volume | $ | Gemini Pro, 1.5 Pro |
-
-For detailed provider comparison and setup, see [PROVIDERS.md](./PROVIDERS.md).
-
-## 🎓 Use Cases
-
-### Learning from Popular Projects
 ```bash
-uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --provider claude
+docker-compose run --rm reviewer \
+  --repo URL \
+  --reviewer NAME \
+  --use-claude-cli
 ```
 
-### Security Audits
+## Advanced Usage
+
+### Agentic Mode
+
+Agentic mode allows Claude to explore the repository with bash tools for deeper analysis:
+
 ```bash
-uv run review.py --repo https://github.com/yourorg/api --reviewer security-privacy-reviewer --provider claude --output-dir audits
+./review-cli.py \
+  --repo https://github.com/large/codebase \
+  --reviewer python \
+  --agentic \
+  --use-claude-cli
 ```
 
-### Pre-Production Review
-```bash
-uv run review.py --repo https://github.com/yourorg/app \
-  --reviewer django-reviewer \
-  --reviewer security-privacy-reviewer \
-  --provider claude \
-  --output-dir pre-prod
+**Features:**
+- Claude explores repository structure autonomously
+- Searches for patterns across unlimited files
+- More thorough analysis for complex codebases
+- Costs more (~$1-5 per review)
+
+**Requirements:**
+- Must run in container (safety)
+- Only supports batch mode (50 files per reviewer)
+
+**Comparison:**
+
+| Feature | Batch Mode | Agentic Mode |
+|---------|------------|--------------|
+| Speed | ~30 seconds | ~2-5 minutes |
+| Cost | $0.15-0.50 | $1-5 |
+| Files | 50 max | Unlimited |
+| Thoroughness | Good | Excellent |
+| Container | Optional | Required |
+
+### Custom Tags
+
+Create custom reviewer combinations in `tags.yaml`:
+
+```yaml
+backend:
+  description: "Backend-focused reviews"
+  reviewers:
+    - django-reviewer
+    - security-privacy-reviewer
+    - python-test-reviewer
+
+frontend:
+  description: "Frontend-focused reviews"
+  reviewers:
+    - functional-javascript-reviewer
 ```
 
-### Cost-Effective Batch Reviews
+Then use:
+
 ```bash
-# Use Gemini for high-volume reviews
-uv run review.py --repo https://github.com/user/repo --reviewer refactoring-reviewer --provider gemini
+./review-cli.py --repo URL --reviewer backend --use-claude-cli
 ```
 
 ### CI/CD Integration
 
-**.github/workflows/code-review.yml:**
 ```yaml
+# GitHub Actions
 name: Code Review
-
 on: [pull_request]
 
 jobs:
@@ -347,205 +250,272 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-
-      - name: Run Review
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Run Code Review
         run: |
           cd review-tool
-          uv pip install python-dotenv anthropic
-          uv run review.py --repo ${{ github.repository }} --reviewer django-reviewer --provider claude
-
-      - name: Upload Reports
-        uses: actions/upload-artifact@v3
-        with:
-          name: review-reports
-          path: review-tool/reviews/
+          ./review-cli.py \
+            --repo ${{ github.repository }} \
+            --reviewer security \
+            --use-claude-cli
 ```
 
-## 💰 Cost Considerations
-
-Approximate cost per review varies by provider:
-
-| Provider | Input (50K tokens) | Output (12K tokens) | Total per Review |
-|----------|-------------------|---------------------|------------------|
-| **Claude Sonnet 4** | $0.15 | $0.18 | **~$0.33** |
-| **OpenAI GPT-4** | $0.50 | $0.36 | **~$0.86** |
-| **Gemini Pro** | $0.025 | $0.018 | **~$0.04** |
-
-**Tips to reduce costs:**
-- Start with Gemini for initial assessment
-- Use Claude or GPT-4 for final production review
-- Review smaller repositories
-- Use fewer reviewers per run
-- Focus on specific file patterns
-- Review incrementally (only changed files)
-
-## 🔒 Security & Privacy
-
-**API Keys:**
-- Store in environment variables (never commit)
-- Use `.env` file locally (git-ignored)
-- Use secrets management in CI/CD
-- Each provider has different API key formats
-
-**Code Privacy:**
-- Code sent to chosen AI provider's API for review
-- Only review public repos or code you can share
-- Check organization policies for sensitive code
-- Review provider data retention policies
-
-**Data Retention:**
-- Cloned repo deleted after review (unless `--keep-repo`)
-- Review reports saved locally only in `reviews/` directory
-
-## 🛠️ Customization
-
-### Adjust File/Line Limits
-
-Edit `review.py`:
-
-```python
-# Line 126 - Change max files
-files = self.discover_files(repo_path, reviewer_config['patterns'], max_files=100)
-
-# Line 151 - Change max lines per file
-def read_file_content(self, file_path: Path, max_lines: int = 1000):
-```
-
-### Add Custom Reviewer
-
-1. Create skill in parent directory: `../my-custom-reviewer/SKILL.md`
-2. Add to `REVIEWERS` dict in `review.py`:
-
-```python
-REVIEWERS = {
-    'my-custom-reviewer': {
-        'patterns': ['*.py', '*.js'],
-        'description': 'My custom focus',
-    },
-    # ... existing reviewers
-}
-```
-
-### Change Model
-
-Use the `--model` flag:
+### Batch Reviews
 
 ```bash
-# Claude Opus (most capable)
-uv run review.py --repo URL --reviewer REVIEWER --provider claude --model claude-opus-4-20250514
-
-# GPT-4 Turbo
-uv run review.py --repo URL --reviewer REVIEWER --provider openai --model gpt-4-turbo-preview
-
-# Gemini 1.5 Pro
-uv run review.py --repo URL --reviewer REVIEWER --provider gemini --model gemini-1.5-pro
+# Review multiple repositories
+for repo in django flask fastapi; do
+  ./review-cli.py \
+    --repo https://github.com/user/$repo \
+    --reviewer python \
+    --use-claude-cli
+done
 ```
 
-## 🐛 Troubleshooting
+## Architecture
 
-### "API key not set"
+### How It Works
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Python Wrapper (review-cli.py)                         │
+│  - Validates arguments                                  │
+│  - Checks prerequisites                                 │
+│  - Sets up .env with UID/GID                           │
+│  - Runs Docker container                                │
+└──────────────────┬──────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────┐
+│  Docker Container                                        │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  review.py (Main Script)                       │    │
+│  │  - Clones repository                           │    │
+│  │  - Loads reviewer skills from /skills          │    │
+│  │  - Discovers matching files                    │    │
+│  │  - Calls Claude for each reviewer              │    │
+│  │  - Generates markdown reports                  │    │
+│  └────────────────────────────────────────────────┘    │
+│                                                          │
+│  Mounted Volumes:                                       │
+│  - ~/.claude → /home/appuser/.claude (credentials)     │
+│  - ../skills → /skills (reviewer templates)             │
+│  - ./reviews → /app/reviews (output)                   │
+│  - ./review.py → /app/review.py (live code)           │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Permission Handling
+
+The container runs as your user (not root) to avoid permission issues:
+
+1. `test-setup.sh` creates `.env` with `USER_ID` and `GROUP_ID`
+2. Docker uses these values: `user: "${USER_ID}:${GROUP_ID}"`
+3. Files created in container are owned by you on the host
+
+## Troubleshooting
+
+### "Docker not found"
+
 ```bash
-# For Claude
-export ANTHROPIC_API_KEY='sk-ant-...'
-
-# For OpenAI
-export OPENAI_API_KEY='sk-...'
-
-# For Gemini
-export GOOGLE_API_KEY='your-key'
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 ```
 
-Or use a `.env` file (copy from `.env.example`).
+### "Claude credentials not found"
 
-### "Provider package not installed"
 ```bash
-# Claude
-uv pip install anthropic
-
-# OpenAI
-uv pip install openai
-
-# Gemini
-uv pip install google-generativeai
+claude login
+ls ~/.claude/.credentials.json  # Should exist
 ```
 
-### "Git is not installed"
-Install git:
-- **Mac**: `brew install git`
-- **Ubuntu**: `sudo apt-get install git`
-- **Windows**: https://git-scm.com/download/win
+### "Permission denied" on reviews
 
-### "uv not found"
-Install uv:
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+# Fix ownership
+sudo chown -R $(id -u):$(id -g) reviews
+
+# Or delete and recreate
+sudo rm -rf reviews
 ```
 
-### "Skill not found"
-Make sure you're running from the `review-tool/` directory and skills exist in parent directory `../[reviewer-name]/`
+### Build fails
 
-### "No files found"
-Repository may not contain files matching the reviewer's patterns. Try a different reviewer or check repository structure.
-
-## 📚 Project Structure
-
-```
-claude-skills-public/
-├── agile-requirements-reviewer/
-│   └── SKILL.md
-├── django-reviewer/
-│   └── SKILL.md
-├── ... (other skills)
-└── review-tool/               ← You are here
-    ├── review.py              ← Main script
-    ├── pyproject.toml         ← uv project config
-    ├── README.md              ← This file
-    ├── .env.example           ← API key template
-    ├── Dockerfile             ← Container for agentic mode
-    ├── docker-compose.yml     ← Docker Compose configuration
-    ├── .dockerignore          ← Docker build exclusions
-    ├── PROVIDERS.md           ← Provider comparison guide
-    ├── QUICKSTART.md          ← Quick start guide
-    ├── TAGS.md                ← Reviewer tags reference
-    ├── AGENTIC.md             ← Agentic mode guide
-    ├── tags.yaml              ← Reviewer tags configuration
-    ├── examples/              ← Example reports
-    └── reviews/               ← Generated reports (git-ignored)
+```bash
+# Rebuild from scratch
+docker-compose build --no-cache
 ```
 
-## 🤝 Contributing
+### "Agentic mode requires container"
 
-Ideas for contributions:
-- Add filtering by directory/file patterns
-- Add support for private repositories
-- Add incremental review (only changed files)
-- Add HTML report output
-- Add batch review mode (multiple repos)
-- Add support for Azure OpenAI, AWS Bedrock
-- Add local model support (Ollama, LM Studio)
+Agentic mode must run in Docker for safety. Use the Python wrapper:
 
-## 📄 License
+```bash
+./review-cli.py --repo URL --reviewer NAME --agentic --use-claude-cli
+```
 
-Same license as Claude Code Skills Collection (parent directory).
+## Examples
 
-## 📞 Resources
+### Review Django Project
 
-- **Quick Start Guide**: [QUICKSTART.md](./QUICKSTART.md)
-- **Provider Guide**: [PROVIDERS.md](./PROVIDERS.md)
-- **Reviewer Tags**: [TAGS.md](./TAGS.md)
-- **Agentic Mode**: [AGENTIC.md](./AGENTIC.md)
-- **Claude CLI Auth**: [CLAUDE-CLI.md](./CLAUDE-CLI.md)
-- **Parent README**: [../README.md](../README.md)
-- **Skills Documentation**: [../*-reviewer/README.md](../)
-- **Claude API Docs**: https://docs.anthropic.com/
-- **OpenAI API Docs**: https://platform.openai.com/docs
-- **Gemini API Docs**: https://ai.google.dev/docs
-- **uv Documentation**: https://github.com/astral-sh/uv
+```bash
+./review-cli.py \
+  --repo https://github.com/django/django \
+  --reviewer django \
+  --use-claude-cli
+```
+
+**Output:** 1 comprehensive Django production readiness review
+
+### Review Simon Willison's Datasette
+
+```bash
+./review-cli.py \
+  --repo https://github.com/simonw/datasette \
+  --reviewer python \
+  --use-claude-cli
+```
+
+**Output:** 6 independent reviews covering:
+- Refactoring opportunities
+- Functional programming patterns
+- Zen of Python alignment
+- Code formatting
+- Test quality
+- Security & privacy
+
+### Security Audit
+
+```bash
+./review-cli.py \
+  --repo https://github.com/your-org/app \
+  --reviewer security-privacy-reviewer \
+  --use-claude-cli
+```
+
+**Output:** Security-focused review with vulnerability analysis
+
+## Cost Estimates
+
+Using Claude CLI (your Claude Code subscription):
+
+| Review Type | Estimated Cost |
+|-------------|----------------|
+| Single reviewer | $0.15 - $0.50 |
+| Python tag (6 reviewers) | $1.00 - $3.00 |
+| Agentic mode | $1.00 - $5.00 |
+
+Costs vary by:
+- Repository size
+- Number of files
+- Model choice (Sonnet vs Opus)
+
+## Development
+
+### Project Structure
+
+```
+review-tool/
+├── review-cli.py          # Python wrapper (user-facing)
+├── review.py              # Core review logic (runs in container)
+├── test-setup.sh          # Setup verification script
+├── Dockerfile             # Container definition
+├── docker-compose.yml     # Docker orchestration
+├── tags.yaml              # Reviewer tag definitions
+├── reviews/               # Output directory
+└── README.md              # This file
+```
+
+### Adding Custom Reviewers
+
+1. Create a new skill directory in parent:
+   ```bash
+   mkdir ../my-custom-reviewer
+   ```
+
+2. Add `SKILL.md` with review template:
+   ```markdown
+   ---
+   name: My Custom Reviewer
+   description: Reviews for X, Y, Z
+   ---
+
+   You are an expert code reviewer focusing on...
+   ```
+
+3. Add to `review.py` REVIEWERS dict:
+   ```python
+   'my-custom-reviewer': {
+       'patterns': ['*.py', '*.js'],
+       'description': 'Custom review focus',
+   }
+   ```
+
+4. Use it:
+   ```bash
+   ./review-cli.py --repo URL --reviewer my-custom-reviewer --use-claude-cli
+   ```
+
+### Volume-Based Development
+
+No rebuilds needed! Code is mounted as volumes:
+
+```yaml
+volumes:
+  - ./review.py:/app/review.py:ro     # Edit locally, runs in container
+  - ./tags.yaml:/app/tags.yaml:ro     # Edit tag definitions
+  - ..:/skills:ro                      # All reviewer skills
+```
+
+Just edit files and run - changes take effect immediately.
+
+## FAQ
+
+**Q: Do I need an API key?**
+A: No! Use `--use-claude-cli` with your Claude Code subscription (recommended).
+
+**Q: How many files are reviewed?**
+A: 50 most recently modified files matching the reviewer's patterns.
+
+**Q: Can I review private repositories?**
+A: Yes, if you can clone them (SSH keys, credentials, etc.).
+
+**Q: What's the difference between reviewers and tags?**
+A: Reviewers are individual (e.g., `django-reviewer`). Tags expand to multiple reviewers (e.g., `python` → 6 reviewers).
+
+**Q: Can I run multiple reviews in parallel?**
+A: Yes! Each reviewer runs sequentially with fresh context, preventing cross-contamination.
+
+**Q: What models are supported?**
+A: Claude Sonnet 4 (default, fast) and Claude Opus 4 (most capable).
+
+**Q: Is my code sent to the cloud?**
+A: Yes, to Claude's API for review. Use appropriate repositories.
+
+**Q: Can I customize the output format?**
+A: Yes, edit the skill templates in `../*/SKILL.md` files.
+
+## Support
+
+- **Test setup:** `./test-setup.sh`
+- **Documentation:** This README
+- **Implementation notes:** `STATUS.md`
+- **Help:** `./review-cli.py --help`
+
+## License
+
+See parent repository for license information.
+
+## Credits
+
+Built with:
+- [Claude](https://claude.ai) - AI code review
+- [Docker](https://docker.com) - Containerization
+- [Python](https://python.org) - Scripting
+- [Claude Code](https://claude.com/claude-code) - CLI authentication
 
 ---
 
-**Generate comprehensive AI-powered code reviews with Claude, OpenAI, or Gemini.**
+**Ready to review!**
+
+```bash
+./review-cli.py --repo <YOUR_REPO_URL> --reviewer python --use-claude-cli
+```

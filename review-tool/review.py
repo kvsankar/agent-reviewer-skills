@@ -2,12 +2,12 @@
 """
 Agentic Code Review Tool
 
-Uses AI coding agents (Claude, OpenAI, Gemini) with Claude Code skills to review
-GitHub repositories and generate detailed markdown reports.
+Uses Claude AI with Claude Code skills to review GitHub repositories
+and generate detailed markdown reports.
 
 Usage:
-    uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --provider claude
-    uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --provider openai --model gpt-4
+    uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --use-claude-cli
+    uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --model claude-opus-4-20250514
 """
 
 import argparse
@@ -190,6 +190,91 @@ def expand_reviewer_tags(reviewer_inputs: List[str], tags_dict: Dict[str, List[s
     return expanded
 
 
+def list_reviewers_and_tags(tags_file: Optional[Path] = None, skills_dir: Optional[Path] = None) -> None:
+    """
+    List all available reviewers and tags with descriptions.
+
+    Args:
+        tags_file: Path to tags.yaml file. If None, uses default location.
+        skills_dir: Path to skills directory. If None, uses parent of script directory.
+    """
+    if tags_file is None:
+        tags_file = Path(__file__).parent / 'tags.yaml'
+
+    if skills_dir is None:
+        # Check /skills (Docker) or parent directory (local)
+        if Path('/skills').exists():
+            skills_dir = Path('/skills')
+        else:
+            skills_dir = Path(__file__).parent.parent
+
+    print("=" * 70)
+    print("AVAILABLE REVIEWERS AND TAGS")
+    print("=" * 70)
+
+    # Load tags
+    tags_data = {}
+    if tags_file.exists():
+        try:
+            with open(tags_file, 'r', encoding='utf-8') as f:
+                tags_data = yaml.safe_load(f) or {}
+        except Exception as e:
+            print(f"Warning: Could not load tags file: {e}\n")
+
+    # Discover individual reviewers
+    print("\nINDIVIDUAL REVIEWERS:")
+    print("-" * 70)
+
+    reviewers = []
+    if skills_dir.exists():
+        for item in sorted(skills_dir.iterdir()):
+            if item.is_dir() and (item / 'SKILL.md').exists():
+                reviewers.append(item.name)
+
+    if reviewers:
+        for reviewer in reviewers:
+            print(f"  • {reviewer}")
+        print(f"\nTotal: {len(reviewers)} reviewer(s)")
+    else:
+        print("  No reviewers found")
+
+    # Display tags
+    if tags_data:
+        print("\n" + "=" * 70)
+        print("TAGS (shortcuts for multiple reviewers):")
+        print("-" * 70)
+
+        for tag_name in sorted(tags_data.keys()):
+            tag_config = tags_data[tag_name]
+            if isinstance(tag_config, dict):
+                description = tag_config.get('description', 'No description')
+                reviewers_list = tag_config.get('reviewers', [])
+
+                print(f"\n  {tag_name}")
+                print(f"    Description: {description}")
+                print(f"    Reviewers ({len(reviewers_list)}):")
+                for rev in reviewers_list:
+                    print(f"      - {rev}")
+
+        print(f"\n{'-' * 70}")
+        print(f"Total: {len(tags_data)} tag(s)")
+    else:
+        print("\n" + "=" * 70)
+        print("No tags file found or tags file is empty")
+
+    print("\n" + "=" * 70)
+    print("\nUSAGE:")
+    print("  --reviewer REVIEWER    Use individual reviewer")
+    print("  --reviewer TAG         Use tag (expands to multiple reviewers)")
+    print("  --reviewer TAG1 --reviewer TAG2   Combine multiple tags/reviewers")
+    print("\nEXAMPLES:")
+    print("  --reviewer python                    # All Python reviewers (tag)")
+    print("  --reviewer django                    # Django-specific reviewers (tag)")
+    print("  --reviewer refactoring-reviewer      # Single reviewer")
+    print("  --reviewer security --reviewer tests # Combine tags")
+    print("=" * 70)
+
+
 class AIProvider(ABC):
     """Base class for AI providers"""
 
@@ -221,11 +306,12 @@ class ClaudeProvider(AIProvider):
             try:
                 result = subprocess.run(['claude', '--version'], capture_output=True, text=True, timeout=5)
                 if result.returncode != 0:
-                    raise RuntimeError("Claude CLI not found or not working")
+                    raise RuntimeError(f"Claude CLI not found or not working. Return code: {result.returncode}, stderr: {result.stderr}")
                 print(f"[+] Using Claude CLI (version: {result.stdout.strip()})")
-            except (FileNotFoundError, subprocess.TimeoutExpired):
+            except (FileNotFoundError, subprocess.TimeoutExpired) as e:
                 raise RuntimeError(
-                    "Claude CLI not found. Install with: npm install -g @anthropic-ai/claude-cli\n"
+                    f"Claude CLI not found: {e}\n"
+                    "Install with: npm install -g @anthropic-ai/claude-code\n"
                     "Or use API key mode instead."
                 )
 
@@ -369,33 +455,21 @@ Focus on the most critical issues first.
         try:
             print("  [CLI] Calling Claude via CLI...")
 
-            # Write prompt to temp file (CLI reads from file or stdin)
-            import tempfile
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-                f.write(review_prompt)
-                prompt_file = f.name
+            # Call claude CLI with --print mode (non-interactive) and pass prompt via stdin
+            # Use --dangerously-skip-permissions since we're in a safe container environment
+            # Disable tools (empty string = no tools)
+            result = subprocess.run(
+                ['claude', '--print', '--model', self.model, '--tools', '', '--dangerously-skip-permissions'],
+                input=review_prompt,
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
 
-            try:
-                # Call claude CLI
-                result = subprocess.run(
-                    ['claude', 'chat', '--file', prompt_file, '--model', self.model],
-                    capture_output=True,
-                    text=True,
-                    timeout=300  # 5 minute timeout
-                )
+            if result.returncode != 0:
+                return f"Error calling Claude CLI: {result.stderr}"
 
-                if result.returncode != 0:
-                    return f"Error calling Claude CLI: {result.stderr}"
-
-                return result.stdout
-
-            finally:
-                # Cleanup temp file
-                import os
-                try:
-                    os.unlink(prompt_file)
-                except:
-                    pass
+            return result.stdout
 
         except subprocess.TimeoutExpired:
             return "Error: Claude CLI call timed out after 5 minutes"
@@ -440,143 +514,17 @@ Focus on the most critical issues first.
             return f"Error during Claude review: {str(e)}"
 
 
-class OpenAIProvider(AIProvider):
-    """OpenAI provider (GPT-4, GPT-4 Turbo, etc.)"""
-
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4-turbo-preview"):
-        try:
-            from openai import OpenAI
-        except ImportError:
-            raise ImportError("openai package not installed. Run: uv pip install openai")
-
-        self.api_key = api_key or os.environ.get('OPENAI_API_KEY')
-        if not self.api_key:
-            raise ValueError("OPENAI_API_KEY not set")
-
-        self.model = model
-        self.package_version = get_package_version('openai')
-        self.client = OpenAI(api_key=self.api_key)
-
-    @property
-    def name(self) -> str:
-        return f"OpenAI ({self.model}) [openai v{self.package_version}]"
-
-    def review(self, skill_prompt: str, code_context: str, repo_url: str) -> str:
-        review_prompt = f"""
-{skill_prompt}
-
----
-
-You are reviewing the repository: {repo_url}
-
-Please perform a comprehensive review of the following code files using the guidelines from the skill above.
-
-{code_context}
-
-Provide a detailed review following the structured markdown format specified in the skill.
-Focus on the most critical issues first.
-"""
-
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert code reviewer using established best practices and security guidelines."
-                    },
-                    {
-                        "role": "user",
-                        "content": review_prompt
-                    }
-                ],
-                max_tokens=16000,
-                temperature=0
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            return f"Error during OpenAI review: {str(e)}"
-
-
-class GeminiProvider(AIProvider):
-    """Google Gemini provider"""
-
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-pro"):
-        try:
-            import google.generativeai as genai
-        except ImportError:
-            raise ImportError("google-generativeai package not installed. Run: uv pip install google-generativeai")
-
-        self.api_key = api_key or os.environ.get('GOOGLE_API_KEY') or os.environ.get('GEMINI_API_KEY')
-        if not self.api_key:
-            raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY not set")
-
-        self.model_name = model
-        self.package_version = get_package_version('google-generativeai')
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel(model)
-
-    @property
-    def name(self) -> str:
-        return f"Gemini ({self.model_name}) [google-generativeai v{self.package_version}]"
-
-    def review(self, skill_prompt: str, code_context: str, repo_url: str) -> str:
-        review_prompt = f"""
-{skill_prompt}
-
----
-
-You are reviewing the repository: {repo_url}
-
-Please perform a comprehensive review of the following code files using the guidelines from the skill above.
-
-{code_context}
-
-Provide a detailed review following the structured markdown format specified in the skill.
-Focus on the most critical issues first.
-"""
-
-        try:
-            response = self.model.generate_content(
-                review_prompt,
-                generation_config={
-                    'temperature': 0,
-                    'max_output_tokens': 16000,
-                }
-            )
-            return response.text
-        except Exception as e:
-            return f"Error during Gemini review: {str(e)}"
-
-
-def create_provider(provider_name: str, model: Optional[str] = None, agentic: bool = False, repo_path: Path = None, use_cli: bool = False) -> AIProvider:
-    """Factory function to create AI provider"""
-    providers = {
-        'claude': ClaudeProvider,
-        'openai': OpenAIProvider,
-        'gemini': GeminiProvider,
-    }
-
-    if provider_name not in providers:
-        raise ValueError(f"Unknown provider: {provider_name}. Choose from: {', '.join(providers.keys())}")
-
-    provider_class = providers[provider_name]
+def create_provider(model: Optional[str] = None, agentic: bool = False, repo_path: Path = None, use_cli: bool = False) -> AIProvider:
+    """Factory function to create Claude provider"""
+    provider_class = ClaudeProvider
 
     try:
-        # Claude supports agentic mode and CLI authentication
-        if provider_name == 'claude':
-            if model:
-                return provider_class(model=model, agentic=agentic, repo_path=repo_path, use_cli=use_cli)
-            else:
-                return provider_class(agentic=agentic, repo_path=repo_path, use_cli=use_cli)
+        if model:
+            return provider_class(model=model, agentic=agentic, repo_path=repo_path, use_cli=use_cli)
         else:
-            # Other providers don't support agentic mode or CLI yet
-            if model:
-                return provider_class(model=model)
-            else:
-                return provider_class()
+            return provider_class(agentic=agentic, repo_path=repo_path, use_cli=use_cli)
     except (ImportError, ValueError, RuntimeError) as e:
-        print(f"\n[-] Error initializing {provider_name} provider: {e}")
+        print(f"\n[-] Error initializing Claude provider: {e}")
         sys.exit(1)
 
 
@@ -585,8 +533,11 @@ class ReviewAgent:
 
     def __init__(self, provider: AIProvider):
         self.provider = provider
-        # Skills are in parent directory
-        self.skills_dir = Path(__file__).parent.parent
+        # Skills directory: check /skills (Docker volume) or parent directory (local)
+        if Path('/skills').exists():
+            self.skills_dir = Path('/skills')
+        else:
+            self.skills_dir = Path(__file__).parent.parent
 
     def load_skill(self, reviewer_name: str) -> str:
         """Load skill prompt from SKILL.md"""
@@ -747,10 +698,9 @@ def main():
         description='Agentic code review tool using AI providers with Claude Code skills',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Available providers:
-  - claude: Anthropic Claude (claude-sonnet-4, claude-opus-4)
-  - openai: OpenAI GPT models (gpt-4, gpt-4-turbo-preview, gpt-3.5-turbo)
-  - gemini: Google Gemini (gemini-pro, gemini-pro-vision)
+Available models:
+  - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
+  - claude-opus-4-20250514: Most capable model for complex tasks
 
 Available reviewers:
   - agile-requirements-reviewer: Requirements and user stories
@@ -764,45 +714,37 @@ Available reviewers:
   - zen-of-python-reviewer: Zen of Python principles
 
 Examples:
-  # Using Claude
-  uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --provider claude
+  # Using Claude CLI (recommended - no API key needed)
+  uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --use-claude-cli
 
-  # Using OpenAI
-  uv run review.py --repo https://github.com/user/repo --reviewer security-privacy-reviewer --provider openai --model gpt-4
+  # Using API key
+  uv run review.py --repo https://github.com/user/repo --reviewer security-privacy-reviewer
 
-  # Using Gemini
-  uv run review.py --repo https://github.com/user/repo --reviewer refactoring-reviewer --provider gemini
+  # Specific model
+  uv run review.py --repo https://github.com/user/repo --reviewer refactoring-reviewer --model claude-opus-4-20250514
 
   # Multiple reviewers
-  uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --reviewer security-privacy-reviewer --provider claude
+  uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --reviewer security-privacy-reviewer --use-claude-cli
         """
     )
 
     parser.add_argument(
         '--repo',
-        required=True,
         help='GitHub repository URL to review'
     )
 
     parser.add_argument(
         '--reviewer',
         action='append',
-        required=True,
         help='Reviewer(s) or tag(s) to use (can specify multiple times). '
              'Tags are defined in tags.yaml and can be customized. '
-             'See TAGS.md for details.'
+             'Use --list-reviewers to see all available options.'
     )
 
-    parser.add_argument(
-        '--provider',
-        default='claude',
-        choices=['claude', 'openai', 'gemini'],
-        help='AI provider to use (default: claude)'
-    )
 
     parser.add_argument(
         '--model',
-        help='Specific model to use (provider-dependent)'
+        help='Claude model to use (e.g., claude-sonnet-4-20250514, claude-opus-4-20250514)'
     )
 
     parser.add_argument(
@@ -834,14 +776,27 @@ Examples:
              'Requires Claude CLI installed and credentials mounted in container.'
     )
 
+    parser.add_argument(
+        '--list-reviewers',
+        action='store_true',
+        help='List all available reviewers and tags, then exit'
+    )
+
     args = parser.parse_args()
+
+    # Handle --list-reviewers flag
+    if args.list_reviewers:
+        list_reviewers_and_tags()
+        sys.exit(0)
+
+    # Validate required arguments (only needed when not listing)
+    if not args.repo:
+        parser.error('--repo is required (use --list-reviewers to see available reviewers)')
+    if not args.reviewer:
+        parser.error('--reviewer is required (use --list-reviewers to see available reviewers)')
 
     # Check CLI mode requirements
     if args.use_claude_cli:
-        if args.provider != 'claude':
-            print(f"[-] Error: --use-claude-cli only works with Claude provider")
-            print(f"    You specified: {args.provider}")
-            sys.exit(1)
 
         # Check if credentials file exists (will be mounted in container)
         creds_file = Path.home() / '.claude' / '.credentials.json'
@@ -866,25 +821,15 @@ Examples:
             print("=" * 60)
             print("[!] WARNING: Agentic Mode Requires Container")
             print("=" * 60)
-            print("Agentic mode enables AI to run bash commands with full access.")
+            print("Agentic mode enables Claude to run bash commands with full access.")
             print("This is potentially dangerous outside a container.")
             print("")
             print("Please run in Docker:")
             print("  docker-compose run --rm reviewer --repo URL --reviewer TAG --agentic")
             print("")
-            print("Or build and run manually:")
-            print("  docker build -f review-tool/Dockerfile -t claude-reviewer .")
-            print("  docker run --rm -v $(pwd)/reviews:/app/reviews \\")
-            print("    -e ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY \\")
-            print("    claude-reviewer --repo URL --reviewer TAG --agentic")
+            print("Or use the Python wrapper:")
+            print("  ./review-cli.py --repo URL --reviewer TAG --agentic --use-claude-cli")
             print("=" * 60)
-            sys.exit(1)
-
-        # Check provider is Claude (only supported for now)
-        if args.provider != 'claude':
-            print(f"[-] Error: Agentic mode currently only supports Claude provider")
-            print(f"    You specified: {args.provider}")
-            print(f"    Future versions will support OpenAI and Gemini")
             sys.exit(1)
 
         print("[+] Agentic mode enabled (containerized environment detected)")
@@ -924,7 +869,7 @@ Examples:
         print(f"Expanded to {len(expanded_reviewers)} reviewer(s): {', '.join(expanded_reviewers)}")
     else:
         print(f"Reviewers: {', '.join(args.reviewer)}")
-    print(f"AI Provider: {args.provider}")
+    print(f"AI Provider: claude")
     if args.model:
         print(f"Model: {args.model}")
     print(f"Output: {args.output_dir}")
@@ -941,7 +886,7 @@ Examples:
             sys.exit(1)
 
         # Create provider (after cloning, so we have repo_path for agentic mode)
-        provider = create_provider(args.provider, args.model, args.agentic, temp_dir, args.use_claude_cli)
+        provider = create_provider(args.model, args.agentic, temp_dir, args.use_claude_cli)
         print(f"\n[+] Using {provider.name}")
 
         # Initialize review agent with provider
@@ -960,7 +905,7 @@ Examples:
                 review_content,
                 args.repo,
                 args.output_dir,
-                args.provider
+                'claude'
             )
 
             print(f"[+] Review complete: {report_path}")

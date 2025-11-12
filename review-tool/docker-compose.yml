@@ -19,32 +19,36 @@ version: '3.8'
 services:
   reviewer:
     build:
-      context: ..  # Build from parent directory (claude-skills-public/)
+      context: ..  # Build from parent directory (claude-skills/)
       dockerfile: review-tool/Dockerfile
     image: claude-reviewer:latest
     container_name: claude-reviewer
 
-    # Mount reviews directory for output
+    # Run as host user to match file permissions
+    # Use USER_ID/GROUP_ID from .env file (avoid UID readonly issue)
+    user: "${USER_ID:-1000}:${GROUP_ID:-1000}"
+
+    # Mount reviews directory for output (inherits host user permissions)
     volumes:
       - ./reviews:/app/reviews
 
       # Mount Claude Code credentials for CLI authentication (read-only)
       # This allows using your Claude Code subscription without API key
-      - ~/.claude/.credentials.json:/root/.claude/.credentials.json:ro
+      - ~/.claude/.credentials.json:/home/appuser/.claude/.credentials.json:ro
 
-      # Optional: Mount custom tags.yaml
-      # - ./tags.yaml:/app/tags.yaml:ro
+      # Mount all skills from parent directory (read-only)
+      # This eliminates need to rebuild when skills change
+      - ..:/skills:ro
+
+      # Mount the review tool code itself (for development)
+      # This allows code changes without rebuilding
+      - ./review.py:/app/review.py:ro
+      - ./tags.yaml:/app/tags.yaml:ro
 
     # Environment variables (or use .env file)
     environment:
-      # Claude (default provider for agentic mode)
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-
-      # OpenAI (future support)
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-
-      # Gemini (future support)
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # Claude API key (optional if using --use-claude-cli)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
 
       # Container detection (already set in Dockerfile)
       - IN_CONTAINER=true

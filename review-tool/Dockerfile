@@ -31,28 +31,34 @@ RUN apt-get update && apt-get install -y \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Claude CLI (for OAuth authentication)
-RUN npm install -g @anthropic-ai/claude-cli
+# Install Claude Code CLI (provides 'claude' command for OAuth authentication)
+RUN npm install -g @anthropic-ai/claude-code
 
 # Install uv package manager
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.cargo/bin:${PATH}"
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Set working directory
 WORKDIR /app
 
-# Copy all skills from parent directory (build context is claude-skills-public/)
-COPY *-reviewer/ /skills/
-
-# Copy review tool
+# Copy review tool only (skills will be mounted as volume)
 COPY review-tool/ /app/
 
 # Install Python dependencies
-# Install all providers by default in the container
-RUN uv pip install --system python-dotenv pyyaml anthropic openai google-generativeai
+# Only Claude provider is supported
+RUN uv pip install --system python-dotenv pyyaml anthropic
 
-# Create directories
-RUN mkdir -p /app/reviews /root/.claude
+# Create app directory - reviews will be mounted as volume
+RUN mkdir -p /app
+
+# Create a non-root user to run the application
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /home/appuser/.claude && \
+    chown -R appuser:appuser /home/appuser/.claude
+USER appuser
+
+# Reviews directory will be mounted from host with correct permissions
+WORKDIR /app
 
 # Set entrypoint to review script
 ENTRYPOINT ["python", "review.py"]
