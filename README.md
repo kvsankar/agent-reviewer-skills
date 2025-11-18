@@ -126,6 +126,21 @@ Reviews Python tests for quality and suggests multiple testing strategies.
 
 ---
 
+### 10. **OpenAPI Reviewer**
+Reviews OpenAPI/Swagger specifications for completeness, consistency, and API design best practices.
+
+**Focus Areas:**
+- OpenAPI 3.x structure and format
+- RESTful path naming and HTTP methods
+- Schema definitions and validation
+- Security schemes and requirements
+- Complete documentation with examples
+- Response definitions and error handling
+
+**Use when:** Reviewing API specifications, validating OpenAPI/Swagger files, or checking REST API design
+
+---
+
 ## 🚀 Installation
 
 ### Automated Installation (Recommended)
@@ -142,8 +157,8 @@ python install_skills.py
 ```
 
 This will automatically:
-- Install all 9 skills to `~/.claude/skills/` on Windows
-- Install all 9 skills to `~/.claude/skills/` on WSL (if available)
+- Install all 10 skills to `~/.claude/skills/` on Windows
+- Install all 10 skills to `~/.claude/skills/` on WSL (if available)
 - Handle existing installations by replacing them with the latest version
 
 ### Manual Installation
@@ -212,6 +227,7 @@ Once installed, skills activate automatically based on keywords in your requests
 "Review these tests for quality"
 "Fix this line length issue through refactoring"
 "Apply functional patterns to this JavaScript"
+"Review this OpenAPI specification"
 ```
 
 Or invoke directly:
@@ -220,6 +236,7 @@ Or invoke directly:
 "Use the django-reviewer on this Django project"
 "Use the security reviewer on this file"
 "Apply functional Python patterns here"
+"Use the openapi-reviewer on this API spec"
 ```
 
 ## 🤖 Agentic Review Tool
@@ -248,7 +265,7 @@ uv run review.py --repo https://github.com/user/project \
 **Features:**
 - 🔍 Automatically discovers and reviews relevant files
 - 📊 Generates detailed markdown reports with findings
-- 🎯 Supports all 9 reviewers
+- 🎯 Supports all 10 reviewers
 - ⚡ Can run multiple reviewers in one command
 - 🛡️ Includes security, performance, and quality analysis
 - 📦 Uses uv for fast, modern Python management
@@ -288,6 +305,8 @@ Based on established resources:
 - **Django Documentation** - Official Django patterns, security, and best practices
 - **Two Scoops of Django** - Django community best practices
 - **Django REST Framework** - API design and implementation
+- **OpenAPI Specification 3.x** - Official OpenAPI/Swagger standards
+- **REST API Design Principles** - Industry best practices for RESTful APIs
 - **IEEE 830, BABOK** - Requirements engineering standards
 - **INVEST Criteria** - Agile user story best practices
 - **PEP 8, PEP 20** - Python style and philosophy
@@ -360,6 +379,8 @@ These skills build upon the work of many contributors to software engineering be
 - **Django Software Foundation** - Django documentation, security guidelines, best practices
 - **Two Scoops of Django authors** - Django community standards and patterns
 - **Django REST Framework contributors** - API design best practices
+- **OpenAPI Initiative** - OpenAPI Specification 3.x standards
+- **REST API Design Community** - RESTful API best practices (Google, Microsoft, Zalando, PayPal)
 - **IEEE & IIBA** - Requirements engineering standards (IEEE 830, BABOK)
 - **Agile Community** - INVEST criteria and agile requirements practices
 - **Python Software Foundation** - PEP 8, PEP 20, Python documentation

@@ -50,6 +50,9 @@ htmlcov/
 *.tmp
 *.bak
 .cache/
+WIP.md
+test-openapi.yaml
+claude-conversations-temp/
 
 # OS
 Thumbs.db
