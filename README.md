@@ -2,7 +2,7 @@
 
 A curated collection of high-quality Claude Code skills for code review, requirements analysis, and software quality. Each skill focuses on a specific aspect of software development, providing detailed analysis and actionable recommendations.
 
-## 🎯 Available Skills (17 Total)
+## 🎯 Available Skills (18 Total)
 
 ### JavaScript/TypeScript Skills
 
@@ -99,9 +99,26 @@ Reviews JavaScript/TypeScript code for performance optimization opportunities.
 
 ---
 
+#### 7. **React Reviewer**
+Reviews React code for best practices, patterns, performance, accessibility, and common pitfalls.
+
+**Focus Areas:**
+- Component design (single responsibility, composition, props)
+- Hooks (dependencies, cleanup, custom hooks, rules)
+- State management (lifting state, colocation, derived state)
+- Rendering optimization (memoization, keys, lazy loading)
+- Patterns (compound components, render props, portals)
+- Accessibility (ARIA, keyboard navigation, focus management)
+- Error handling (error boundaries, async errors)
+- Testing (behavior testing, Testing Library queries)
+
+**Use when:** Reviewing React components, debugging hooks, improving performance, or ensuring accessibility
+
+---
+
 ### Python Skills
 
-#### 7. **Agile Requirements Reviewer**
+#### 8. **Agile Requirements Reviewer**
 Reviews software specifications, user stories, and use cases using agile requirements best practices.
 
 **Focus Areas:**
@@ -115,7 +132,7 @@ Reviews software specifications, user stories, and use cases using agile require
 
 ---
 
-#### 8. **Django Reviewer**
+#### 9. **Django Reviewer**
 Comprehensive production readiness review for Django projects focusing on security, performance, and scalability.
 
 **Focus Areas:**
@@ -131,7 +148,7 @@ Comprehensive production readiness review for Django projects focusing on securi
 
 ---
 
-#### 9. **Functional Python Reviewer**
+#### 10. **Functional Python Reviewer**
 Reviews Python code for functional programming patterns and best practices.
 
 **Focus Areas:**
@@ -144,7 +161,7 @@ Reviews Python code for functional programming patterns and best practices.
 
 ---
 
-#### 10. **Python Performance Reviewer**
+#### 11. **Python Performance Reviewer**
 Reviews Python code for performance optimization opportunities.
 
 **Focus Areas:**
@@ -161,7 +178,7 @@ Reviews Python code for performance optimization opportunities.
 
 ---
 
-#### 11. **Security & Privacy Reviewer**
+#### 12. **Security & Privacy Reviewer**
 Comprehensive security and privacy review covering OWASP Top 10 and data protection.
 
 **Focus Areas:**
@@ -174,7 +191,7 @@ Comprehensive security and privacy review covering OWASP Top 10 and data protect
 
 ---
 
-#### 12. **Python Refactoring Reviewer**
+#### 13. **Python Refactoring Reviewer**
 Identifies refactoring opportunities to improve code quality, readability, and maintainability.
 
 **Focus Areas:**
@@ -187,7 +204,7 @@ Identifies refactoring opportunities to improve code quality, readability, and m
 
 ---
 
-#### 13. **Zen of Python Reviewer**
+#### 14. **Zen of Python Reviewer**
 Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 **Focus Areas:**
@@ -200,7 +217,7 @@ Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 ---
 
-#### 14. **Python Format/Style Refactoring Reviewer**
+#### 15. **Python Format/Style Refactoring Reviewer**
 Solves formatting and style issues through refactoring, not just line wrapping.
 
 **Focus Areas:**
@@ -215,7 +232,7 @@ Solves formatting and style issues through refactoring, not just line wrapping.
 
 ### General/Cross-Language Skills
 
-#### 15. **Python Test Reviewer**
+#### 16. **Python Test Reviewer**
 Reviews Python tests for quality and suggests multiple testing strategies.
 
 **Focus Areas:**
@@ -228,7 +245,7 @@ Reviews Python tests for quality and suggests multiple testing strategies.
 
 ---
 
-#### 16. **OpenAPI Reviewer**
+#### 17. **OpenAPI Reviewer**
 Reviews OpenAPI/Swagger specifications for completeness, consistency, and API design best practices.
 
 **Focus Areas:**
@@ -243,7 +260,7 @@ Reviews OpenAPI/Swagger specifications for completeness, consistency, and API de
 
 ---
 
-#### 17. **Database Schema Reviewer**
+#### 18. **Database Schema Reviewer**
 Reviews relational database schemas for normalization, performance, and data integrity.
 
 **Focus Areas:**
@@ -274,8 +291,8 @@ python install_skills.py
 ```
 
 This will automatically:
-- Install all 17 skills to `~/.claude/skills/` on Windows
-- Install all 17 skills to `~/.claude/skills/` on WSL (if available)
+- Install all 18 skills to `~/.claude/skills/` on Windows
+- Install all 18 skills to `~/.claude/skills/` on WSL (if available)
 - Handle existing installations by replacing them with the latest version
 
 ### Manual Installation
@@ -342,6 +359,8 @@ Once installed, skills activate automatically based on keywords in your requests
 "Review this code for XSS vulnerabilities"
 "Check if this Node.js code is secure"
 "This React component is slow - optimize it"
+"Review this React component for best practices"
+"Check my React hooks for issues"
 "Find performance bottlenecks in this function"
 "Review this user story for quality"
 "Review this Django view for security and performance"
@@ -365,6 +384,7 @@ Or invoke directly:
 "Use the functional-javascript-reviewer on this module"
 "Use the javascript-security-privacy-reviewer on this API"
 "Use the javascript-performance-reviewer on this slow component"
+"Use the react-reviewer on this React component"
 "Use the agile-requirements-reviewer on this specification"
 "Use the django-reviewer on this Django project"
 "Use the python-performance-reviewer on this slow code"
@@ -400,7 +420,7 @@ uv run review.py --repo https://github.com/user/project \
 **Features:**
 - 🔍 Automatically discovers and reviews relevant files
 - 📊 Generates detailed markdown reports with findings
-- 🎯 Supports all 17 reviewers
+- 🎯 Supports all 18 reviewers
 - ⚡ Can run multiple reviewers in one command
 - 🛡️ Includes security, performance, and quality analysis
 - 📦 Uses uv for fast, modern Python management
