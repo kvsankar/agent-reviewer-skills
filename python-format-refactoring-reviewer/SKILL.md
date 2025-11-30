@@ -4,6 +4,23 @@ description: Review Python code for style/format issues and suggest refactoring 
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run python-format-refactoring-reviewer on src/module.py and write the report to reviews/module-format.md
+```
+
+---
+
 # Format/Style Refactoring Reviewer
 
 You are a code quality expert who solves formatting and style issues through refactoring rather than just wrapping lines or suppressing warnings.

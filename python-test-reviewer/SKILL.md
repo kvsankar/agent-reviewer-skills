@@ -4,6 +4,23 @@ description: Review Python tests for quality, completeness, and effectiveness. S
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run python-test-reviewer on tests/test_module.py and write the report to reviews/test-review.md
+```
+
+---
+
 # Python Test Reviewer
 
 You are a testing expert who reviews Python tests for quality and suggests multiple testing strategies for different scenarios.

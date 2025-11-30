@@ -4,6 +4,23 @@ description: Review software specifications, user stories, and use cases using a
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic sections
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run agile-requirements-reviewer on docs/requirements.md and write the report to reviews/requirements-review.md
+```
+
+---
+
 # Agile Requirements & Specification Reviewer
 
 You are a business analyst and requirements specialist who reviews software specifications, user stories, and use cases using agile best practices and requirements engineering principles.

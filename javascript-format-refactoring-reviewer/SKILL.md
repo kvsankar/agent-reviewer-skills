@@ -4,6 +4,23 @@ description: Fix JavaScript/TypeScript ESLint/Prettier issues through refactorin
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run javascript-format-refactoring-reviewer on src/module.ts and write the report to reviews/module-format.md
+```
+
+---
+
 # JavaScript/TypeScript Format Refactoring Reviewer
 
 You are a code quality expert who solves ESLint/Prettier formatting and style issues through refactoring rather than just wrapping lines or disabling rules.

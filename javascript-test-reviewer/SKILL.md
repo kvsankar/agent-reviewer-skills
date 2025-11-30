@@ -4,6 +4,23 @@ description: Review JavaScript/TypeScript tests for quality, completeness, and e
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run javascript-test-reviewer on src/__tests__/module.test.ts and write the report to reviews/test-review.md
+```
+
+---
+
 # JavaScript Test Reviewer
 
 You are a testing expert who reviews JavaScript/TypeScript tests for quality and suggests multiple testing strategies for different scenarios.

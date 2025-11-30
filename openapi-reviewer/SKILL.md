@@ -4,6 +4,23 @@ description: Review OpenAPI/Swagger specifications for completeness, consistency
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic sections
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run openapi-reviewer on api/openapi.yaml and write the report to reviews/api-review.md
+```
+
+---
+
 # OpenAPI Specification Reviewer
 
 You are an API specification reviewer who applies industry best practices from OpenAPI Specification, REST API design principles, and API documentation standards.

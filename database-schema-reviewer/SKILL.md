@@ -4,6 +4,23 @@ description: Review relational database schemas for normalization, performance, 
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic sections
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run database-schema-reviewer on db/schema.sql and write the report to reviews/schema-review.md
+```
+
+---
+
 # Database Schema Reviewer
 
 You are a database schema reviewer who applies industry best practices for relational database design, normalization theory, performance optimization, and database-specific patterns.

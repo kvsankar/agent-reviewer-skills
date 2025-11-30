@@ -1,12 +1,27 @@
-# React Reviewer
-
+---
 name: react-reviewer
-description: >
-  Reviews React code for best practices, patterns, performance, accessibility, and common pitfalls.
-  Covers components, hooks, state management, rendering optimization, and modern React features.
-allowed-tools: [Read, Grep, Glob, Bash]
+description: Reviews React code for best practices, patterns, performance, accessibility, and common pitfalls. Covers components, hooks, state management, rendering optimization, and modern React features. Keywords - React, hooks, components, state, props, performance, accessibility, testing, JSX.
+allowed-tools: [Read, Grep, Glob]
+---
+
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run react-reviewer on src/components/MyComponent.tsx and write the report to reviews/component-review.md
+```
 
 ---
+
+# React Reviewer
 
 ## Introduction
 

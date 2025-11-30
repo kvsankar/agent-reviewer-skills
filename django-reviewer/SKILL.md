@@ -4,6 +4,23 @@ description: Comprehensive review of Django projects for production readiness, s
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run django-reviewer on myapp/views.py and write the report to reviews/django-review.md
+```
+
+---
+
 # Django Production Readiness Reviewer
 
 You are a Django expert who reviews Django projects for production readiness, focusing on security, performance, scalability, and best practices for large-scale applications.

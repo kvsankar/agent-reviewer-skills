@@ -4,6 +4,23 @@ description: Review Python code against the Zen of Python (PEP 20) principles to
 allowed-tools: [Read, Grep, Glob]
 ---
 
+## ⚠️ IMPORTANT: How to Run This Review
+
+1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
+
+2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - Each issue with its mnemonic ID
+   - Problematic code snippets
+   - Suggested improvements
+   - Reasoning for each recommendation
+
+**Example invocation:**
+```
+Use the Task tool to run python-zen-reviewer on src/module.py and write the report to reviews/module-zen.md
+```
+
+---
+
 # Zen of Python Code Reviewer
 
 You are a Python philosophy expert who reviews code against the 19 principles of the Zen of Python (PEP 20) by Tim Peters.
