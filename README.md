@@ -51,7 +51,7 @@ Solves JavaScript/TypeScript formatting and style issues through refactoring, no
 
 ---
 
-#### 4. **Functional JavaScript Reviewer**
+#### 4. **JavaScript Functional Reviewer**
 Reviews JavaScript/TypeScript code using functional programming principles.
 
 **Focus Areas:**
@@ -148,7 +148,7 @@ Comprehensive production readiness review for Django projects focusing on securi
 
 ---
 
-#### 10. **Functional Python Reviewer**
+#### 10. **Python Functional Reviewer**
 Reviews Python code for functional programming patterns and best practices.
 
 **Focus Areas:**
@@ -178,8 +178,8 @@ Reviews Python code for performance optimization opportunities.
 
 ---
 
-#### 12. **Security & Privacy Reviewer**
-Comprehensive security and privacy review covering OWASP Top 10 and data protection.
+#### 12. **Python Security & Privacy Reviewer**
+Comprehensive Python security and privacy review covering OWASP Top 10 and data protection.
 
 **Focus Areas:**
 - Input validation and injection prevention
@@ -204,7 +204,7 @@ Identifies refactoring opportunities to improve code quality, readability, and m
 
 ---
 
-#### 14. **Zen of Python Reviewer**
+#### 14. **Python Zen Reviewer**
 Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 **Focus Areas:**
@@ -328,8 +328,8 @@ Then update your project's `.claude/settings.json`:
 {
   "skills": [
     {
-      "name": "security-privacy-reviewer",
-      "path": "./.claude/skills/claude-skills-public/security-privacy-reviewer"
+      "name": "python-security-privacy-reviewer",
+      "path": "./.claude/skills/claude-skills-public/python-security-privacy-reviewer"
     }
   ]
 }
@@ -341,10 +341,10 @@ To install just one skill:
 
 ```bash
 # Copy single skill to personal directory
-cp -r functional-python-reviewer ~/.claude/skills/
+cp -r python-functional-reviewer ~/.claude/skills/
 
 # Or to project directory
-cp -r functional-python-reviewer .claude/skills/
+cp -r python-functional-reviewer .claude/skills/
 ```
 
 ## 💡 How to Use
@@ -381,15 +381,17 @@ Or invoke directly:
 "Use the javascript-test-reviewer on these tests"
 "Use the javascript-refactoring-reviewer on this code"
 "Use the javascript-format-refactoring-reviewer on this file"
-"Use the functional-javascript-reviewer on this module"
+"Use the javascript-functional-reviewer on this module"
 "Use the javascript-security-privacy-reviewer on this API"
 "Use the javascript-performance-reviewer on this slow component"
 "Use the react-reviewer on this React component"
 "Use the agile-requirements-reviewer on this specification"
 "Use the django-reviewer on this Django project"
 "Use the python-performance-reviewer on this slow code"
-"Use the security-privacy-reviewer on this file"
+"Use the python-security-privacy-reviewer on this file"
 "Use the python-refactoring-reviewer on this code"
+"Use the python-zen-reviewer on this code"
+"Use the python-functional-reviewer on this module"
 "Use the openapi-reviewer on this API spec"
 "Use the database-schema-reviewer on this DDL script"
 ```
@@ -413,7 +415,7 @@ uv run review.py --repo https://github.com/django/django --reviewer django-revie
 # Multiple reviewers at once
 uv run review.py --repo https://github.com/user/project \
   --reviewer django-reviewer \
-  --reviewer security-privacy-reviewer \
+  --reviewer python-security-privacy-reviewer \
   --output-dir reports
 ```
 
