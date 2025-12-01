@@ -16,7 +16,7 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 - ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth (default)
 - ✅ **Zero Setup** - Python wrapper handles everything automatically
 - ✅ **Agentic Mode** - Claude explores repositories with bash tools (default)
-- ✅ **Multiple Reviewers** - Run 6+ specialized reviewers in parallel
+- ✅ **Multiple Reviewers** - Run 18 specialized reviewers in parallel
 - ✅ **Fresh Context** - Each reviewer gets independent analysis
 - ✅ **Containerized** - Safe Docker environment for all operations
 - ✅ **Volume Mounts** - No rebuilds needed for code changes
@@ -56,10 +56,15 @@ claude login
 ### Multiple Reviewers with Tags
 
 ```bash
-# 'python' expands to 6 reviewers
+# 'python' expands to 7 reviewers
 ./review-cli.py \
   --repo https://github.com/pallets/flask \
   --reviewer python
+
+# 'javascript' expands to 7 reviewers (including react-reviewer)
+./review-cli.py \
+  --repo https://github.com/maciekt07/TodoApp \
+  --reviewer javascript
 ```
 
 ### Batch Mode (Small Repos)
@@ -95,28 +100,52 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 
 ## Available Reviewers
 
-### Individual Reviewers
+### Python Reviewers (7)
+
+| Reviewer | Focus Area |
+|----------|------------|
+| `python-refactoring-reviewer` | Code smells, SOLID principles, design patterns |
+| `python-functional-reviewer` | Functional programming patterns |
+| `python-zen-reviewer` | Zen of Python (PEP 20) principles |
+| `python-format-refactoring-reviewer` | Style issues through refactoring |
+| `python-test-reviewer` | Test quality and coverage |
+| `python-security-privacy-reviewer` | Security vulnerabilities, OWASP, GDPR |
+| `python-performance-reviewer` | Performance optimization |
+
+### JavaScript/TypeScript Reviewers (7)
+
+| Reviewer | Focus Area |
+|----------|------------|
+| `javascript-test-reviewer` | Jest, Vitest, Testing Library |
+| `javascript-refactoring-reviewer` | Code smells, SOLID, modern patterns |
+| `javascript-format-refactoring-reviewer` | ESLint/Prettier through refactoring |
+| `javascript-functional-reviewer` | Functional programming patterns |
+| `javascript-security-privacy-reviewer` | XSS, CSRF, OWASP, GDPR |
+| `javascript-performance-reviewer` | Performance optimization |
+| `react-reviewer` | React best practices, hooks, patterns |
+
+### Other Reviewers (4)
 
 | Reviewer | Focus Area |
 |----------|------------|
 | `agile-requirements-reviewer` | Requirements, user stories, specifications |
 | `django-reviewer` | Django production readiness |
-| `format-refactoring-reviewer` | Python code style and formatting |
-| `functional-javascript-reviewer` | JavaScript functional patterns |
-| `functional-python-reviewer` | Python functional programming |
-| `python-test-reviewer` | Test quality and coverage |
-| `refactoring-reviewer` | General Python refactoring |
-| `security-privacy-reviewer` | Security and privacy issues |
-| `zen-of-python-reviewer` | Zen of Python principles |
+| `openapi-reviewer` | OpenAPI/Swagger specifications |
+| `database-schema-reviewer` | Database normalization, indexing |
 
 ### Tags (Multiple Reviewers)
 
 | Tag | Expands To |
 |-----|------------|
-| `python` | All 6 Python reviewers |
-| `javascript` | All JavaScript reviewers |
-| `security` | Security-focused reviewers |
-| `django` | Django-specific reviewers |
+| `python` | All 7 Python reviewers |
+| `javascript` / `js` | All 7 JavaScript reviewers |
+| `react` | React + JS refactoring, security, test reviewers |
+| `django` | Django + Python refactoring, security, test reviewers |
+| `security` | Python + JavaScript security reviewers |
+| `testing` / `tests` | Python + JavaScript test reviewers |
+| `functional` / `fp` | Python + JavaScript functional reviewers |
+| `quality` | All refactoring and format reviewers |
+| `complete` / `all` | All 18 reviewers |
 
 **Customize tags:** Edit `tags.yaml` to create your own combinations.
 
@@ -145,7 +174,6 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 - Claude explores repo with bash tools (ls, cat, grep)
 - Handles large repos well
 - More thorough analysis
-- Costs more (~$1-5 per review)
 
 ```bash
 # Default mode
@@ -157,7 +185,6 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 - Sends all files at once
 - Faster (~30 seconds)
 - May fail with "prompt too long" on large repos
-- Cheaper (~$0.15-0.50 per review)
 
 ```bash
 ./review-cli.py --repo URL --reviewer NAME --mode batch
@@ -252,7 +279,6 @@ Agentic mode (default) allows Claude to explore the repository with bash tools:
 | Feature | Batch Mode | Agentic Mode (Default) |
 |---------|------------|------------------------|
 | Speed | ~30 seconds | ~2-5 minutes |
-| Cost | $0.15-0.50 | $1-5 |
 | Files | 50 max | Unlimited |
 | Large repos | May fail | ✅ Works |
 | Thoroughness | Good | Excellent |
@@ -268,13 +294,15 @@ backend:
   description: "Backend-focused reviews"
   reviewers:
     - django-reviewer
-    - security-privacy-reviewer
+    - python-security-privacy-reviewer
     - python-test-reviewer
 
 frontend:
   description: "Frontend-focused reviews"
   reviewers:
-    - functional-javascript-reviewer
+    - react-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-test-reviewer
 ```
 
 Then use:
@@ -421,23 +449,34 @@ Use agentic mode (default) instead of batch mode:
   --reviewer python
 ```
 
-**Output:** 6 independent reviews covering:
+**Output:** 7 independent reviews covering:
 - Refactoring opportunities
 - Functional programming patterns
 - Zen of Python alignment
 - Code formatting
 - Test quality
 - Security & privacy
+- Performance optimization
 
 ### Security Audit
 
 ```bash
 ./review-cli.py \
   --repo https://github.com/your-org/app \
-  --reviewer security-privacy-reviewer
+  --reviewer security
 ```
 
-**Output:** Security-focused review with vulnerability analysis
+**Output:** Security-focused reviews (Python + JavaScript) with vulnerability analysis
+
+### React Application Review
+
+```bash
+./review-cli.py \
+  --repo https://github.com/maciekt07/TodoApp \
+  --reviewer react
+```
+
+**Output:** 4 reviews covering React patterns, refactoring, security, and testing
 
 ## Sample Reviews
 
@@ -465,25 +504,6 @@ All samples generated using default OAuth + Agentic mode. Each review demonstrat
 - Specific, actionable recommendations
 
 Browse `sample_reviews/` to see what reviews look like before running your own.
-
-## Cost Estimates
-
-Using OAuth (your Claude Code subscription):
-
-| Review Type | Agentic Mode | Batch Mode |
-|-------------|--------------|------------|
-| Single reviewer | $1 - $5 | $0.15 - $0.50 |
-| Python tag (6 reviewers) | $6 - $30 | $1 - $3 |
-
-Using API Key:
-- Same costs charged to your API account
-- More control over usage limits
-
-Costs vary by:
-- Repository size
-- Number of files
-- Model choice (Sonnet vs Opus)
-- Review mode (Agentic vs Batch)
 
 ## Development
 

@@ -17,76 +17,103 @@
 
 # Language-specific tags
 python:
-  description: Complete Python code review (refactoring, functional patterns, style, tests, security)
+  description: Complete Python code review (7 reviewers)
   reviewers:
-    - refactoring-reviewer
-    - functional-python-reviewer
-    - zen-of-python-reviewer
-    - format-refactoring-reviewer
+    - python-refactoring-reviewer
+    - python-functional-reviewer
+    - python-zen-reviewer
+    - python-format-refactoring-reviewer
     - python-test-reviewer
-    - security-privacy-reviewer
+    - python-security-privacy-reviewer
+    - python-performance-reviewer
 
 javascript:
-  description: JavaScript/TypeScript functional programming review
+  description: Complete JavaScript/TypeScript code review (7 reviewers)
   reviewers:
-    - functional-javascript-reviewer
+    - javascript-test-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-format-refactoring-reviewer
+    - javascript-functional-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-performance-reviewer
+    - react-reviewer
 
 js:
   description: Alias for javascript
   reviewers:
-    - functional-javascript-reviewer
+    - javascript-test-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-format-refactoring-reviewer
+    - javascript-functional-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-performance-reviewer
+    - react-reviewer
 
 # Quality and style
 quality:
   description: Code quality, style, and refactoring opportunities
   reviewers:
-    - refactoring-reviewer
-    - zen-of-python-reviewer
-    - format-refactoring-reviewer
+    - python-refactoring-reviewer
+    - python-zen-reviewer
+    - python-format-refactoring-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-format-refactoring-reviewer
 
 # Functional programming
 functional:
   description: Functional programming patterns for Python and JavaScript
   reviewers:
-    - functional-python-reviewer
-    - functional-javascript-reviewer
+    - python-functional-reviewer
+    - javascript-functional-reviewer
 
 fp:
   description: Alias for functional
   reviewers:
-    - functional-python-reviewer
-    - functional-javascript-reviewer
+    - python-functional-reviewer
+    - javascript-functional-reviewer
 
 # Security and privacy
 security:
   description: Security vulnerabilities and privacy issues
   reviewers:
-    - security-privacy-reviewer
+    - python-security-privacy-reviewer
+    - javascript-security-privacy-reviewer
 
 privacy:
   description: Alias for security
   reviewers:
-    - security-privacy-reviewer
+    - python-security-privacy-reviewer
+    - javascript-security-privacy-reviewer
 
 # Framework-specific
 django:
   description: Django best practices, performance, and security
   reviewers:
     - django-reviewer
-    - refactoring-reviewer
-    - security-privacy-reviewer
+    - python-refactoring-reviewer
+    - python-security-privacy-reviewer
     - python-test-reviewer
+
+react:
+  description: React best practices and patterns
+  reviewers:
+    - react-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-test-reviewer
 
 # Testing
 testing:
   description: Test quality, coverage, and patterns
   reviewers:
     - python-test-reviewer
+    - javascript-test-reviewer
 
 tests:
   description: Alias for testing
   reviewers:
     - python-test-reviewer
+    - javascript-test-reviewer
 
 # Documentation
 requirements:
@@ -101,27 +128,51 @@ docs:
 
 # Comprehensive
 complete:
-  description: All available reviewers (generates 9 reports)
+  description: All available reviewers (generates 18 reports)
   reviewers:
+    # Python reviewers
+    - python-refactoring-reviewer
+    - python-functional-reviewer
+    - python-zen-reviewer
+    - python-format-refactoring-reviewer
+    - python-test-reviewer
+    - python-security-privacy-reviewer
+    - python-performance-reviewer
+    # JavaScript reviewers
+    - javascript-test-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-format-refactoring-reviewer
+    - javascript-functional-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-performance-reviewer
+    - react-reviewer
+    # Other reviewers
     - agile-requirements-reviewer
     - django-reviewer
-    - format-refactoring-reviewer
-    - functional-javascript-reviewer
-    - functional-python-reviewer
-    - python-test-reviewer
-    - refactoring-reviewer
-    - security-privacy-reviewer
-    - zen-of-python-reviewer
+    - openapi-reviewer
+    - database-schema-reviewer
 
 all:
   description: Alias for complete
   reviewers:
+    # Python reviewers
+    - python-refactoring-reviewer
+    - python-functional-reviewer
+    - python-zen-reviewer
+    - python-format-refactoring-reviewer
+    - python-test-reviewer
+    - python-security-privacy-reviewer
+    - python-performance-reviewer
+    # JavaScript reviewers
+    - javascript-test-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-format-refactoring-reviewer
+    - javascript-functional-reviewer
+    - javascript-security-privacy-reviewer
+    - javascript-performance-reviewer
+    - react-reviewer
+    # Other reviewers
     - agile-requirements-reviewer
     - django-reviewer
-    - format-refactoring-reviewer
-    - functional-javascript-reviewer
-    - functional-python-reviewer
-    - python-test-reviewer
-    - refactoring-reviewer
-    - security-privacy-reviewer
-    - zen-of-python-reviewer
+    - openapi-reviewer
+    - database-schema-reviewer
