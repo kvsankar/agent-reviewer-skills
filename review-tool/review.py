@@ -68,6 +68,65 @@ def parse_github_url(repo_url: str) -> Tuple[str, str]:
 
 # Available reviewers and their file patterns
 REVIEWERS = {
+    # Python reviewers (7)
+    'python-refactoring-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code for refactoring opportunities',
+    },
+    'python-functional-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code for functional programming patterns',
+    },
+    'python-zen-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code against Zen of Python',
+    },
+    'python-format-refactoring-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code for style/format refactoring',
+    },
+    'python-test-reviewer': {
+        'patterns': ['test_*.py', '*_test.py', 'tests/*.py', 'tests/**/*.py'],
+        'description': 'Reviews Python tests for quality',
+    },
+    'python-security-privacy-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code for security and privacy issues',
+    },
+    'python-performance-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code for performance optimization',
+    },
+    # JavaScript/TypeScript reviewers (7)
+    'javascript-test-reviewer': {
+        'patterns': ['*.test.js', '*.test.ts', '*.test.jsx', '*.test.tsx', '*.spec.js', '*.spec.ts', '**/__tests__/*.js', '**/__tests__/*.ts'],
+        'description': 'Reviews JavaScript/TypeScript tests for quality',
+    },
+    'javascript-refactoring-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
+        'description': 'Reviews JavaScript/TypeScript for refactoring opportunities',
+    },
+    'javascript-format-refactoring-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
+        'description': 'Reviews JavaScript/TypeScript for style/format refactoring',
+    },
+    'javascript-functional-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
+        'description': 'Reviews JavaScript/TypeScript for functional patterns',
+    },
+    'javascript-security-privacy-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
+        'description': 'Reviews JavaScript/TypeScript for security and privacy issues',
+    },
+    'javascript-performance-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
+        'description': 'Reviews JavaScript/TypeScript for performance optimization',
+    },
+    'react-reviewer': {
+        'patterns': ['*.jsx', '*.tsx', '*.js', '*.ts'],
+        'description': 'Reviews React code for best practices and patterns',
+    },
+    # Other reviewers (4)
     'agile-requirements-reviewer': {
         'patterns': ['*.md', 'requirements.txt', 'REQUIREMENTS.md', 'stories/*.md', 'docs/*.md'],
         'description': 'Reviews requirements, user stories, and specifications',
@@ -76,33 +135,13 @@ REVIEWERS = {
         'patterns': ['*.py', 'settings/*.py', 'manage.py', '**/models.py', '**/views.py', '**/serializers.py', '**/urls.py', '**/forms.py', '**/admin.py'],
         'description': 'Reviews Django projects for production readiness',
     },
-    'format-refactoring-reviewer': {
-        'patterns': ['*.py'],
-        'description': 'Reviews Python code for style/format refactoring',
+    'openapi-reviewer': {
+        'patterns': ['*.yaml', '*.yml', '*.json', 'openapi.*', 'swagger.*'],
+        'description': 'Reviews OpenAPI/Swagger specifications',
     },
-    'functional-javascript-reviewer': {
-        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx'],
-        'description': 'Reviews JavaScript/TypeScript for functional patterns',
-    },
-    'functional-python-reviewer': {
-        'patterns': ['*.py'],
-        'description': 'Reviews Python code for functional programming patterns',
-    },
-    'python-test-reviewer': {
-        'patterns': ['test_*.py', '*_test.py', 'tests/*.py', 'tests/**/*.py'],
-        'description': 'Reviews Python tests for quality',
-    },
-    'refactoring-reviewer': {
-        'patterns': ['*.py'],
-        'description': 'Reviews Python code for refactoring opportunities',
-    },
-    'security-privacy-reviewer': {
-        'patterns': ['*.py', '*.js', '*.ts', '*.java', '*.go', '*.rb'],
-        'description': 'Reviews code for security and privacy issues',
-    },
-    'zen-of-python-reviewer': {
-        'patterns': ['*.py'],
-        'description': 'Reviews Python code against Zen of Python',
+    'database-schema-reviewer': {
+        'patterns': ['*.sql', 'schema.sql', 'migrations/*.sql', '**/migrations/*.py'],
+        'description': 'Reviews database schemas for normalization and performance',
     },
 }
 
@@ -747,26 +786,36 @@ Available models:
   - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
   - claude-opus-4-20250514: Most capable model for complex tasks
 
-Available reviewers:
-  - agile-requirements-reviewer: Requirements and user stories
-  - django-reviewer: Django production readiness
-  - format-refactoring-reviewer: Python style refactoring
-  - functional-javascript-reviewer: JavaScript functional patterns
-  - functional-python-reviewer: Python functional patterns
-  - python-test-reviewer: Python test quality
-  - refactoring-reviewer: Python refactoring opportunities
-  - security-privacy-reviewer: Security and privacy issues
-  - zen-of-python-reviewer: Zen of Python principles
+Available reviewers (18 total):
+
+  Python (7):
+    python-refactoring-reviewer, python-functional-reviewer, python-zen-reviewer,
+    python-format-refactoring-reviewer, python-test-reviewer,
+    python-security-privacy-reviewer, python-performance-reviewer
+
+  JavaScript/TypeScript (7):
+    javascript-test-reviewer, javascript-refactoring-reviewer,
+    javascript-format-refactoring-reviewer, javascript-functional-reviewer,
+    javascript-security-privacy-reviewer, javascript-performance-reviewer,
+    react-reviewer
+
+  Other (4):
+    agile-requirements-reviewer, django-reviewer, openapi-reviewer,
+    database-schema-reviewer
+
+Available tags:
+  python, javascript/js, react, django, security, testing/tests, functional/fp,
+  quality, complete/all
 
 Examples:
-  # Using Claude CLI (recommended - no API key needed)
-  uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --use-claude-cli
+  # Review Python project (7 reviewers)
+  uv run review.py --repo https://github.com/pallets/flask --reviewer python --use-claude-cli
 
-  # Using API key
-  uv run review.py --repo https://github.com/user/repo --reviewer security-privacy-reviewer
+  # Review React/JS project (7 reviewers)
+  uv run review.py --repo https://github.com/user/react-app --reviewer javascript --use-claude-cli
 
-  # Specific model
-  uv run review.py --repo https://github.com/user/repo --reviewer refactoring-reviewer --model claude-opus-4-20250514
+  # Single reviewer
+  uv run review.py --repo https://github.com/user/repo --reviewer python-security-privacy-reviewer
 
   # Multiple reviewers
   uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --reviewer security-privacy-reviewer --use-claude-cli
