@@ -33,6 +33,8 @@ Review JavaScript code with a functional programming lens. Focus on:
 - **Array Methods** - Leveraging map, filter, reduce, and functional iteration
 - **Function Composition** - Building complex logic from simple functions
 - **Modern JS Features** - Destructuring, spread/rest, arrow functions for FP
+- **Async Functional Flows** - Promise pipelines, async iterables, cancellation
+- **Type Safety** - Functional patterns with TypeScript (readonly, discriminated unions)
 
 ## Review Process
 
@@ -165,6 +167,19 @@ Use the 45+ guidelines embedded below in this skill document.
 - FUNCTOR-MAP - Use functor pattern
 - LAZY-EVAL - Lazy evaluation patterns
 - MEMOIZATION - Cache expensive computations
+
+**Async Functional Patterns (5 guidelines)**
+- ASYNC-COMPOSE - Compose async operations with Promise chains
+- ASYNC-ITERABLE - Use async generators/iterators for streaming data
+- PROMISE-ALLSAFE - Batch with `Promise.allSettled` / concurrency limits
+- CANCEL-TOKEN - Cancellation primitives (AbortController, RxJS)
+- TASK-QUEUE - Declarative background work (p-limit, Task monads)
+
+**TypeScript Functional Safety (4 guidelines)**
+- TS-READONLY-FP - Prefer `readonly` arrays/tuples
+- TS-DISCRIMINATE - Discriminated unions for pattern matching
+- TS-FP-TYPES - Higher-order utility types (`Parameters`, `ReturnType`)
+- TS-NO-ANY - Use generics instead of `any`
 
 ## Example Review
 
@@ -2163,6 +2178,106 @@ const expensiveCalculation = memoize((x, y) => {
 Memoization dramatically improves performance for pure functions with expensive computations, especially with recursion.
 
 ---
+
+## Async Functional Patterns
+
+### ASYNC-COMPOSE: Promise Pipelines
+
+```javascript
+const fetchJson = (url) => fetch(url).then((r) => r.json());
+const extractUsers = ({ data }) => data.users;
+
+const loadUsers = (endpoint) =>
+  Promise.resolve(endpoint)
+    .then(fetchJson)
+    .then(extractUsers);
+```
+
+- Keeps async logic declarative and chainable.
+- Works with helper libraries (`p-pipe`, `ramda`) for reuse.
+
+### ASYNC-ITERABLE: Stream via Async Generators
+
+```javascript
+async function* paginate(fetchPage) {
+  let page = 1;
+  while (true) {
+    const result = await fetchPage(page);
+    if (!result.items.length) return;
+    yield* result.items;
+    page += 1;
+  }
+}
+
+for await (const record of paginate(api.listUsers)) {
+  await process(record);
+}
+```
+
+- Processes large datasets without loading them entirely.
+
+### PROMISE-ALLSAFE: Bounded Concurrency
+
+```javascript
+import pLimit from 'p-limit';
+
+const limit = pLimit(5);
+await Promise.allSettled(urls.map((url) => limit(() => fetchJson(url))));
+```
+
+- Prevents rate-limit spikes and improves resilience.
+
+### CANCEL-TOKEN: Abort-Friendly FP
+
+```javascript
+const controller = new AbortController();
+const fetchWithAbort = (url) =>
+  fetch(url, { signal: controller.signal }).then((r) => r.json());
+```
+
+- Propagate `AbortSignal` through FP helpers for cancellable flows.
+
+### TASK-QUEUE: Declarative Background Jobs
+
+- Model side effects with Task/IO monads (`fp-ts/Task`, `folktale/Task`) or concurrency utilities like `RxJS` Observables so work remains testable and composable.
+
+## TypeScript Functional Safety
+
+### TS-READONLY-FP: Enforce Immutability at Type Level
+
+```ts
+type Filters = {
+  readonly status: 'draft' | 'published';
+  readonly tags: readonly string[];
+};
+```
+
+### TS-DISCRIMINATE: Exhaustive Pattern Matching
+
+```ts
+type Result<T> = { type: 'ok'; value: T } | { type: 'error'; error: Error };
+
+const unwrap = <T>(result: Result<T>): T => {
+  switch (result.type) {
+    case 'ok':
+      return result.value;
+    case 'error':
+      throw result.error;
+    default: {
+      const _exhaustive: never = result;
+      return _exhaustive;
+    }
+  }
+};
+```
+
+### TS-FP-TYPES: Higher-Order Utility Types
+
+- Use `Parameters`, `ReturnType`, `Awaited`, and custom helper types inside wrappers (memoization, logging) to keep inference intact.
+
+### TS-NO-ANY: Expressive Generics
+
+- Replace `any` with `<T>` generics and constraints (`<T extends Record<string, unknown>>`) to keep FP utilities type-safe across inputs.
 
 ## Summary
 

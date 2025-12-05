@@ -40,7 +40,7 @@ Review Python code for style/format problems that indicate deeper issues. Focus 
 - **Methods** - Extract methods instead of long functions
 - **Organization** - Proper structure instead of cramped code
 
-##  Review Process
+## Review Process
 
 ### 1. Initial Read
 - Read the code to identify style/format warnings
@@ -119,6 +119,17 @@ Use the 40+ guidelines embedded below. All guidelines include:
 - Show refactored code (not just reformatted)
 - Explain why refactoring is better than formatting
 
+### Ruff/pylint Rule Cheat Sheet
+
+| Mnemonic | Ruff/pylint codes | Notes |
+| --- | --- | --- |
+| FMT-EXTRACT-VAR | `E501` (line too long) | Extract intermediate variables. |
+| FMT-GUARD-CLAUSE | `R0912` (too-many-branches) | Use early returns. |
+| FMT-LONG-METHOD | `R0915` (too-many-statements) | Split into helpers. |
+| FMT-PARAM-DATACLASS | `R0913` (too-many-args) | Introduce dataclass/options. |
+| FMT-ASYNC-AWAIT | `E702`/`ASYNC100` | Break chained awaits/contexts. |
+| FMT-COMPREHENSION | `C400` | Prefer comprehensions over map/filter. |
+
 ## Key Guidelines by Category
 
 **Line Length Issues (8 guidelines)**
@@ -150,6 +161,9 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 **Import & Organization (3 guidelines)**
 - FMT-GROUP-IMPORTS, FMT-LAZY-IMPORT, FMT-STAR-IMPORT
+
+**Async & Context Managers (4 guidelines)**
+- FMT-ASYNC-AWAIT, FMT-ASYNC-CM, FMT-AIOPIPE, FMT-TASK-GROUP
 
 ---
 
@@ -2065,6 +2079,55 @@ result = process_data(data)  # Clear it's from utils
 **Refactoring applied:** Replace Star Import with Explicit Imports
 
 **Attribution:** PEP 8, Zen of Python
+
+---
+
+## Async & Context Manager Refactorings
+
+### FMT-ASYNC-AWAIT: Break Inline Await Chains
+
+**Style Issue:** Ruff `E501`, `ASYNC100`
+
+**Bad:**
+```python
+result = await client.get_user(user_id).json()
+```
+
+**Better:**
+```python
+response = await client.get_user(user_id)
+result = await response.json()
+```
+
+- Improves debuggability and lets you log intermediate states.
+
+### FMT-ASYNC-CM: Use Async Context Managers
+
+```python
+async with httpx.AsyncClient(timeout=5) as client:
+    resp = await client.get(url)
+```
+
+- Replace manual try/finally cleanup; linted by `ASYNC109`.
+
+### FMT-AIOPIPE: Extract Async Pipelines
+
+```python
+async def fetch_and_transform(urls, transform):
+  return await asyncio.gather(*(transform(await fetch(url)) for url in urls))
+```
+
+- Move comprehension logic into helpers; shortens call sites and satisfies max-complexity rules.
+
+### FMT-TASK-GROUP: Structure Concurrent Blocks
+
+```python
+async with asyncio.TaskGroup() as tg:
+    profile = tg.create_task(fetch_profile(user_id))
+    orders = tg.create_task(fetch_orders(user_id))
+```
+
+- Keeps `asyncio.gather` constants manageable while handling cancellation properly.
 
 ---
 

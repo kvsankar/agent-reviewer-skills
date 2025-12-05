@@ -43,6 +43,22 @@ Review JavaScript/TypeScript code for security vulnerabilities and privacy risks
 - Identify PII and sensitive data handling
 - Note attack surfaces and trust boundaries
 - Check both client-side and server-side vulnerabilities
+- Map observations to **STRIDE/LINDDUN** categories:
+  - *STRIDE:* Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege.
+  - *LINDDUN:* Linkability, Identifiability, Non-repudiation, Detectability, Disclosure, Unawareness, Non-compliance.
+
+### Threat Modeling Quickstart
+
+Build a one-minute threat outline to ground your suggestions:
+
+1. **Assets:** Credentials, PII classes, payment tokens, access tokens.
+2. **Entry points:** HTTP handlers, WebSocket events, cron jobs, queues.
+3. **Trust levels:** Browser → API → internal services → data stores.
+4. **Threats:** Map to STRIDE/LINDDUN to ensure coverage.
+5. **Controls:** Identify missing mitigations (CSRF token, tenant filter, encryption).
+
+Reference external sources (OWASP ASVS, OWASP Top 10, GDPR/CCPA articles) when describing impact.
+- Perform a **fast STRIDE/LINDDUN threat sketch**: list entry points, assets, likely attackers, and map findings to mnemonic IDs.
 
 ### 2. Apply Guidelines
 
@@ -144,6 +160,7 @@ Use the 60+ guidelines embedded below in this skill document. All guidelines inc
 - PII-IDENTIFY, PII-MINIMIZE, PII-ENCRYPT, PII-LOG
 - CONSENT-MANAGE, DATA-ERASURE, DATA-EXPORT, GDPR-COMPLY
 - ANONYMIZE-DATA, AUDIT-LOG
+- PII-RESIDENCY, PII-RETENTION
 
 **Cryptography (7 guidelines)**
 - CRYPTO-STRONG, KEY-MANAGE, RANDOM-SECURE, SALT-HASH
@@ -2957,6 +2974,39 @@ PII in logs creates compliance issues and increases breach surface area.
 **Compliance:** GDPR Art. 5, CWE-532
 
 **Attribution:** OWASP Logging Cheat Sheet
+
+---
+
+### PII-RESIDENCY: Enforce Data Localization
+
+**Principle:** Jurisdictions such as EU (GDPR Art. 44-50), Brazil (LGPD Art. 33), and India (DPDP) mandate that certain data reside in-region or follow approved transfer mechanisms.
+
+**Implementation:**
+```javascript
+const region = tenant.dataRegion; // e.g., 'eu-west-1'
+const db = getRegionalMongoClient(region);
+await db.collection('profiles').insertOne({ ...profile, tenantId: tenant.id });
+```
+
+- Route DB/cache/storage clients using residency metadata.
+- Disable cross-region replication for sensitive buckets and log any cross-border transfers.
+- Ensure subprocessors (logging, analytics) support EU/US data centers with DPAs/SCCs executed.
+
+---
+
+### PII-RETENTION: Honor Retention & Deletion SLAs
+
+**Principle:** GDPR Art. 5(1)(e) and SOC 2 CC8 require data minimization over time, not just at ingestion.
+
+**Implementation:**
+```javascript
+const cutoff = subDays(new Date(), 90);
+await db.collection('audit_logs').deleteMany({ createdAt: { $lt: cutoff } });
+```
+
+- Define per-field retention policies (e.g., IP logs 30 days, payment tokens 1 year).
+- Provide user-initiated erasure endpoints and verify cascading deletes (DB, caches, S3, analytics).
+- Track legal holds/exceptions with immutable audit events.
 
 ---
 

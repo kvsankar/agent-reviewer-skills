@@ -1,0 +1,5 @@
+review-tool/sample_reviews/
+claude-conversations/
+claude-conversations-temp/
+**/SOURCES.md
+reports/

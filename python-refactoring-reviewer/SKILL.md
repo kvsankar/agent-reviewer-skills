@@ -35,6 +35,8 @@ Review Python code for refactoring opportunities. Focus on:
 - **Testability** - Dependency injection, pure functions, testable design
 - **Code Smells** - Bloaters, coupling, duplication, complexity
 - **Pythonic** - Idiomatic patterns, language features
+- **Async & Concurrency** - asyncio, TaskGroup, queue orchestration
+- **Typing** - type hints, Protocols, TypedDict, gradual typing strategies
 - **Performance** - Algorithmic efficiency, resource optimization
 
 ## Review Process
@@ -145,6 +147,12 @@ Use the 70+ guidelines embedded below. All guidelines include:
 **Performance (7 guidelines)**
 - ALGO-COMPLEX, PREMATURE-OPT, CACHE-RESULT
 - GEN-NOT-LIST, SLOT-USE, LAZY-EVAL, AVOID-COPY
+
+**Async & Concurrency (5 guidelines)**
+- ASYNC-BOUNDARY, TASK-GROUP, ASYNC-CM, BACKGROUND-TASK, AWAIT-COMPOSE
+
+**Typing & Contracts (5 guidelines)**
+- TYPE-HINT, PROTOCOL-EXTRACT, TYPEDICT, GENERIC-CLEANUP, SINGLE-SOURCE-TYPES
 
 ---
 
@@ -830,9 +838,9 @@ fee = get_payment_fee(payment_method)
 
 **Why this can be better:**
 
-*   **Simplicity:** It avoids the overhead of defining multiple classes for a simple calculation.
-*   **Conciseness:** The mapping from payment type to logic is very clear and concise.
-*   **Extensibility:** Adding a new payment method is as simple as adding a new entry to the dictionary.
+- **Simplicity:** It avoids the overhead of defining multiple classes for a simple calculation.
+- **Conciseness:** The mapping from payment type to logic is very clear and concise.
+- **Extensibility:** Adding a new payment method is as simple as adding a new entry to the dictionary.
 
 **Attribution:** Refactoring Guru - Replace Conditional with Polymorphism
 
@@ -2338,9 +2346,9 @@ shipping_cost = calculate_shipping(order)
 
 **Why this can be better:**
 
-*   **Readability:** The `SHIPPING_COSTS` dictionary is a very clear and simple representation of the business logic.
-*   **Maintainability:** To add or change a shipping cost, you only need to edit the dictionary.
-*   **Less Code:** It achieves the same result with significantly less boilerplate code compared to the class-based approach.
+- **Readability:** The `SHIPPING_COSTS` dictionary is a very clear and simple representation of the business logic.
+- **Maintainability:** To add or change a shipping cost, you only need to edit the dictionary.
+- **Less Code:** It achieves the same result with significantly less boilerplate code compared to the class-based approach.
 
 **Attribution:** Refactoring Guru - Switch Statements, Replace Conditional with Polymorphism
 
@@ -3184,6 +3192,64 @@ When reviewing code for refactoring, systematically check:
    - Are responsibilities clear?
 
 ## Common Refactoring Techniques
+
+## Async & Concurrency Refactorings
+
+### ASYNC-BOUNDARY: Keep Async Edges Thin
+
+- Move networking/DB calls into async service functions; keep Django/FastAPI endpoints as thin wrappers.
+- Ensures you can reuse async logic in jobs and tests without web framework context.
+
+### TASK-GROUP: Upgrade to `asyncio.TaskGroup`
+
+```python
+async def load_dashboard(user_id):
+    async with asyncio.TaskGroup() as tg:
+        profile = tg.create_task(fetch_profile(user_id))
+        orders = tg.create_task(fetch_orders(user_id))
+    return profile.result(), orders.result()
+```
+
+- Handles cancellation + error propagation better than manual `gather`.
+
+### ASYNC-CM: Prefer Async Context Managers
+
+- Replace manual connect/close boilerplate with `async with` wrappers (database pools, HTTP clients).
+
+### BACKGROUND-TASK: Extract Background Jobs
+
+- Pull Celery/RQ/asyncio background logic into dedicated modules so requests stay lean and queue workers can import them easily.
+
+### AWAIT-COMPOSE: Compose Awaitable Helpers
+
+- Chain async transformations via helper coroutines rather than huge inline `await` statements; improves readability and lint friendliness.
+
+## Typing-Friendly Refactorings
+
+### TYPE-HINT: Add Type Signatures
+
+- Type annotate public APIs and use `typing.Protocol` to describe behavior-based contracts.
+
+### PROTOCOL-EXTRACT
+
+```python
+class Storage(Protocol):
+    async def put(self, key: str, data: bytes) -> None: ...
+```
+
+- Allows dependency injection without base classes.
+
+### TYPEDICT & DATACLASS
+
+- Replace loosely structured dicts with `TypedDict`/`dataclass` to document fields and enable IDE support.
+
+### GENERIC-CLEANUP
+
+- Simplify nested generics by extracting helper aliases and providing defaults.
+
+### SINGLE-SOURCE-TYPES
+
+- Keep shared types (API schemas, DTOs) in dedicated modules and re-export them for tests/clients to avoid drift.
 
 **Composing Methods**
 - Extract Method, Inline Method

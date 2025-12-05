@@ -32,6 +32,8 @@ Review Python code with a functional programming lens. Focus on:
 - **Immutability** - Avoiding mutable state
 - **Higher-Order Functions** - Leveraging functions as first-class citizens
 - **Pythonic FP** - Comprehensions, generators, itertools, functools
+- **Async Flows** - Async generators, pipelines, cancellation
+- **Typing** - Protocols, TypedDict, type inference for FP utilities
 
 ## Review Process
 
@@ -139,6 +141,17 @@ Use the 40+ guidelines embedded below in this skill document.
 **Best Practices (6 guidelines)**
 - RECURSION-SIMPLE, USE-NAMEDTUPLE, FUNC-COMPOSE
 - MULTI-PARADIGM, ITERATOR-PROTOCOL
+
+**Async Functional (3 guidelines)**
+- ASYNC-GEN - Async generators for streaming
+- ASYNC-PIPE - Compose async pipelines
+- ASYNC-CANCEL - Propagate cancellation with `asyncio`/`anyio`
+
+**Typing-Friendly FP (4 guidelines)**
+- TYPE-READONLY - Prefer immutable typing primitives
+- PROTOCOL-FP - Model behaviors via Protocols
+- TYPEDICT-FP - Strongly typed records
+- GENERIC-FP - Preserve inference with generics
 
 ## Example Review
 
@@ -1041,6 +1054,76 @@ Named tuples provide immutability with clear field names, making data structures
 
 **Key Point:**
 "You can only move forward; there's no backward navigation, reset capability, or copying without recreating the iterator."
+
+---
+
+## Async Functional Patterns
+
+### ASYNC-GEN: Async Generators for Streaming
+
+```python
+async def stream_events(source):
+    async for page in source:
+        for event in page.events:
+            yield event
+```
+
+- Process unbounded feeds without buffering everything in memory.
+
+### ASYNC-PIPE: Compose Async Pipelines
+
+```python
+async def pipeline(value, *steps):
+    result = value
+    for step in steps:
+        result = await step(result)
+    return result
+```
+
+- Keeps asynchronous transformations declarative.
+
+### ASYNC-CANCEL: Propagate Cancellation
+
+```python
+async def fetch_with_timeout(coro, timeout=5):
+    return await asyncio.wait_for(coro, timeout)
+```
+
+- Ensures cooperative cancellation for long-running chains.
+
+## Typing-Friendly FP
+
+### TYPE-READONLY: Use Immutable Types
+
+```python
+from typing import NamedTuple
+
+class Product(NamedTuple):
+    id: int
+    price: float
+    tags: tuple[str, ...]
+```
+
+### PROTOCOL-FP: Protocols for Behavior
+
+```python
+class Serializer(Protocol):
+    def dumps(self, data: Mapping[str, Any]) -> str: ...
+```
+
+- Allows passing different implementations into FP pipelines without concrete inheritance.
+
+### GENERIC-FP: Preserve Type Information
+
+```python
+T = TypeVar('T')
+
+def tap(fn: Callable[[T], None]) -> Callable[[T], T]:
+    def wrapper(value: T) -> T:
+        fn(value)
+        return value
+    return wrapper
+```
 
 ---
 

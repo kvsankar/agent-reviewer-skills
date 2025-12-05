@@ -31,9 +31,10 @@ Review Django projects with focus on:
 - **Security** - OWASP for Django, authentication, authorization, data protection
 - **Performance** - Query optimization, caching, async support
 - **Scalability** - Architecture patterns, database design, infrastructure
+- **Multi-Tenancy** - Tenant isolation, per-tenant data routing, sharding strategies
 - **Code Quality** - Django best practices, DRY, maintainability
 - **Production Readiness** - Settings, deployment, monitoring, error handling
-- **API Design** - Django REST Framework best practices (if applicable)
+- **API & Deployment Design** - Django REST Framework, containers, Kubernetes, serverless best practices
 
 ## Review Process
 
@@ -151,6 +152,16 @@ Use the 100+ guidelines embedded in this skill document, organized by category.
 - PERF-ASYNC - Async view usage
 - And more...
 
+**Multi-Tenancy & Data Isolation (8+ guidelines)**
+- TENANT-ROUTER - Database routers per tenant
+- TENANT-SCHEMA - Schema per tenant or shared+FK
+- TENANT-RLS - Row-level security / queryset filters
+- TENANT-CACHE - Cache sharding by tenant
+- TENANT-FEATURES - Feature flag & config isolation
+- DATA-RESIDENCY - Region-aware storage
+- SHARDING-STRATEGY - Horizontal partitioning guidance
+- OBSERVE-TENANT - Logging/metrics tagged by tenant
+
 **API Design (12+ guidelines)**
 - API-REST - RESTful design
 - API-VERSION - API versioning
@@ -171,6 +182,8 @@ Use the 100+ guidelines embedded in this skill document, organized by category.
 - DEPLOY-MEDIA - Media files
 - DEPLOY-DB - Database setup
 - DEPLOY-CELERY - Async tasks
+- DEPLOY-CONTAINER - Docker/Kubernetes best practices
+- DEPLOY-EDGE - Edge/serverless considerations
 - And more...
 
 ## Review Checklist
@@ -3242,6 +3255,73 @@ Fat models cause:
 
 **Best practice:**
 Keep models thin - just data and simple methods. Use service layer for business logic. Use managers/querysets for data access logic. Separate concerns.
+
+---
+
+## Multi-Tenancy & Data Isolation Patterns
+
+### TENANT-ROUTER: Database Routers Per Tenant
+
+```python
+class TenantRouter:
+    def db_for_read(self, model, **hints):
+        tenant = getattr(threading.local(), "tenant", "default")
+        return f"tenant_{tenant}"
+
+    def db_for_write(self, model, **hints):
+        tenant = getattr(threading.local(), "tenant", "default")
+        return f"tenant_{tenant}"
+```
+
+- Require middleware to set `threadlocal.tenant` (from subdomain, JWT claim, etc.).
+- Validate router coverage in tests—missing router entries default to `default` DB and leak data.
+
+### TENANT-SCHEMA: Separate Schemas or Shared Table Strategy
+
+- Shared tenancy: include `tenant_id` FK on every shared table and enforce `QuerySet.filter(tenant=request.tenant)` via custom managers or libraries (django-tenant-schemas, django-multitenant).
+- Schema-per-tenant: use PostgreSQL schemas created via migrations; run planar migrations for each tenant.
+
+### TENANT-RLS: Database-Level Safeguards
+
+- For PostgreSQL, combine Django queryset filters with RLS policies to guard against bypasses (see SEC-RLS).
+- For MySQL/SQL Server, create views that filter on `current_tenant` session variables and restrict applications to those views.
+
+### TENANT-CACHE: Cache Key Namespacing
+
+```python
+def tenant_cache_key(tenant_id, *parts):
+    slug = ":".join(str(part) for part in parts)
+    return f"tenant:{tenant_id}:{slug}"
+```
+- Avoid cross-tenant cache bleed by namespacing keys (Redis, Memcached) and using per-tenant local-memory caches when needed.
+
+### DATA-RESIDENCY & SHARDING
+
+- Respect regulatory residency by pinning tenants to regions and storing the mapping in a control plane table.
+- For sharding, implement `SHARDING-STRATEGY`: consistent hash → database alias → router. Document rebalancing workflows and background migrations.
+
+### OBSERVE-TENANT: Logging & Metrics Tags
+
+- Include `tenant_id`, `region`, and feature flag metadata in logs/metrics to diagnose tenant-specific incidents.
+
+## Container & Kubernetes Deployment
+
+### DEPLOY-CONTAINER: Docker Best Practices
+
+- Use multi-stage builds with `python:3.x-slim` base, install OS deps (libpq, build-essential) only in builder stage.
+- Run as non-root, set `PYTHONUNBUFFERED=1`, `DJANGO_SETTINGS_MODULE` via env vars.
+- Collect static files during build to keep runtime pods lean.
+
+### DEPLOY-K8S: Kubernetes & Autoscaling
+
+- Configure readiness/liveness probes hitting `/healthz` endpoints that check DB/cache connectivity.
+- Use `gunicorn` with `--max-requests` to prevent memory leaks, and horizontal pod autoscalers based on CPU + request latency.
+- Externalize secrets via K8s Secrets or Vault injectors; never bake into images.
+
+### DEPLOY-EDGE / SERVERLESS
+
+- For ASGI deployments (Channels, Fast APIs), document `lifespan` hooks and concurrency limits.
+- Ensure cold-start safe settings (lazy DB connections, cached settings) and ephemeral storage strategies.
 
 ---
 

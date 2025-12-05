@@ -36,6 +36,7 @@ Review OpenAPI/Swagger specifications for quality, completeness, and best practi
 - **Data Models** - Schema definitions, validation, reusability
 - **Security** - Authentication schemes, security requirements
 - **Consistency** - Naming conventions, patterns, standards
+- **Async Workflows** - Callbacks, webhooks, streaming, long-running operations
 
 ## Review Process
 
@@ -129,6 +130,7 @@ Use the 50+ guidelines embedded below in this skill document. All guidelines inc
 - TAGS-ORGANIZED - Tag organization
 - EXTERNAL-DOCS - External documentation
 - VALID-YAML - Valid YAML syntax
+- CALLBACKS-SECTION - Callback/webhook section when async events exist
 
 **Path & Operations (10 guidelines)**
 - PATH-NAMING - RESTful path naming
@@ -141,6 +143,8 @@ Use the 50+ guidelines embedded below in this skill document. All guidelines inc
 - DEPRECATED-FLAG - Deprecation markers
 - RESPONSE-CODES - HTTP response codes
 - REQUEST-BODY - Request body definitions
+- CALLBACKS-DEFINED - Callback objects for async flows
+- LINKS-DEFINED - Link relationships between operations
 
 **Parameters (6 guidelines)**
 - PARAM-REQUIRED - Required parameter markers
@@ -183,6 +187,12 @@ Use the 50+ guidelines embedded below in this skill document. All guidelines inc
 - MARKDOWN-FORMAT - Markdown in descriptions
 - CONTACT-INFO - Contact information
 - LICENSE-INFO - License information
+
+**API Lifecycle (4 guidelines)**
+- VERSION-STRATEGY - Semantic versioning and stability labels
+- SUNSET-POLICY - Deprecation/sunset headers documented
+- CHANGELOG-LINK - Link to release notes/changelog
+- EXTENSIONS-VENDOR - `x-*` vendor extensions documented
 
 ---
 
@@ -2518,6 +2528,74 @@ info:
 - Legal requirement for many APIs
 - Professional presentation
 - Best practice
+
+---
+
+## Async Callbacks & Webhooks
+
+### CALLBACKS-DEFINED: Describe Outbound Calls
+
+**Anti-pattern:**
+```yaml
+paths:
+  /payments:
+    post:
+      summary: Create payment
+      # Missing callback documentation
+```
+
+**Improved:**
+```yaml
+paths:
+  /payments:
+    post:
+      summary: Create payment
+      callbacks:
+        paymentStatus:
+          '{$request.body#/callbackUrl}':
+            post:
+              summary: Notify payment status
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentStatus'
+              responses:
+                '200':
+                  description: Acknowledge receipt
+```
+
+- Use runtime expressions (e.g., `$request.body#/callbackUrl`) for webhook targets.
+- Callbacks inherit security requirements unless overridden—document API keys or MTLS expectations clearly.
+
+### LINKS-DEFINED: Connect Related Operations
+
+```yaml
+responses:
+  '201':
+    description: Created
+    links:
+      GetOrder:
+        operationId: getOrder
+        parameters:
+          orderId: '$response.body#/id'
+```
+
+- Helps SDK generators and API consumers discover follow-up calls.
+
+## API Lifecycle & Versioning
+
+### VERSION-STRATEGY
+- Align `info.version` with semantic versioning and describe stability (beta/GA) in `x-api-stage` or tags.
+- Document versioning approach (URI `/v1`, header `X-API-Version`, media type `application/vnd.example+json;version=1`).
+
+### SUNSET-POLICY
+- Deprecate operations with `deprecated: true` AND document timeline (`Sunset` header, `x-sunset-date` extension).
+- Provide `externalDocs` or `x-changelog-url` references for migration guides.
+
+### EXTENSIONS-VENDOR
+- Explain any `x-*` extensions (gateway integrations, SDK hints) so reviewers understand automation hooks.
 
 ---
 
