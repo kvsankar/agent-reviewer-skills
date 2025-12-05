@@ -38,6 +38,20 @@ When reviewing JavaScript/TypeScript code:
 5. **Consider Context** - Not all optimizations are worth the complexity
 6. **Use Mnemonic IDs** - Easy reference codes (e.g., ALGO-COMPLEX, DOM-BATCH)
 
+### Profiling Playbook
+
+Before suggesting code changes, gather evidence:
+
+| Scenario | Tooling | Notes |
+| --- | --- | --- |
+| API latency | `autocannon https://api.test --connections 20 --duration 30` | Capture p95/p99 latency before & after. |
+| CPU hotspots | `node --prof app.js` + `node --prof-process isolate-*.log` | Generates V8 tick data. |
+| Production sampling | [`clinic flame`](https://clinicjs.org/), [`0x`](https://github.com/davidmarkclements/0x) | Low-overhead flamegraphs. |
+| Memory leaks | Chrome DevTools heap snapshots (`node --inspect`), `clinic heapprofiler` | Track retained objects over time. |
+| React rendering | React DevTools Profiler, `why-did-you-render` | Identify wasted renders. |
+
+> Save profiler outputs (SVG, txt) with the review so teams can reproduce the findings.
+
 ## Review Process
 
 1. **Analyze the code** for performance issues
@@ -4007,6 +4021,32 @@ jobs:
 - OBJECT-LITERAL - Objects for small lookups
 - EARLY-EXIT - Return early
 - REDUNDANT-CALC - Hoist loop-invariant code
+
+### Node.js Runtime & Streams
+
+#### EVENT-LOOP-BLOCK
+- Identify synchronous hotspots (`fs.readFileSync`, crypto loops) with `clinic flame` or `node --prof`.
+- Move CPU-bound work to `worker_threads` pools (Piscina, workerpool) or external services.
+
+#### WORKER-THREAD
+- Reuse workers to avoid startup cost, pass data via `Transferable` objects for large buffers.
+- Guard with health checks so stuck workers get replaced.
+
+#### STREAM-BACKPRESSURE
+- Prefer `stream.pipeline` / `Readable.fromWeb` / `AsyncGenerator` to automatically manage backpressure.
+- Avoid manual `data` listeners that ignore `stream.pause()`—they cause OOM when producers outpace consumers.
+
+#### CLUSTER-STRATEGY
+- Use process managers (PM2, systemd, Kubernetes) to spawn one worker per vCPU.
+- Ensure sticky sessions (ingress affinity, `socket.io-redis`) for WebSockets or stateful protocols.
+
+#### KEEPALIVE-TUNING
+- Configure HTTP/HTTPS agents with `keepAlive: true`, `maxSockets`, `maxFreeSockets`.
+- Adjust `server.keepAliveTimeout`/`headersTimeout` to prevent slowloris attacks while keeping sockets reusable.
+
+#### OBSERVE-EVENTLOOP
+- Monitor event-loop lag via `perf_hooks.monitorEventLoopDelay()` and export metrics (Prometheus, StatsD).
+- Alert when p95 lag exceeds ~100ms; it signals blocking synchronous work.
 
 ### By Use Case
 

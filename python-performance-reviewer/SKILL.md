@@ -45,6 +45,16 @@ Review Python code for performance issues and optimization opportunities. Focus 
 - Identify loops, nested structures, and data processing
 - Note I/O operations (file, network, database)
 - Look for obvious inefficiencies
+- Capture baseline metrics before recommending changes. Use sampling profilers (`py-spy`, `scalene`) or `cProfile` to discover the real hot paths.
+
+### Profiling Quickstart
+
+| Scenario | Tooling | Notes |
+| --- | --- | --- |
+| CPU hotspots | `py-spy top --pid <pid>` / `py-spy record -o flame.svg -- python app.py` | Low overhead, works in production. |
+| Memory leaks | `memray run python app.py` / `tracemalloc` snapshots | Tracks allocator stacks and retained objects. |
+| Async IO | `pyinstrument --async-mode strict` | Visualizes awaited sections. |
+| CLI benchmarking | `python -m timeit`, `pytest --durations=10`, `hyperfine "python script.py"` | Quick regression detection. |
 
 ### 2. Apply Guidelines
 
@@ -2037,6 +2047,36 @@ async def fetch_with_sync_fallback(urls):
 
 ---
 
+#### TASK-GROUP: Structure Parallel Async Work (Python 3.11+)
+
+```python
+async def load_dashboard(user_id):
+  async with asyncio.TaskGroup() as tg:
+    profile = tg.create_task(fetch_profile(user_id))
+    orders = tg.create_task(fetch_orders(user_id))
+    recommendations = tg.create_task(fetch_recs(user_id))
+
+  return {
+    'profile': profile.result(),
+    'orders': orders.result(),
+    'recommendations': recommendations.result(),
+  }
+```
+
+- TaskGroups automatically cancel siblings when one fails and surface the first exception cleanly.
+- Prefer over raw `asyncio.gather` when tasks must be cancelled as a unit.
+
+#### ASYNC-TO-THREAD: Lift Blocking Calls
+
+```python
+async def get_resized_image(path):
+  return await asyncio.to_thread(resize_image, path)
+```
+
+- Keeps async APIs clean while offloading blocking logic to thread pool executors.
+
+---
+
 #### THREADING-USE: Use Threading for I/O-Bound Concurrent Tasks
 
 **Impact:** Medium
@@ -2361,9 +2401,9 @@ def process_data(data):
 **Profiling tools:**
 - **cProfile**: Built-in, low overhead, function-level
 - **line_profiler**: Line-by-line profiling (`pip install line_profiler`)
-- **py-spy**: Sampling profiler, no code changes (`pip install py-spy`)
-- **memory_profiler**: Memory usage line-by-line
-- **pyinstrument**: Statistical profiler with nice output
+- **py-spy** / **scalene**: Sampling profilers (CPU + memory) safe for production
+- **memray**: Heap tracer for leaks/retained objects
+- **pyinstrument**: Async-aware statistical profiler with flamegraphs
 
 **Best practices:**
 - Always profile before optimizing

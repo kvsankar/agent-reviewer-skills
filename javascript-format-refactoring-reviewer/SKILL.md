@@ -118,6 +118,21 @@ Use the 30+ guidelines embedded below. All guidelines include:
 - Show refactored code (not just reformatted)
 - Explain why refactoring is better than formatting
 
+### ESLint/Prettier Rule Cheat Sheet
+
+| Mnemonic | Typical ESLint/TSLint rule | Notes |
+| --- | --- | --- |
+| JS-LONG-FUNC-PARAMS | `max-params`, `max-len` | Extract parameter objects/options bags. |
+| JS-COMPLEX-CONDITION | `complexity`, `no-nested-ternary` | Decompose logic with guard clauses. |
+| JS-LONG-TEMPLATE | `max-len`, `no-multi-str` | Use template helpers or component extraction. |
+| JS-PARAMS-MANY | `max-params` | Convert to destructured objects with defaults. |
+| JS-JSX-LONG | `react/jsx-max-props-per-line` | Extract child components, use composition. |
+| JS-COMPLEX-CALLBACK | `max-nested-callbacks` | Promise chaining / async functions. |
+| JS-OBJ-LONG | `object-curly-newline`, `key-spacing` | Break large objects into builder functions. |
+| JS-TEMPLATE-COMPLEX | `no-template-curly-in-string` | Move logic out of template strings. |
+
+> 🧭 When a linter isn’t explicitly listed, quote the rule ID reported in your local run (ESLint, TSLint, Biome, etc.) so the team can cross-reference quickly.
+
 ## Key Guidelines by Category
 
 **Line Length Issues (6 guidelines)**
@@ -140,6 +155,14 @@ Use the 30+ guidelines embedded below. All guidelines include:
 
 **String/Template (4 guidelines)**
 - JS-STRING-CONCAT, JS-TEMPLATE-LONG, JS-TEMPLATE-COMPLEX, JS-STRING-SPLIT
+
+**TypeScript-Specific (6 guidelines)**
+- TS-GENERIC-EXPLOSION - Extract mapped/utility types for long generics
+- TS-OVERLOAD-REDUCE - Consolidate overload signatures
+- TS-DISCRIMINATED - Use discriminated unions instead of flag params
+- TS-SATISFY-CONTRACT - Use `satisfies` to lock structural contracts
+- TS-IMMUTABLE-READONLY - Prefer `readonly` and `as const` for inference
+- TS-TYPE-HELPER - Extract reusable helper types/modules
 
 ---
 
@@ -2012,6 +2035,100 @@ const error = [
 **Refactoring applied:** Multi-line String
 
 **Attribution:** JavaScript patterns
+
+---
+
+# 7. TYPESCRIPT-SPECIFIC REFACTORINGS
+
+### TS-GENERIC-EXPLOSION: Extract Helper Types
+
+**Problematic:**
+```ts
+type ApiResponse<TData extends Record<string, unknown>, TMeta extends { page: number; size: number }> = {
+  data: TData[];
+  meta: TMeta & { total: number };
+};
+```
+
+**Refactored:**
+```ts
+type PaginationMeta = { page: number; size: number; total: number };
+
+type ApiResponse<
+  TData extends Record<string, unknown>,
+  TMeta extends Partial<PaginationMeta> = PaginationMeta
+> = {
+  data: TData[];
+  meta: PaginationMeta & TMeta;
+};
+```
+
+**Why this is better:**
+- Keeps type aliases readable and re-usable.
+- Encourages teams to colocate helper types instead of duplicating generics.
+
+### TS-OVERLOAD-REDUCE: Replace Multiple Overloads with Config Object
+
+```ts
+type FetchUserArgs = { id?: number; email?: string };
+
+async function fetchUser({ id, email }: FetchUserArgs): Promise<User> {
+  if (id) return fetchById(id);
+  if (email) return fetchByEmail(email);
+  throw new Error('Missing selector');
+}
+```
+
+- Avoids violating `@typescript-eslint/unified-signatures`.
+- Allows destructuring defaults and schema validation.
+
+### TS-DISCRIMINATED: Prefer Tagged Unions Over Flags
+
+```ts
+type PaymentCommand =
+  | { kind: 'stripe'; intentId: string }
+  | { kind: 'paypal'; orderId: string };
+
+function executePayment(cmd: PaymentCommand) {
+  switch (cmd.kind) {
+    case 'stripe':
+      return captureStripe(cmd.intentId);
+    case 'paypal':
+      return capturePaypal(cmd.orderId);
+  }
+}
+```
+
+- Eliminates boolean flags or `mode: 'stripe' | 'paypal'` strings scattered around.
+- Enables exhaustiveness checking with `never`.
+
+### TS-SATISFY-CONTRACT: Lock Configuration Shape
+
+```ts
+const searchConfig = {
+  pageSize: 25,
+  highlight: true,
+  retryPolicy: { retries: 3, jitter: 100 },
+} as const satisfies SearchOptions;
+```
+
+- Keeps config literals under control and signals when required props are missing.
+
+### TS-IMMUTABLE-READONLY: Use `readonly` for Safer APIs
+
+```ts
+type Filters = {
+  readonly status: 'draft' | 'published';
+  readonly tags: readonly string[];
+};
+```
+
+- Avoids accidental mutation flagged by `@typescript-eslint/prefer-readonly`.
+
+### TS-TYPE-HELPER: Extract Reusable Modules
+
+- Co-locate shared types (`types/domain.ts`) and re-export via `index.ts`.
+- Encourage `export type { UserProfile }` to keep bundlers tree-shakeable.
 
 ---
 

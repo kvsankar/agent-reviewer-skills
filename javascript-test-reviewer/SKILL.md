@@ -46,6 +46,7 @@ Review JavaScript/TypeScript tests and production code to suggest effective test
 - Identify what's being tested and what's missing
 - Understand the testing challenges (DOM, async, API calls)
 - Note test quality issues (implementation details, brittle selectors)
+- Review CI history (flake detectors, test duration, retry counts) to understand pain points beyond code.
 
 ### 2. Apply Guidelines
 
@@ -142,6 +143,12 @@ Use the 55+ guidelines embedded below. Each guideline includes:
 
 **Test Quality (6 guidelines)**
 - QUALITY-DETERMINISTIC, QUALITY-FAST, QUALITY-INDEPENDENT, QUALITY-MAINTAINABLE, QUALITY-COVERAGE, QUALITY-MUTATION
+
+**Contract & Service Tests (4 guidelines)**
+- CONTRACT-CONSUMER - Consumer-driven contract tests
+- CONTRACT-PROVIDER - Provider verification suites
+- CONTRACT-SCHEMA - JSON Schema & OpenAPI validation
+- CONTRACT-MONITOR - Production contract monitors / canaries
 
 ---
 
@@ -2692,6 +2699,76 @@ test('rejects zero amount', () => {
 Don't chase 100% coverage—chase meaningful behavior verification. Write tests that would fail if the code was wrong in important ways. Test error cases and edge cases, not just happy paths. Ask: "If I introduce a bug, will this test catch it?"
 
 ---
+
+## Contract & Service Testing Patterns
+
+### CONTRACT-CONSUMER: Pact-style Contracts
+
+```javascript
+import { Pact } from '@pact-foundation/pact';
+
+const provider = new Pact({ consumer: 'WebApp', provider: 'OrderAPI' });
+
+describe('OrderAPI contract', () => {
+  beforeAll(() => provider.setup());
+  afterAll(() => provider.finalize());
+
+  it('returns order details', async () => {
+    await provider.addInteraction({
+      state: 'order 42 exists',
+      uponReceiving: 'GET /orders/42',
+      withRequest: { method: 'GET', path: '/orders/42' },
+      willRespondWith: {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          id: 42,
+          total: Pact.Matchers.like(199.99),
+          status: Pact.Matchers.term({ matcher: '^(paid|shipped)$', generate: 'paid' }),
+        },
+      },
+    });
+
+    const order = await api.getOrder(42);
+    expect(order).toMatchObject({ id: 42, status: 'paid' });
+  });
+});
+```
+
+- Publish contracts to a broker and fail the CI build if the provider hasn't verified them.
+
+### CONTRACT-PROVIDER: Provider Verification
+
+```javascript
+import { Verifier } from '@pact-foundation/pact';
+
+await new Verifier({
+  providerBaseUrl: process.env.API_URL,
+  pactBrokerUrl: process.env.PACT_BROKER_URL,
+  publishVerificationResult: true,
+  providerVersion: process.env.GIT_SHA,
+}).verifyProvider();
+```
+
+- Run this as part of backend CI/CD to guarantee backward compatibility.
+
+### CONTRACT-SCHEMA: JSON Schema/OpenAPI Validation
+
+```javascript
+import Ajv from 'ajv';
+const ajv = new Ajv({ strict: true });
+const validate = ajv.compile(orderSchema);
+
+const res = await request(app).get('/orders/42');
+expect(validate(res.body)).toBe(true);
+```
+
+- Use when Pact is overkill but you still want schema drift detection.
+
+### CONTRACT-MONITOR: Production Canaries
+
+- Schedule synthetic monitors (Checkly, Pingdom, CloudWatch Synthetics) that call real endpoints with fixture data and validate schema.
+- Alert on SLA breaches or payload mismatches.
 
 ## Summary
 

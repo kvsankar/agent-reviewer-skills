@@ -5164,6 +5164,51 @@ it('returns focus after modal closes', async () => {
 
 ---
 
+## Modern React 18 & Framework Guidance
+
+### Server/Client Component Boundaries
+
+- Default to **Server Components** for data fetching and heavy computation in Next.js/Remix; mark interactive pieces with `"use client"`.
+- Never import browser-only APIs (window, document, Zustand stores) into server components; push them into client components via props.
+
+### Streaming & Suspense
+
+- Use Suspense boundaries per layout segment to stream data incrementally:
+
+```jsx
+export default function Page() {
+  return (
+    <>
+      <Suspense fallback={<StatsSkeleton />}>
+        <StatsPanel />
+      </Suspense>
+      <Suspense fallback={<OrdersSkeleton />}>
+        <OrdersTable />
+      </Suspense>
+    </>
+  );
+}
+```
+
+- For long-running actions, pair Suspense with `useTransition` or route segment loading UI.
+
+### Server Actions / Mutations
+
+- Encapsulate mutations in server actions (Next.js) or Remix actions to keep secrets on the server.
+- Validate inputs with Zod/pydantic before touching the database.
+
+### Next.js / Remix Deployment Notes
+
+- Document per-route runtime (`edge`, `nodejs`), caching strategies (`revalidate`, `cache: 'no-store'`), and data fetching mode (SSR, ISR, SSG).
+- Use route groups/segments wisely; nest layouts for deduped fetches.
+- For Remix loaders/actions, share validation utilities to avoid divergence between client/server.
+
+### React Native & Web Hybrid Considerations
+
+- Extract platform-specific components (`Platform.select`) and avoid DOM-specific APIs in shared hooks.
+
+---
+
 ## Quick Reference
 
 ### By Category

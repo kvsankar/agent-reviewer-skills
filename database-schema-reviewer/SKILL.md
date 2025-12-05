@@ -45,6 +45,7 @@ Review relational database schemas (DDL scripts, migrations, ORMs) for:
 - Identify database platform (MySQL, PostgreSQL, SQL Server, generic)
 - Understand entity relationships and data model
 - Note tables, columns, indexes, constraints
+- If reviewing **migrations**, note ordering, lock duration, and whether scripts are idempotent and reversible.
 
 ### 2. Apply Guidelines
 
@@ -199,6 +200,21 @@ CREATE TABLE users (
 - NAME-RESERVED - Avoid reserved words
 - NAME-ABBREV - Abbreviation standards
 - NAME-PLURAL - Singular vs plural
+
+**Security & Data Protection (6 guidelines)**
+- SEC-RLS - Row-level security / tenant isolation
+- SEC-TDE - Encryption at rest and in transit
+- SEC-PRIVILEGE - Principle of least privilege for GRANTs
+- SEC-SENSITIVE - Handling PII/PCI/PHI data types
+- SEC-AUDIT - Immutable auditing requirements
+- SEC-BACKUP - Backup/restore validation and key handling
+
+**Migrations & Rollouts (5 guidelines)**
+- MIG-ORDER - Safe sequencing of schema changes
+- MIG-IDEMPOTENT - Idempotent, repeatable scripts
+- MIG-LOCK - Lock/availability impact assessment
+- MIG-ROLLBACK - Tested rollback/repair procedures
+- MIG-BACKFILL - Batch backfills and catch-up jobs
 
 **Performance Optimization (6 guidelines)**
 - PERF-PARTITION - Table partitioning
@@ -2087,6 +2103,102 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY monthly_sales;
 - **MSSQL-GUID**: UNIQUEIDENTIFIER with NEWSEQUENTIALID()
 - **MSSQL-TEMPORAL**: System-versioned temporal tables
 - **MSSQL-FILESTREAM**: For large binary data
+
+---
+
+## 10. Security & Data Protection Guidelines
+
+### SEC-RLS: Enforce Row-Level Security or Tenant Isolation
+
+**Problem:** Application-only tenant filters are brittle. One missing `WHERE tenant_id = ?` leaks data.
+
+**Better (PostgreSQL example):**
+```sql
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON invoices
+USING (tenant_id = current_setting('app.tenant_id')::uuid);
+
+-- On each connection
+SET app.tenant_id = 'tenant-123';
+```
+
+**Checklist**
+- Multi-tenant SaaS → database-enforced RLS, separate schemas, or dedicated DBs.
+- For SQL Server/MySQL, use security policies/views to guard tenant scopes.
+
+### SEC-TDE: Encrypt Data at Rest & In Transit
+
+- Confirm TDE or disk encryption (AWS RDS, Azure SQL TDE, CloudSQL CMEK).
+- Require TLS-only connections (`rds.force_ssl=1`, `require_secure_transport=ON`).
+- Document key rotation cadence (KMS or HSM) and who owns it.
+
+### SEC-PRIVILEGE: Principle of Least Privilege
+
+- Separate roles: `app_readonly`, `app_rw`, `migration`.
+- GRANT only required verbs: `GRANT SELECT, INSERT ON ... TO app_rw`.
+- Avoid running app code as superuser; audit `SECURITY DEFINER` functions.
+
+### SEC-SENSITIVE: Handle PII/PCI/PHI Safely
+
+- Use deterministic hashes (e.g., SHA-256 + salt) for lookup fields like email.
+- Mask or tokenize card data; store only PCI-compliant tokens or last4.
+- Apply CHECK constraints to restrict formats (e.g., ISO country codes).
+
+### SEC-AUDIT: Immutable Audit Trails
+
+```sql
+CREATE TABLE order_audit (
+  audit_id BIGSERIAL PRIMARY KEY,
+  order_id BIGINT NOT NULL,
+  action TEXT NOT NULL,
+  changed_by TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+- Prefer append-only audit tables populated via triggers or logical decoding.
+- Ship audit logs to tamper-resistant storage (CloudTrail, Azure Monitor).
+
+### SEC-BACKUP: Backup/Restore Validation
+
+- Define RPO/RTO per environment.
+- Automate restore drills (spin up a fresh instance, restore latest backup, run checksums).
+- Document encryption for backups and how KMS keys are rotated.
+
+---
+
+## 11. Migrations & Rollouts Guidelines
+
+### MIG-ORDER: Safe Sequencing
+
+- Follow **expand → backfill → contract**: add nullable column, copy data, switch app, then drop legacy column/index.
+- Avoid combining multiple risky operations in one migration.
+
+### MIG-IDEMPOTENT: Repeatable Scripts
+
+```sql
+ALTER TABLE customers
+ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN NOT NULL DEFAULT false;
+```
+- Guard object creation/drops with `IF [NOT] EXISTS`.
+- Use migration version tables to detect drift.
+
+### MIG-LOCK: Understand Locking
+
+- Document expected lock type/duration. For PostgreSQL, know that `ALTER TABLE ... ADD COLUMN` takes ACCESS EXCLUSIVE locks.
+- Use online operations when available (SQL Server `ONLINE = ON`, MySQL `ALGORITHM=INPLACE`).
+
+### MIG-ROLLBACK: Reversal or Repair
+
+- Provide down-migrations or an operational playbook to correct failed deployments.
+- Archive schema snapshots before destructive steps.
+
+### MIG-BACKFILL: Controlled Data Updates
+
+- Backfill in batches: `UPDATE ... WHERE id BETWEEN x AND y LIMIT 1000`.
+- Use job queues or `pg_cron`/`Event Scheduler` to pace workloads.
+- Validate row counts/aggregates before flipping feature flags.
 
 ---
 

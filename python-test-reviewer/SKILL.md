@@ -46,6 +46,7 @@ Review Python tests and production code to suggest effective testing strategies.
 - Identify what's being tested and what's missing
 - Understand the testing challenges (external dependencies, complexity)
 - Note test quality issues (coupling, brittleness, unclear assertions)
+- Review CI telemetry (pytest durations, flaky test suppressions, rerun counts) to understand operational pain points.
 
 ### 2. Apply Guidelines
 
@@ -133,6 +134,9 @@ Use the 25 guidelines embedded below. Each guideline includes:
 
 **Test Quality & Completeness (5 guidelines)**
 - TEST-EDGE-CASES, TEST-ERROR-PATHS, TEST-COVERAGE-QUALITY, TEST-FLAKY, TEST-FAST
+
+**Contract & Service Tests (4 guidelines)**
+- CONTRACT-CONSUMER, CONTRACT-PROVIDER, CONTRACT-SCHEMA, CONTRACT-MONITOR
 
 ---
 
@@ -1808,6 +1812,64 @@ def test_sort_with_fixed_data(data):
 - Use retries only as last resort, fix root cause instead
 
 ---
+
+## Contract & Service Testing Patterns
+
+### CONTRACT-CONSUMER: Pact for Python
+
+```python
+from pact import Consumer, Provider
+
+pact = Consumer('InventoryUI').has_pact_with(Provider('InventoryAPI'))
+pact.start_service()
+
+def test_get_inventory_contract():
+    expected = {
+        'id': 42,
+        'sku': 'ABC-123',
+        'quantity': pact.like(100),
+    }
+    (pact
+        .upon_receiving('a request for inventory 42')
+        .with_request('GET', '/inventory/42')
+        .will_respond_with(200, body=expected))
+
+    with pact:
+        response = client.get_inventory(42)
+    assert response == expected
+```
+
+- Publish pacts to a broker and gate API deployments on verification.
+
+### CONTRACT-PROVIDER
+
+```python
+from pact import Verifier
+
+Verifier(provider='InventoryAPI', provider_base_url=API_URL).verify_pacts(
+    pact_url=os.environ['PACT_BROKER_URL']
+)
+```
+
+- Run in backend CI to guarantee backward compatibility.
+
+### CONTRACT-SCHEMA: JSON Schema/OpenAPI Assertions
+
+```python
+import jsonschema
+
+def test_order_schema():
+    schema = load_schema('order.json')
+    response = client.get('/orders/42')
+    jsonschema.validate(response.json(), schema)
+```
+
+- Lightweight alternative when Pact is overkill.
+
+### CONTRACT-MONITOR: Production Canaries
+
+- Schedule synthetic checks (e.g., pytest scripts run via cron) hitting real environments and validating responses.
+- Alert on schema drift or SLA violations.
 
 # End of Guidelines
 

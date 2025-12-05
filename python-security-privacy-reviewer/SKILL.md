@@ -42,6 +42,15 @@ Review Python code for security vulnerabilities and privacy risks. Focus on:
 - Identify security-sensitive operations (auth, crypto, I/O)
 - Identify PII and sensitive data handling
 - Note attack surfaces and trust boundaries
+- Map findings to STRIDE/LINDDUN categories so you cover spoofing, tampering, privacy risks, and compliance gaps consistently.
+
+### Threat Modeling Quickstart
+
+1. **Assets:** credentials, secrets, PII classes, regulated data.
+2. **Entry points:** HTTP handlers, Celery tasks, cron jobs, CLI scripts.
+3. **Trust zones:** browser → API → internal services → storage.
+4. **Threats:** use STRIDE (security) + LINDDUN (privacy) mnemonics.
+5. **Controls:** list missing mitigations (CSRF token, tenant filter, encryption at rest).
 
 ### 2. Apply Guidelines
 
@@ -179,6 +188,14 @@ Use the 60+ guidelines embedded below in this skill document. All guidelines inc
 - HEADER-SECURE - Security headers
 - COOKIE-SECURE - Secure cookie flags
 - CLICK-JACK - Clickjacking prevention
+
+**Framework-Specific (6 guidelines)**
+- DJANGO-CSRF - Django middleware & settings
+- DRF-PERM - DRF permissions/throttling
+- FASTAPI-DEPENDENCIES - Dependency injection for auth/tenancy
+- FLASK-SESSION - Session/signing configuration
+- CELERY-SECURE - Task signing, visibility timeout, queue auth
+- ORM-TENANT - Tenant filters / row-level security
 
 **Privacy - PII Handling (8 guidelines)**
 - PII-IDENTIFY - Identify all PII
@@ -2719,6 +2736,29 @@ When reviewing code, systematically check:
 - [ ] **PCI DSS**: If handling payment cards
 - [ ] **HIPAA**: If handling health information
 - [ ] **CCPA**: If handling California residents
+
+---
+
+## 9. Framework-Specific Guidance
+
+### DJANGO-CSRF / DRF-PERM
+- Ensure `MIDDLEWARE` includes `django.middleware.csrf.CsrfViewMiddleware`.
+- In DRF, use `DEFAULT_PERMISSION_CLASSES` (`IsAuthenticated`, custom RBAC) and rate throttles; never rely solely on viewset defaults.
+
+### FASTAPI-DEPENDENCIES
+- Centralize auth/tenant validation in dependency callables so every route enforces the same checks.
+- Use `Depends(get_current_user)` combined with `Annotated` parameters for injection.
+
+### FLASK-SESSION
+- Use `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE`, and `SECRET_KEY` rotation.
+- Prefer server-side session stores (Redis) rather than signed cookies for sensitive data.
+
+### CELERY-SECURE
+- Sign tasks (`task_serializer='json', accept_content=['json']`), require TLS on broker connections, and set `visibility_timeout` for SQS/Redis.
+
+### ORM-TENANT
+- Ensure ORM managers/filter sets always scope by tenant/org ID.
+- Combine with database-level controls (RLS, schema separation) to prevent accidental leaks.
 
 ---
 

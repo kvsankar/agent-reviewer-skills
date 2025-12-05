@@ -7,6 +7,7 @@ A comprehensive Claude Code skill for reviewing software specifications, user st
 This skill analyzes requirements documents, user stories, and use cases for:
 
 ### User Story Quality (INVEST Criteria)
+
 - **I**ndependent - Stories can be developed in any order
 - **N**egotiable - Details worked out through conversation
 - **V**aluable - Clear business or user value
@@ -15,6 +16,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 - **T**estable - Clear acceptance criteria
 
 ### Use Case Completeness
+
 - All actors identified (primary, secondary, stakeholders)
 - Preconditions and postconditions specified
 - Complete main success scenario
@@ -23,6 +25,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 - Data exchanged specified
 
 ### Requirements Quality
+
 - Clear, unambiguous language
 - Atomic (one requirement per statement)
 - Measurable and verifiable
@@ -31,6 +34,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 - Traceable to business needs
 
 ### Problem Domain Focus
+
 - Describes WHAT, not HOW
 - No architecture or design details
 - No technology choices
@@ -38,6 +42,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 - Focuses on external behavior
 
 ### Consistency
+
 - Consistent terminology throughout
 - No contradicting requirements
 - Consistent format and structure
@@ -45,6 +50,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 - Valid cross-references
 
 ### Completeness
+
 - All actors and scenarios covered
 - Edge cases addressed
 - Error conditions specified
@@ -67,12 +73,14 @@ This skill analyzes requirements documents, user stories, and use cases for:
 #### INVEST-V: User story lacks clear business value
 
 **Current requirement:**
-```
+
+```text
 As a user, I want a checkout button so that I can check out.
 ```
 
 **Suggested improvement:**
-```
+
+```text
 As a customer, I want to review my order details and complete payment quickly,
 so that I can finalize my purchase with confidence and minimal friction,
 reducing cart abandonment and increasing conversion.
@@ -92,12 +100,14 @@ Every user story must articulate clear value. The "so that" clause should answer
 #### REQ-AVOID-VAGUE: Requirement uses unmeasurable terms
 
 **Current requirement:**
-```
+
+```text
 The checkout process shall be fast and user-friendly.
 ```
 
 **Suggested improvement:**
-```
+
+```text
 The checkout process shall:
 - Complete in 3 steps or fewer from cart to confirmation
 - Display each step within 2 seconds of user action
@@ -120,13 +130,15 @@ can't measure it, you can't verify it.
 #### COMP-ERROR: Missing error condition handling
 
 **Current requirement:**
-```
+
+```text
 The user enters payment information and clicks Submit.
 The system processes payment and displays confirmation.
 ```
 
 **Suggested improvement:**
-```
+
+```text
 Main Success Scenario:
 1. User enters payment information
 2. System validates payment information format

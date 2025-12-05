@@ -98,6 +98,18 @@ Use the 50+ guidelines embedded below in this skill document.
 - Show actual before/after examples
 - Provide concrete "current vs improved" versions
 - Explain the "why" - impact on development and testing
+- Include a **severity label** from the rubric below
+
+### 🚦 Severity Rubric
+
+| Severity | When to use it | Typical impact |
+| --- | --- | --- |
+| **Blocker** | Contradictory requirements, missing core flows, legal/compliance gaps | Delivery cannot start; regulatory or contractual risk |
+| **High** | Missing acceptance criteria, INVEST violations, ambiguous scope | Significant rework during development or testing |
+| **Medium** | Clarity or completeness issues that still allow progress | Slower velocity, confusion across roles |
+| **Low** | Style/format or optimization suggestions | Improves consistency but not immediately harmful |
+
+> ⚡ Severity should reflect **business impact** (customer risk, regulatory exposure, wasted effort) rather than document aesthetics.
 
 ## Key Guidelines by Category
 
@@ -584,7 +596,22 @@ Acceptance Criteria:
 ```
 
 **Why this matters:**
-Acceptance criteria define what "done" means, guide implementation, and form the basis for test cases. Without them, stakeholders and developers may have different expectations.
+Acceptance criteria define what "done" means, guide implementation, provide BDD scenarios, and form the basis for test cases. Without them, stakeholders and developers may have different expectations.
+
+**From Acceptance Criteria to BDD Scenarios**
+
+Translate criteria into **Given/When/Then** steps so QA and automation engineers can execute them:
+
+```
+Scenario: Display matching products
+  Given a product catalog that includes "Fuzzy Blanket"
+  And I am on the catalog page
+  When I search for "fuzzy"
+  Then I see "Fuzzy Blanket" in the results
+  And the highlight markup wraps the match term
+```
+
+Use **Scenario Outlines** for data-driven acceptance criteria (e.g., validating multiple product categories) and keep steps written in business language (no UI element IDs).
 
 ---
 

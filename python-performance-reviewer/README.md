@@ -358,10 +358,11 @@ def fetch_urls(urls):
 - Large objects in memory
 
 ### Strings
-- + concatenation → join()
-- % formatting → f-strings
-- Repeated regex → Compiled regex
-- Regex → String methods
+
+- `+` concatenation → `''.join(...)`
+- `%` formatting → f-strings
+- Repeated regex → compiled regex
+- Regex → string methods
 
 ### I/O
 - Loading entire files → Streaming

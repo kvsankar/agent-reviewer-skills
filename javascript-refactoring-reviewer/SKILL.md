@@ -35,6 +35,8 @@ Review JavaScript/TypeScript code for refactoring opportunities. Focus on:
 - **Testability** - Dependency injection, pure functions, testable design
 - **Code Smells** - Bloaters, coupling, duplication, complexity
 - **Modern JavaScript** - ES6+, async/await, functional patterns
+- **Type Safety** - Interfaces, discriminated unions, generics
+- **Framework Patterns** - React/JSX component structure and hooks
 - **Performance** - Algorithmic efficiency, resource optimization
 
 ## Review Process
@@ -139,6 +141,22 @@ Use the 50+ guidelines embedded below. All guidelines include:
 - DESTRUCTURE, SPREAD-REST, OPT-CHAIN
 - NULLISH-COAL, ASYNC-AWAIT, ARRAY-METHODS
 - CONST-LET, DEFAULT-PARAM
+
+**React & JSX (6 guidelines)**
+- REACT-PROP-DRILL - Replace prop drilling with composition/context
+- REACT-HOOK-EXTRACT - Extract custom hooks
+- REACT-SPLIT-COMP - Split massive components
+- REACT-STATE-LOCAL - Colocate state
+- REACT-MEMO - Memoize heavy components/hooks
+- REACT-SERVER-BOUNDARY - Server/Client component boundaries (React 18)
+
+**TypeScript-Specific (6 guidelines)**
+- TS-INTERFACE-EXTRACT - Extract interfaces/types
+- TS-DISCRIMINATED - Prefer discriminated unions over flag params
+- TS-SATISFY - Use `satisfies`/`as const` for config safety
+- TS-GENERIC-CLEAN - Simplify complex generics
+- TS-ENUM-TO-UNION - Migrate enums to union literals
+- TS-READONLY - Leverage `readonly` and mapped types
 
 **Performance (5 guidelines)**
 - ALGO-COMPLEX, MEMO-RESULT, LAZY-EVAL
@@ -2949,6 +2967,85 @@ searchInput.addEventListener('input', debounce((e) => {
 > "Code is read much more often than it is written." - Guido van Rossum
 
 > "The best code is no code at all." - Jeff Atwood
+
+---
+
+## React & JSX Refactorings
+
+### REACT-PROP-DRILL: Replace Prop Drilling with Composition/Context
+
+```jsx
+const ThemeContext = createContext();
+
+function App() {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <Layout>
+        <Header />
+        <Sidebar />
+      </Layout>
+    </ThemeContext.Provider>
+  );
+}
+```
+
+- Keeps JSX clean and unlocks memoization per concern.
+
+### REACT-HOOK-EXTRACT: Custom Hooks
+
+```jsx
+function useUserProfile(userId) {
+  const [profile, setProfile] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchUser(userId).then((data) => !cancelled && setProfile(data));
+    return () => { cancelled = true; };
+  }, [userId]);
+  return profile;
+}
+```
+
+- Removes repeated `useEffect` boilerplate inside components.
+
+### REACT-SPLIT-COMP: Split Large Components
+
+- Break 500-line dashboard components into container + presentational pieces.
+- Apply Suspense boundaries to isolate slow queries.
+
+### REACT-SERVER-BOUNDARY: Server vs Client Components
+
+- In React 18 App Router, keep data fetching/render-heavy logic server-side and mark interactive components with `"use client"`.
+- Never import Node-only modules into client bundles.
+
+### REACT-MEMO/STATE-LOCAL
+
+- Colocate state to reduce renders and wrap heavy children in `React.memo`.
+
+## TypeScript-Specific Refactorings
+
+### TS-INTERFACE-EXTRACT
+
+- Extract interface/type aliases so functions take single objects.
+- Encourages reuse in tests and APIs.
+
+### TS-DISCRIMINATED
+
+- Model flows as tagged unions to replace boolean flag parameters.
+- Use exhaustive switch statements for safety.
+
+### TS-SATISFY & READONLY
+
+- Apply `as const satisfies ConfigSchema` patterns so config remains type-safe.
+- Use `readonly` arrays/maps to enforce immutability in FP-heavy code.
+
+### TS-GENERIC-CLEAN
+
+- Extract helper types, avoid deeply nested inline generics that violate `max-len`.
+
+### TS-ENUM-TO-UNION
+
+- Prefer union literals + `Record` helpers for tree-shakable enums.
 
 ---
 

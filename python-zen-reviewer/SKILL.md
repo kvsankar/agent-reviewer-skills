@@ -108,6 +108,14 @@ Use the 40+ guidelines embedded below. All guidelines include:
 - Provide concrete "before and after" examples
 - Explain alignment with Zen of Python philosophy
 - Quote the relevant Zen aphorism
+- Tag each issue with a **priority** (Critical/High/Medium/Low) to guide teams.
+
+| Priority | Description |
+| --- | --- |
+| **Critical** | Violates multiple Zen principles or causes readability/security risk. |
+| **High** | Hinders comprehension, maintainability, or explicitness. |
+| **Medium** | Style consistency and clarity improvements. |
+| **Low** | Minor polish or philosophical alignment notes. |
 
 ## Key Guidelines by Category
 
@@ -117,7 +125,7 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 **Explicitness & Clarity (7 guidelines)**
 - ZEN-EXPLICIT, ZEN-IMPLICIT, ZEN-TYPE-HINTS, ZEN-MAGIC-IMPORT
-- ZEN-ARGS, ZEN-RETURN, ZEN-MUTATE
+- ZEN-ARGS, ZEN-RETURN, ZEN-MUTATE, ZEN-DOCSTRING
 
 **Simplicity (6 guidelines)**
 - ZEN-SIMPLE, ZEN-COMPLEX, ZEN-COMPLICATED, ZEN-OVERDESIGN
@@ -1454,6 +1462,45 @@ def parse_date(date_string: str, format: str = "%Y-%m-%d") -> datetime:
 > "In the face of ambiguity, refuse the temptation to guess."
 
 **Attribution:** PEP 20
+
+---
+
+### ZEN-DOCSTRING: Document Non-Obvious Behavior
+
+**Intent:** Explicitness
+
+**Zen Principle:** "Explicit is better than implicit."
+
+**Missing docstring:**
+```python
+def reconcile_accounts(accounts, *, allow_overdraft=False):
+    # 40 lines of logic...
+    ...
+```
+
+**Docstring clarifies behavior:**
+```python
+def reconcile_accounts(accounts: Iterable[Account], *, allow_overdraft: bool = False) -> list[Entry]:
+    """
+    Reconcile pending debits/credits and return journal entries.
+
+    Args:
+        accounts: Iterable of accounts to reconcile.
+        allow_overdraft: When True, permits temporary negative balances.
+
+    Raises:
+        OverdraftError: if overdraft detected and allow_overdraft=False.
+    """
+    ...
+```
+
+- Use docstrings for public APIs, complex algorithms, and edge-case behavior.
+- Reference Sphinx/Google-style docstrings for consistency.
+
+**Zen principle:**
+> "Explicit is better than implicit."
+
+**Attribution:** PEP 257, PEP 20
 
 ---
 
