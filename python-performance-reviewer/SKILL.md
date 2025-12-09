@@ -2678,6 +2678,420 @@ def generate_realistic_data():
 
 ---
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging performance issues, check whether **expected performance patterns are missing**. The absence of good practices is itself a finding.
+
+Based on [Python Wiki PerformanceTips](https://wiki.python.org/moin/PythonSpeed/PerformanceTips), [The Little Book of Python Anti-Patterns](https://docs.quantifiedcode.com/python-anti-patterns/), [Real Python Profiling Guide](https://realpython.com/python-profiling/), and [functools documentation](https://docs.python.org/3/library/functools.html).
+
+## How to Use This Section
+
+When reviewing code, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern causes significant performance issues
+- **⚠️ Warning** - Missing pattern leaves performance on the table
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Profiling & Measurement
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PROFILING** | Code profiled before optimization | Guessing at bottlenecks |
+| **MISSING-BENCHMARK** | Benchmarks with production-like data | False confidence from small tests |
+| **MISSING-BASELINE** | Performance baseline established | No way to measure improvement |
+| **MISSING-HOTSPOT-FOCUS** | Optimization targets the 20% causing 80% of time | Wasted effort on fast code |
+| **MISSING-BEFORE-AFTER** | Measurements before and after changes | No proof optimization worked |
+
+**What to look for:**
+```python
+# PRESENT: Profile before optimizing
+import cProfile
+import pstats
+
+def profile_function(func, *args, **kwargs):
+    """Profile a function and show top time consumers."""
+    profiler = cProfile.Profile()
+    profiler.enable()
+    result = func(*args, **kwargs)
+    profiler.disable()
+
+    stats = pstats.Stats(profiler)
+    stats.sort_stats('cumulative')
+    stats.print_stats(10)  # Top 10 time consumers
+    return result
+
+# PRESENT: Benchmark with realistic data
+import timeit
+
+def benchmark_implementations():
+    """Compare implementations with production-like data."""
+    setup = "data = list(range(100_000))"
+
+    implementations = {
+        'list_search': 'x = 99_999 in data',
+        'set_search': 's = set(data); x = 99_999 in s',
+    }
+
+    for name, code in implementations.items():
+        time = timeit.timeit(code, setup=setup, number=1000)
+        print(f"{name}: {time:.4f}s")
+```
+
+**Attribution:** [Real Python - Profiling in Python](https://realpython.com/python-profiling/)
+
+---
+
+## Data Structure Selection
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SET-LOOKUP** | Sets for membership tests | O(n) list lookups instead of O(1) |
+| **MISSING-DICT-LOOKUP** | Dicts for key-value lookups | Linear search through lists |
+| **MISSING-DEQUE** | `collections.deque` for queue operations | O(n) list.insert(0, x) |
+| **MISSING-COUNTER** | `collections.Counter` for counting | Manual dict counting |
+| **MISSING-DEFAULTDICT** | `collections.defaultdict` for grouping | Verbose if-key-exists checks |
+
+**What to look for:**
+```python
+# PRESENT: Set for membership (O(1) vs O(n))
+valid_ids = {1, 2, 3, 4, 5}  # Set literal
+if user_id in valid_ids:  # O(1) lookup
+    process(user_id)
+
+# PRESENT: Dict for key-value (O(1) vs O(n))
+user_cache = {u.id: u for u in users}  # Dict comprehension
+user = user_cache.get(user_id)  # O(1) lookup
+
+# PRESENT: Deque for queue (O(1) vs O(n))
+from collections import deque
+queue = deque(maxlen=1000)
+queue.append(item)      # O(1) right
+queue.appendleft(item)  # O(1) left - list.insert(0, x) is O(n)!
+
+# PRESENT: Counter for counting
+from collections import Counter
+word_counts = Counter(words)  # Optimized C implementation
+top_10 = word_counts.most_common(10)
+
+# PRESENT: defaultdict for grouping
+from collections import defaultdict
+by_category = defaultdict(list)
+for item in items:
+    by_category[item.category].append(item)  # No if-key-exists check
+```
+
+**Attribution:** [Python Wiki PerformanceTips](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+
+---
+
+## Generators & Lazy Evaluation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-GENERATOR** | Generators for large sequences | Memory exhaustion on large data |
+| **MISSING-YIELD** | `yield` instead of building lists | Entire dataset loaded in memory |
+| **MISSING-ITERTOOLS** | `itertools` for iterator operations | Reinventing efficient iteration |
+| **MISSING-LAZY-EVAL** | Lazy evaluation where possible | Unnecessary computation upfront |
+| **MISSING-GENEXP** | Generator expressions `(x for x in ...)` | List comprehensions when not needed |
+
+**What to look for:**
+```python
+# PRESENT: Generator for large file processing
+def read_large_file(path):
+    """Process file line by line, never load entire file."""
+    with open(path) as f:
+        for line in f:
+            yield process_line(line)
+
+# Use: constant memory regardless of file size
+for result in read_large_file("huge_file.txt"):
+    save(result)
+
+# PRESENT: Generator expression (not list comprehension)
+# When you only need to iterate once:
+total = sum(x * x for x in range(1_000_000))  # Generator: ~0 MB
+# NOT: sum([x * x for x in range(1_000_000)])  # List: ~40 MB
+
+# PRESENT: itertools for efficient iteration
+from itertools import islice, chain, groupby
+
+# Take first 10 from generator (no list conversion)
+first_10 = list(islice(generator, 10))
+
+# Chain iterables without creating intermediate list
+all_items = chain(list1, list2, list3)
+
+# MISSING: Building entire list when streaming possible
+def process_all(items):  # Bad: builds entire result list
+    results = []
+    for item in items:
+        results.append(transform(item))
+    return results
+```
+
+**Attribution:** [KDnuggets - Lazy Evaluation in Python](https://www.kdnuggets.com/lazy-evaluation-python-exploring-power-generators)
+
+---
+
+## Caching & Memoization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-LRU-CACHE** | `@lru_cache` for expensive pure functions | Recomputing same results |
+| **MISSING-CACHE-SIZE** | Appropriate `maxsize` for cache | Unbounded memory growth |
+| **MISSING-CACHE-TYPED** | `typed=True` when types matter | Wrong cached results |
+| **MISSING-CACHE-CLEAR** | Cache clearing when data changes | Stale cached results |
+| **MISSING-HASHABLE-ARGS** | Hashable arguments for cached functions | Cache misses or errors |
+
+**What to look for:**
+```python
+from functools import lru_cache, cache
+
+# PRESENT: Cache expensive computations
+@lru_cache(maxsize=128)  # LRU eviction when full
+def fibonacci(n: int) -> int:
+    """Cached recursive fibonacci - O(n) instead of O(2^n)."""
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+# PRESENT: Unbounded cache for small result sets
+@cache  # Equivalent to lru_cache(maxsize=None)
+def get_config(key: str) -> dict:
+    """Config rarely changes, cache forever."""
+    return load_config_from_disk(key)
+
+# PRESENT: Typed cache when types matter
+@lru_cache(maxsize=256, typed=True)
+def parse_value(value):
+    """parse_value(3) and parse_value(3.0) cached separately."""
+    return expensive_parse(value)
+
+# PRESENT: Monitor cache performance
+print(fibonacci.cache_info())
+# CacheInfo(hits=97, misses=3, maxsize=128, currsize=3)
+
+# PRESENT: Clear cache when underlying data changes
+def update_config(key: str, value: dict):
+    save_config_to_disk(key, value)
+    get_config.cache_clear()  # Invalidate cache
+```
+
+**Attribution:** [Python functools documentation](https://docs.python.org/3/library/functools.html)
+
+---
+
+## String Operations
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-JOIN** | `''.join(list)` for many strings | O(n²) string concatenation |
+| **MISSING-FSTRING** | f-strings for formatting | Slower .format() or % |
+| **MISSING-STR-METHODS** | String methods over regex for simple tasks | Regex overhead for simple ops |
+| **MISSING-INTERN** | `sys.intern()` for repeated strings | Duplicate string objects |
+
+**What to look for:**
+```python
+# PRESENT: join() for building strings (O(n) vs O(n²))
+parts = []
+for item in items:
+    parts.append(str(item))
+result = ''.join(parts)  # One allocation
+
+# Or more Pythonic:
+result = ''.join(str(item) for item in items)
+
+# MISSING: String concatenation in loop (O(n²))
+result = ''
+for item in items:
+    result += str(item)  # Creates new string each time!
+
+# PRESENT: f-strings (fastest string formatting)
+name, age = "Alice", 30
+message = f"Hello, {name}! You are {age} years old."
+
+# PRESENT: String methods for simple operations
+text = "  hello world  "
+text.strip()          # vs re.sub(r'^\s+|\s+$', '', text)
+text.startswith('h')  # vs re.match(r'^h', text)
+text.replace('o', '0') # vs re.sub(r'o', '0', text)
+```
+
+**Attribution:** [Python Wiki PerformanceTips](https://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+
+---
+
+## Async & Concurrency
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ASYNCIO** | `asyncio` for I/O-bound concurrency | Sequential I/O operations |
+| **MISSING-GATHER** | `asyncio.gather()` for concurrent tasks | Sequential await calls |
+| **MISSING-SEMAPHORE** | Semaphore for rate limiting | Resource exhaustion |
+| **MISSING-MULTIPROCESS** | `multiprocessing` for CPU-bound tasks | GIL-limited parallelism |
+| **MISSING-EXECUTOR** | `ProcessPoolExecutor` for CPU in async | Blocking the event loop |
+
+**What to look for:**
+```python
+import asyncio
+from concurrent.futures import ProcessPoolExecutor
+
+# PRESENT: Concurrent I/O with gather()
+async def fetch_all(urls: list[str]) -> list[Response]:
+    """Fetch all URLs concurrently, not sequentially."""
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_one(session, url) for url in urls]
+        return await asyncio.gather(*tasks)
+
+# MISSING: Sequential awaits (much slower)
+async def fetch_all_slow(urls):
+    results = []
+    for url in urls:
+        results.append(await fetch_one(url))  # Waits for each!
+    return results
+
+# PRESENT: Semaphore for rate limiting
+async def fetch_with_limit(urls: list[str], max_concurrent: int = 10):
+    """Limit concurrent requests to avoid overwhelming server."""
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def fetch_limited(url):
+        async with semaphore:
+            return await fetch_one(url)
+
+    return await asyncio.gather(*[fetch_limited(url) for url in urls])
+
+# PRESENT: ProcessPoolExecutor for CPU-bound in async context
+async def process_images(images: list[Image]) -> list[Result]:
+    """CPU-bound work: use processes, not threads (GIL)."""
+    loop = asyncio.get_event_loop()
+    with ProcessPoolExecutor() as pool:
+        tasks = [
+            loop.run_in_executor(pool, cpu_intensive_process, img)
+            for img in images
+        ]
+        return await asyncio.gather(*tasks)
+```
+
+**Attribution:** [Real Python - asyncio](https://realpython.com/async-io-python/)
+
+---
+
+## Loop Optimization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-COMPREHENSION** | List/dict/set comprehensions | Slower explicit loops |
+| **MISSING-BUILTIN** | Built-in functions (`sum`, `min`, `max`, `any`, `all`) | Manual loop equivalents |
+| **MISSING-ENUMERATE** | `enumerate()` for index+value | Manual counter variable |
+| **MISSING-ZIP** | `zip()` for parallel iteration | Manual indexing |
+| **MISSING-HOIST** | Loop-invariant code moved outside | Repeated computation |
+
+**What to look for:**
+```python
+# PRESENT: Comprehension (faster than loop)
+squares = [x * x for x in range(1000)]
+lookup = {item.id: item for item in items}
+unique = {x.lower() for x in words}
+
+# PRESENT: Built-in functions (C-optimized)
+total = sum(values)
+largest = max(items, key=lambda x: x.score)
+has_errors = any(item.is_error for item in items)
+all_valid = all(item.is_valid for item in items)
+
+# PRESENT: enumerate and zip
+for i, item in enumerate(items):
+    print(f"{i}: {item}")
+
+for name, score in zip(names, scores):
+    print(f"{name}: {score}")
+
+# PRESENT: Loop-invariant hoisting
+# Before (slow):
+for item in items:
+    result = expensive_config_lookup()  # Called N times!
+    process(item, result)
+
+# After (fast):
+result = expensive_config_lookup()  # Called once
+for item in items:
+    process(item, result)
+```
+
+**Attribution:** [GeeksforGeeks - Python Performance Tips](https://www.geeksforgeeks.org/python/optimization-tips-python-code/)
+
+---
+
+## Memory Efficiency
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SLOTS** | `__slots__` for many instances | Memory overhead per instance |
+| **MISSING-DEL** | `del` for large objects when done | Memory held unnecessarily |
+| **MISSING-WEAKREF** | `weakref` for caches that shouldn't prevent GC | Memory leaks |
+| **MISSING-MEMORYVIEW** | `memoryview` for zero-copy slicing | Copying large buffers |
+| **MISSING-ARRAY** | `array.array` for homogeneous numeric data | List overhead |
+
+**What to look for:**
+```python
+# PRESENT: __slots__ for memory-critical classes
+class Point:
+    __slots__ = ('x', 'y')  # ~40% less memory per instance
+
+    def __init__(self, x: float, y: float):
+        self.x = x
+        self.y = y
+
+# Millions of points: significant memory savings
+
+# PRESENT: Delete large objects when done
+large_data = load_huge_file()
+results = process(large_data)
+del large_data  # Free memory now, don't wait for GC
+
+# PRESENT: memoryview for zero-copy
+data = bytearray(1_000_000)
+view = memoryview(data)
+chunk = view[1000:2000]  # No copy! Just a view
+
+# PRESENT: array for numeric data
+from array import array
+# List of ints: ~8 bytes per int + list overhead
+# array of ints: ~4 bytes per int, contiguous
+numbers = array('i', range(1_000_000))  # 'i' = signed int
+```
+
+---
+
+## Expected Good Patterns Checklist
+
+Quick reference for absence checks:
+
+### 🔴 Critical (Must Have)
+- [ ] **MISSING-PROFILING** - Profile before optimizing
+- [ ] **MISSING-SET-LOOKUP** - Sets for membership tests
+- [ ] **MISSING-GENERATOR** - Generators for large data
+- [ ] **MISSING-JOIN** - join() for string building
+- [ ] **MISSING-GATHER** - asyncio.gather() for concurrent I/O
+
+### ⚠️ Warning (Should Have)
+- [ ] **MISSING-LRU-CACHE** - @lru_cache for expensive functions
+- [ ] **MISSING-COMPREHENSION** - List/dict/set comprehensions
+- [ ] **MISSING-BUILTIN** - Built-in functions (sum, any, all)
+- [ ] **MISSING-DEQUE** - deque for queue operations
+- [ ] **MISSING-MULTIPROCESS** - multiprocessing for CPU-bound
+
+### 💡 Recommendation (Nice to Have)
+- [ ] **MISSING-SLOTS** - __slots__ for many instances
+- [ ] **MISSING-ITERTOOLS** - itertools for iteration
+- [ ] **MISSING-SEMAPHORE** - Semaphore for rate limiting
+- [ ] **MISSING-BENCHMARK** - Benchmarks with realistic data
+- [ ] **MISSING-FSTRING** - f-strings for formatting
+
+---
+
 ## Performance Wisdom
 
 > **"Premature optimization is the root of all evil."** - Donald Knuth

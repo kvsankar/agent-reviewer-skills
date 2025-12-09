@@ -2202,6 +2202,404 @@ ADD COLUMN IF NOT EXISTS marketing_opt_in BOOLEAN NOT NULL DEFAULT false;
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [Bytebase Schema Best Practices](https://www.bytebase.com/blog/top-database-schema-design-best-practices/), [SQL Antipatterns Book](https://pragprog.com/titles/bksap1/sql-antipatterns-volume-1/), [Crunchy Data Covering Indexes](https://www.crunchydata.com/blog/why-covering-indexes-are-incredibly-helpful), [CockroachDB FK Guide](https://www.cockroachlabs.com/blog/common-foreign-key-mistakes/)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Referential Integrity Patterns
+
+**Mnemonic:** **"EVERY-FK-INDEXED"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Foreign key constraint on every relationship | 🔴 `MISSING-FK-CONSTRAINT` - Orphaned records possible |
+| Index on every foreign key column | 🔴 `MISSING-FK-INDEX` - Slow joins, table locks |
+| CASCADE or SET NULL rules defined | ⚠️ `MISSING-FK-CASCADE` - Manual cleanup required |
+| Consistent FK/PK data types | 🔴 `MISSING-FK-TYPE-MATCH` - Join failures, poor performance |
+
+```sql
+-- PRESENT: Complete FK setup
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+
+    -- FK constraint with CASCADE
+    CONSTRAINT fk_order_customer
+        FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT fk_order_product
+        FOREIGN KEY (product_id) REFERENCES products(product_id)
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+
+    -- Indexes on FK columns (critical for MySQL/PostgreSQL)
+    INDEX idx_orders_customer (customer_id),
+    INDEX idx_orders_product (product_id)
+);
+
+-- MISSING: FK without constraint or index
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT,  -- No FK constraint!
+    product_id INT    -- No index on FK!
+);
+-- Problems:
+-- 1. Orphaned orders when customer deleted
+-- 2. Full table scan on JOIN customer_id
+-- 3. Table locks during parent updates (no FK index)
+```
+
+### 2. Primary Key Patterns
+
+**Mnemonic:** **"PK-EVERY-TABLE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Primary key on every table | 🔴 `MISSING-PK` - No unique row identification |
+| Surrogate key for join tables | ⚠️ `MISSING-SURROGATE-PK` - Replication issues |
+| Clustered index strategy (SQL Server) | ⚠️ `MISSING-CLUSTERED-STRATEGY` - Fragmentation |
+| Sequential key for high-insert tables | 💡 `MISSING-SEQUENTIAL-KEY` - Page splits with UUID |
+
+```sql
+-- PRESENT: Proper primary key on all tables
+CREATE TABLE order_items (
+    order_item_id INT PRIMARY KEY AUTO_INCREMENT,  -- Surrogate PK
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+
+    -- Unique constraint for business rule
+    UNIQUE KEY uk_order_product (order_id, product_id),
+
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+-- MISSING: No primary key
+CREATE TABLE order_items (
+    order_id INT,
+    product_id INT,
+    quantity INT
+);
+-- Problems:
+-- 1. No unique row identification
+-- 2. Can't reference from other tables
+-- 3. Replication may fail
+-- 4. DELETE/UPDATE become dangerous
+```
+
+### 3. Indexing Strategy Patterns
+
+**Mnemonic:** **"SELECTIVE-COVERING-COMPOSITE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Index on columns in WHERE clauses | 🔴 `MISSING-WHERE-INDEX` - Full table scans |
+| Composite index with correct column order | ⚠️ `MISSING-COMPOSITE-ORDER` - Index not used |
+| Covering index for frequent queries | 💡 `MISSING-COVERING-INDEX` - Extra heap lookups |
+| Partial index for filtered data | 💡 `MISSING-PARTIAL-INDEX` - Larger index than needed |
+
+```sql
+-- PRESENT: Strategic indexing
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    total_amount DECIMAL(10,2),
+
+    -- Composite index for common query: WHERE status = ? AND created_at > ?
+    -- Most selective column first: created_at has more cardinality
+    INDEX idx_orders_status_created (status, created_at),
+
+    -- Covering index for dashboard query
+    -- SELECT customer_id, status, total_amount FROM orders WHERE created_at > ?
+    INDEX idx_orders_dashboard (created_at) INCLUDE (customer_id, status, total_amount)
+);
+
+-- PostgreSQL: Partial index for active records
+CREATE INDEX idx_orders_active ON orders (customer_id, created_at)
+    WHERE status IN ('pending', 'processing');
+-- Only indexes ~20% of data vs full table!
+
+-- MISSING: No strategic indexing
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    status VARCHAR(20),
+    created_at TIMESTAMP
+);
+-- Query: SELECT * FROM orders WHERE status = 'pending' AND customer_id = 123
+-- → Full table scan! No index on status or customer_id
+```
+
+### 4. Normalization Patterns
+
+**Mnemonic:** **"3NF-MINIMUM"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| At least Third Normal Form (3NF) | 🔴 `MISSING-NORMALIZATION` - Update anomalies |
+| No repeating groups (1NF) | 🔴 `MISSING-1NF` - Can't query individual values |
+| No transitive dependencies (3NF) | ⚠️ `MISSING-3NF` - Data inconsistency risk |
+| Documented denormalization | 💡 `MISSING-DENORM-DOCS` - Hidden tech debt |
+
+```sql
+-- PRESENT: Properly normalized schema
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE addresses (
+    address_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    address_type ENUM('billing', 'shipping') NOT NULL,
+    street VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    postal_code VARCHAR(20) NOT NULL,
+    country_code CHAR(2) NOT NULL,
+
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE,
+    UNIQUE KEY uk_customer_address_type (customer_id, address_type)
+);
+
+-- MISSING: Denormalized with update anomalies
+CREATE TABLE customers (
+    customer_id INT PRIMARY KEY,
+    email VARCHAR(255),
+    -- Address repeated in customer table!
+    billing_street VARCHAR(255),
+    billing_city VARCHAR(100),
+    shipping_street VARCHAR(255),
+    shipping_city VARCHAR(100),
+    -- What if they have 3 addresses? Add more columns?
+    -- 1NF violation: repeating groups
+);
+
+-- MISSING: Transitive dependency (3NF violation)
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    customer_name VARCHAR(100),  -- Depends on customer_id, not order!
+    customer_email VARCHAR(255)  -- Same problem - update anomalies
+);
+```
+
+### 5. Constraint Patterns
+
+**Mnemonic:** **"NOT-NULL-CHECK-UNIQUE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| NOT NULL on required columns | ⚠️ `MISSING-NOT-NULL` - NULL handling everywhere |
+| CHECK constraints for validation | ⚠️ `MISSING-CHECK` - Invalid data possible |
+| UNIQUE constraints on business keys | ⚠️ `MISSING-UNIQUE` - Duplicate records |
+| DEFAULT values for optional columns | 💡 `MISSING-DEFAULT` - Inconsistent NULLs |
+
+```sql
+-- PRESENT: Complete constraints
+CREATE TABLE products (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    sku VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    status ENUM('active', 'discontinued', 'out_of_stock') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- CHECK constraints
+    CONSTRAINT chk_price_positive CHECK (price > 0),
+    CONSTRAINT chk_stock_non_negative CHECK (stock_quantity >= 0)
+);
+
+-- MISSING: No constraints
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    sku VARCHAR(50),           -- Can be NULL, can have duplicates!
+    name VARCHAR(255),         -- Can be NULL!
+    price DECIMAL(10,2),       -- Can be negative or NULL!
+    stock_quantity INT         -- Can be negative!
+);
+-- Problems:
+-- 1. Products with NULL name
+-- 2. Duplicate SKUs
+-- 3. Negative prices
+-- 4. Negative stock counts
+```
+
+### 6. Tree/Hierarchy Patterns
+
+**Mnemonic:** **"CLOSURE-NOT-ADJACENCY"** (for deep queries)
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Closure table for arbitrary-depth trees | 💡 `MISSING-CLOSURE-TABLE` - Recursive queries needed |
+| Materialized path for breadcrumbs | 💡 `MISSING-MATERIALIZED-PATH` - Slow ancestry queries |
+| Nested sets for read-heavy trees | 💡 `MISSING-NESTED-SETS` - Complex tree queries |
+
+```sql
+-- PRESENT: Closure table for organizational hierarchy
+-- (Allows: "Find all descendants" in single query)
+
+CREATE TABLE employees (
+    employee_id INT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    title VARCHAR(100)
+);
+
+-- Closure table stores ALL ancestor-descendant relationships
+CREATE TABLE employee_hierarchy (
+    ancestor_id INT NOT NULL,
+    descendant_id INT NOT NULL,
+    depth INT NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (ancestor_id, descendant_id),
+    FOREIGN KEY (ancestor_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
+    FOREIGN KEY (descendant_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
+    INDEX idx_hierarchy_descendant (descendant_id)
+);
+
+-- Get all reports under manager 5 (any depth)
+SELECT e.* FROM employees e
+JOIN employee_hierarchy h ON e.employee_id = h.descendant_id
+WHERE h.ancestor_id = 5 AND h.depth > 0;
+
+-- MISSING: Simple adjacency list (anti-pattern for deep trees)
+CREATE TABLE employees (
+    employee_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    manager_id INT REFERENCES employees(employee_id)
+);
+-- Problem: Getting all reports requires recursive CTE or multiple queries
+-- For 10 levels deep: 10 JOINs or recursive query!
+```
+
+### 7. Audit & Soft Delete Patterns
+
+**Mnemonic:** **"AUDIT-INDEX-DELETED"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Audit columns (created_at, updated_at) | ⚠️ `MISSING-AUDIT-COLUMNS` - No change tracking |
+| Soft delete with indexed deleted_at | ⚠️ `MISSING-SOFT-DELETE-INDEX` - Slow queries |
+| Trigger or app-level updated_at | 💡 `MISSING-AUTO-UPDATED` - Stale timestamps |
+
+```sql
+-- PRESENT: Complete audit trail with indexed soft delete
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+
+    -- Audit columns
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by INT,
+    updated_by INT,
+
+    -- Soft delete
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
+
+    -- Index for soft delete (partial index in PostgreSQL)
+    INDEX idx_orders_active (deleted_at, status, created_at)
+);
+
+-- PostgreSQL: Partial index for active records only
+CREATE INDEX idx_orders_active ON orders (status, created_at)
+    WHERE deleted_at IS NULL;
+
+-- MISSING: No audit columns
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    status VARCHAR(20)
+    -- When was this created? Modified? By whom?
+    -- If deleted: full data loss
+);
+```
+
+### 8. Data Type Patterns
+
+**Mnemonic:** **"RIGHT-TYPE-RIGHT-SIZE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| DECIMAL for money (not FLOAT) | 🔴 `MISSING-DECIMAL-MONEY` - Rounding errors |
+| TIMESTAMP for dates (not VARCHAR) | 🔴 `MISSING-PROPER-DATE` - Can't sort, compare |
+| UTF8MB4 charset (MySQL) | ⚠️ `MISSING-UTF8MB4` - Emoji/unicode fail |
+| Right-sized VARCHAR | 💡 `MISSING-SIZED-VARCHAR` - Wasted space |
+
+```sql
+-- PRESENT: Correct data types
+CREATE TABLE transactions (
+    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    amount DECIMAL(15,2) NOT NULL,  -- Exact precision for money
+    currency CHAR(3) NOT NULL DEFAULT 'USD',  -- Fixed width for ISO codes
+    description VARCHAR(500),
+    transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'completed', 'failed') NOT NULL DEFAULT 'pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- MISSING: Wrong data types
+CREATE TABLE transactions (
+    transaction_id INT PRIMARY KEY,
+    amount FLOAT,           -- WRONG: Rounding errors! 0.1 + 0.2 != 0.3
+    currency VARCHAR(255),  -- WRONG: Oversized, should be CHAR(3)
+    description TEXT,       -- WRONG: Oversized for typical descriptions
+    transaction_date VARCHAR(50),  -- WRONG: Can't index, compare, or validate
+    status VARCHAR(255)     -- WRONG: No validation, inconsistent values
+);
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (causes data integrity/performance issues if missing):**
+- [ ] `MISSING-FK-CONSTRAINT` - No foreign key constraint
+- [ ] `MISSING-FK-INDEX` - No index on foreign key column
+- [ ] `MISSING-FK-TYPE-MATCH` - FK/PK data type mismatch
+- [ ] `MISSING-PK` - No primary key on table
+- [ ] `MISSING-WHERE-INDEX` - No index on frequent WHERE columns
+- [ ] `MISSING-NORMALIZATION` - Major normalization violations
+- [ ] `MISSING-1NF` - Repeating groups / multi-value columns
+- [ ] `MISSING-DECIMAL-MONEY` - FLOAT for money values
+- [ ] `MISSING-PROPER-DATE` - VARCHAR for dates
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-FK-CASCADE` - No ON DELETE/UPDATE rule
+- [ ] `MISSING-SURROGATE-PK` - Join table without surrogate key
+- [ ] `MISSING-CLUSTERED-STRATEGY` - No clustered index plan
+- [ ] `MISSING-COMPOSITE-ORDER` - Wrong column order in composite index
+- [ ] `MISSING-3NF` - Transitive dependencies
+- [ ] `MISSING-NOT-NULL` - Required columns allow NULL
+- [ ] `MISSING-CHECK` - No CHECK constraints
+- [ ] `MISSING-UNIQUE` - No UNIQUE on business keys
+- [ ] `MISSING-AUDIT-COLUMNS` - No created_at/updated_at
+- [ ] `MISSING-SOFT-DELETE-INDEX` - Soft delete without index
+- [ ] `MISSING-UTF8MB4` - Wrong charset (MySQL)
+
+💡 **Recommendation (good practice):**
+- [ ] `MISSING-SEQUENTIAL-KEY` - Non-sequential PK for high-insert
+- [ ] `MISSING-COVERING-INDEX` - Frequent query without covering index
+- [ ] `MISSING-PARTIAL-INDEX` - Full index when partial would work
+- [ ] `MISSING-DENORM-DOCS` - Undocumented denormalization
+- [ ] `MISSING-DEFAULT` - Optional columns without defaults
+- [ ] `MISSING-CLOSURE-TABLE` - Adjacency list for deep trees
+- [ ] `MISSING-MATERIALIZED-PATH` - No path for breadcrumb queries
+- [ ] `MISSING-NESTED-SETS` - Complex tree without nested sets
+- [ ] `MISSING-AUTO-UPDATED` - No auto-update for updated_at
+- [ ] `MISSING-SIZED-VARCHAR` - Oversized VARCHAR columns
+
+---
+
 # Review Checklist
 
 ## Normalization Checklist

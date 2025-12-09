@@ -4618,6 +4618,341 @@ Unsafe deserialization allows remote code execution.
 
 ---
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging vulnerabilities, check whether **expected security patterns are missing**. The absence of good practices is itself a finding.
+
+Based on [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html), [Express.js Security Best Practices](https://expressjs.com/en/advanced/best-practice-security.html), [Helmet.js](https://helmetjs.github.io/), and [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices).
+
+## How to Use This Section
+
+When reviewing code, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern creates immediate vulnerability
+- **⚠️ Warning** - Missing pattern weakens security posture
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Input Validation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-VALIDATION-LIB** | Schema validation (Zod, Joi, Yup) at API boundaries | No consistent validation layer |
+| **MISSING-ALLOWLIST** | Allow-list validation for expected values | Relying on deny-list filtering |
+| **MISSING-TYPE-COERCE** | Explicit type coercion (parseInt, Number) | Implicit coercion vulnerabilities |
+| **MISSING-SIZE-LIMIT** | Size/length limits on inputs | Potential DoS via large payloads |
+| **MISSING-SANITIZE** | HTML sanitization (DOMPurify) for user content | XSS vulnerabilities |
+
+**What to look for:**
+```typescript
+// PRESENT: Schema validation at boundary
+import { z } from 'zod';
+
+const UserInputSchema = z.object({
+  email: z.string().email().max(255),
+  age: z.number().int().min(0).max(150),
+  bio: z.string().max(1000).optional(),
+});
+
+app.post('/users', async (req, res) => {
+  const result = UserInputSchema.safeParse(req.body);
+  if (!result.success) {
+    return res.status(400).json({ errors: result.error.issues });
+  }
+  // result.data is typed and validated
+});
+```
+
+---
+
+## Authentication & Session
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PASSWORD-HASH** | Password hashing with bcrypt/argon2 | Weak or no password hashing |
+| **MISSING-BRUTEFORCE** | Rate limiting on login endpoints | No brute-force protection |
+| **MISSING-JWT-VALIDATE** | Full JWT validation (signature, expiry, issuer) | JWT bypass possible |
+| **MISSING-SESSION-SECURE** | Secure cookie flags (httpOnly, secure, sameSite) | Session hijacking risk |
+| **MISSING-REFRESH-TOKEN** | Refresh token rotation | Long-lived token exposure |
+
+**What to look for:**
+```typescript
+// PRESENT: Secure session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+  resave: false,
+  saveUninitialized: false,
+}));
+```
+
+---
+
+## Authorization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-AUTHZ-CHECK** | Authorization check on every protected endpoint | Endpoints accessible without authz |
+| **MISSING-AUTHZ-MIDDLEWARE** | Centralized authz middleware | Ad-hoc permission checks |
+| **MISSING-OWNERSHIP-CHECK** | Resource ownership verification | IDOR vulnerability |
+| **MISSING-RBAC** | Role-based or attribute-based access control | No access control model |
+| **MISSING-FAIL-CLOSED** | Fail-closed on authz errors | Fail-open allows unauthorized access |
+
+**What to look for:**
+```typescript
+// PRESENT: Authorization middleware
+const requireAuth = (requiredRole?: Role) => async (req, res, next) => {
+  const user = await getUserFromSession(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  if (requiredRole && user.role !== requiredRole) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  req.user = user;
+  next();
+};
+
+// Ownership check
+app.delete('/posts/:id', requireAuth(), async (req, res) => {
+  const post = await Post.findById(req.params.id);
+  if (post.authorId !== req.user.id) {
+    return res.status(403).json({ error: 'Not your post' });
+  }
+  // ...
+});
+```
+
+---
+
+## Crypto & Secrets
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ENV-SECRETS** | Secrets from environment variables | Hardcoded secrets in code |
+| **MISSING-CRYPTO-RANDOM** | `crypto.randomBytes` for security-sensitive random | Using `Math.random()` |
+| **MISSING-TLS-VERIFY** | TLS certificate validation enabled | `rejectUnauthorized: false` |
+| **MISSING-KEY-ROTATION** | Key rotation mechanism | Static long-lived keys |
+| **MISSING-SECURE-COMPARE** | Timing-safe comparison for secrets | Timing attack vulnerability |
+
+**What to look for:**
+```typescript
+// PRESENT: Proper crypto usage
+import crypto from 'crypto';
+
+// Secure random token
+const token = crypto.randomBytes(32).toString('hex');
+
+// Timing-safe comparison
+const isValid = crypto.timingSafeEqual(
+  Buffer.from(providedToken),
+  Buffer.from(storedToken)
+);
+
+// Secrets from environment
+const apiKey = process.env.API_SECRET_KEY;
+if (!apiKey) throw new Error('API_SECRET_KEY required');
+```
+
+---
+
+## Error Handling & Logging
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ERROR-HANDLER** | Generic error pages in production | Stack traces exposed to users |
+| **MISSING-SECURITY-LOG** | Security event logging (login, authz failures) | No audit trail |
+| **MISSING-LOG-SANITIZE** | Log sanitization (no PII, no secrets) | Sensitive data in logs |
+| **MISSING-STRUCTURED-LOG** | Structured logging with correlation IDs | Unstructured/inconsistent logs |
+| **MISSING-DEBUG-OFF** | Debug mode disabled in production | Verbose errors exposed |
+
+**What to look for:**
+```typescript
+// PRESENT: Production error handler
+app.use((err, req, res, next) => {
+  // Log full error internally
+  logger.error({
+    message: err.message,
+    stack: err.stack,
+    requestId: req.id,
+    userId: req.user?.id,
+  });
+
+  // Return generic message to client
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+  res.status(500).json({ error: err.message });
+});
+```
+
+---
+
+## Dependencies & Supply Chain
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-LOCKFILE** | package-lock.json or yarn.lock committed | Non-reproducible builds |
+| **MISSING-AUDIT-CI** | `npm audit` or Snyk in CI pipeline | No dependency vulnerability scanning |
+| **MISSING-DEP-REVIEW** | Review of new dependencies before adding | Supply chain risk |
+| **MISSING-DEP-MINIMAL** | Minimal dependencies | Bloated attack surface |
+| **MISSING-DEP-UPDATE** | Regular dependency updates | Known CVEs unpatched |
+
+**What to look for:**
+```yaml
+# PRESENT: Security scanning in CI (.github/workflows/security.yml)
+- name: Run npm audit
+  run: npm audit --audit-level=high
+
+- name: Run Snyk
+  uses: snyk/actions/node@master
+  env:
+    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+```
+
+---
+
+## Framework Security (Express/React)
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-HELMET** | Helmet.js middleware for security headers | Missing HSTS, CSP, X-Frame-Options |
+| **MISSING-CORS-CONFIG** | Explicit CORS configuration | Overly permissive CORS |
+| **MISSING-CSRF-TOKEN** | CSRF tokens for state-changing requests | CSRF vulnerability |
+| **MISSING-BODY-LIMIT** | Request body size limits | DoS via large payloads |
+| **MISSING-REACT-ESCAPE** | No dangerouslySetInnerHTML with user data | XSS in React |
+
+**What to look for:**
+```typescript
+// PRESENT: Express security middleware
+import helmet from 'helmet';
+import cors from 'cors';
+
+app.use(helmet());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(','),
+  credentials: true,
+}));
+app.use(express.json({ limit: '100kb' }));
+```
+
+**Attribution:** [Express.js Security Best Practices](https://expressjs.com/en/advanced/best-practice-security.html)
+
+---
+
+## Node.js Specific Security
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-NO-EVAL** | No `eval()`, `new Function()`, or dynamic `setTimeout/setInterval` | Remote code execution risk |
+| **MISSING-SAFE-CHILD** | `execFile()` over `exec()`, or parameterized inputs | Command injection via shell |
+| **MISSING-SAFE-REGEX** | Regular expressions checked for ReDoS | Denial of service via regex |
+| **MISSING-STRICT-MODE** | `"use strict"` enabled | Unsafe legacy behaviors |
+| **MISSING-UNCAUGHT-HANDLER** | `uncaughtException` and `unhandledRejection` handlers | Silent crashes, no cleanup |
+
+**What to look for:**
+```typescript
+// PRESENT: Safe child process usage
+import { execFile } from 'child_process';
+
+// Safe: execFile doesn't spawn a shell
+execFile('git', ['log', '--oneline', '-n', '10'], (error, stdout) => {
+  console.log(stdout);
+});
+
+// MISSING: Dangerous - spawns shell, allows injection
+import { exec } from 'child_process';
+exec(`git log --oneline -n ${userInput}`); // Command injection!
+
+// PRESENT: Uncaught exception handler
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught exception', { error: err });
+  // Cleanup resources
+  server.close(() => process.exit(1));
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled rejection', { reason });
+});
+
+// PRESENT: Safe regex (avoid catastrophic backtracking)
+// Use safe-regex package to check patterns
+import safeRegex from 'safe-regex';
+if (!safeRegex(userPattern)) {
+  throw new Error('Unsafe regex pattern');
+}
+```
+
+**Attribution:** [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)
+
+---
+
+## Privacy & Data Protection
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PII-IDENTIFY** | PII fields identified/annotated | Unknown PII locations |
+| **MISSING-DATA-ENCRYPT** | PII encryption at rest | Plaintext sensitive data |
+| **MISSING-RETENTION** | Data retention policy implemented | Data kept indefinitely |
+| **MISSING-DELETION** | Deletion capability (right to be forgotten) | Cannot delete user data |
+| **MISSING-CONSENT** | Consent logging and management | No consent records |
+
+**What to look for:**
+```typescript
+// PRESENT: PII handling
+interface User {
+  id: string;
+  email: string;        // @pii
+  hashedPassword: string;
+  preferences: object;  // Not PII
+}
+
+// Soft delete with data anonymization
+async function deleteUser(userId: string) {
+  await User.update(userId, {
+    email: `deleted-${userId}@anonymized.local`,
+    deletedAt: new Date(),
+  });
+  await AuditLog.create({ action: 'user_deleted', userId });
+}
+```
+
+---
+
+## Expected Good Patterns Checklist
+
+Quick reference for absence checks:
+
+### 🔴 Critical (Must Have)
+- [ ] **MISSING-VALIDATION-LIB**: Schema validation at API boundaries
+- [ ] **MISSING-PASSWORD-HASH**: Password hashing with bcrypt/argon2
+- [ ] **MISSING-AUTHZ-CHECK**: Authorization on every endpoint
+- [ ] **MISSING-ENV-SECRETS**: Secrets from environment/vault
+- [ ] **MISSING-ERROR-HANDLER**: Generic errors in production
+- [ ] **MISSING-NO-EVAL**: No eval() or dynamic code execution
+
+### ⚠️ Warning (Should Have)
+- [ ] **MISSING-BRUTEFORCE**: Rate limiting on auth endpoints
+- [ ] **MISSING-SESSION-SECURE**: Secure cookie flags (httpOnly, secure, sameSite)
+- [ ] **MISSING-HELMET**: Security headers middleware
+- [ ] **MISSING-AUDIT-CI**: Dependency scanning in CI (npm audit)
+- [ ] **MISSING-BODY-LIMIT**: Request body size limits
+- [ ] **MISSING-SAFE-CHILD**: execFile() over exec()
+
+### 💡 Recommendation (Nice to Have)
+- [ ] **MISSING-CSRF-TOKEN**: CSRF protection enabled
+- [ ] **MISSING-CORS-CONFIG**: Explicit CORS configuration
+- [ ] **MISSING-SAFE-REGEX**: ReDoS-safe regular expressions
+- [ ] **MISSING-UNCAUGHT-HANDLER**: Process exception handlers
+- [ ] **MISSING-SECURITY-LOG**: Security event logging
+
+---
+
 ## Security Review Wisdom
 
 > "Security is not a product, but a process." - Bruce Schneier

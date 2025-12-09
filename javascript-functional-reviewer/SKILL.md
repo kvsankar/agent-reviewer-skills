@@ -2279,6 +2279,422 @@ const unwrap = <T>(result: Result<T>): T => {
 
 - Replace `any` with `<T>` generics and constraints (`<T extends Record<string, unknown>>`) to keep FP utilities type-safe across inputs.
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [Perficient FP Guide](https://blogs.perficient.com/2024/03/04/mastering-the-art-of-functional-javascript-immutability-pure-functions-and-beyond/), [Syncfusion FP Techniques](https://www.syncfusion.com/blogs/post/7-functional-programming-techniques-for-javascript-developers), [MDN Array Methods](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Pure Function Patterns
+
+**Mnemonic:** **"SAME-IN-SAME-OUT"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Same input → same output | 🔴 `MISSING-DETERMINISTIC` - Unpredictable results |
+| No side effects | 🔴 `MISSING-NO-SIDE-EFFECTS` - Hidden state changes |
+| No external dependencies | ⚠️ `MISSING-SELF-CONTAINED` - Depends on globals |
+| Arguments not mutated | ⚠️ `MISSING-IMMUT-ARGS` - Caller data corrupted |
+
+```javascript
+// PRESENT: Pure function patterns
+const calculateTax = (price, taxRate = 0.1) => {
+  // Pure: same input always gives same output
+  return price * (1 + taxRate);
+};
+
+const filterAdults = (users) => {
+  // Pure: doesn't modify input, returns new array
+  return users.filter(user => user.age >= 18);
+};
+
+const updateUserStatus = (user, newStatus) => {
+  // Pure: returns new object, doesn't modify original
+  return { ...user, status: newStatus };
+};
+
+const sortByName = (users) => {
+  // Pure: creates copy before sorting
+  return [...users].sort((a, b) => a.name.localeCompare(b.name));
+};
+
+
+// MISSING: Impure functions
+let total = 0; // Module-level state!
+
+const addToTotal = (amount) => {
+  total += amount; // Mutates external state!
+  return total;
+};
+
+const sortUsers = (users) => {
+  users.sort((a, b) => a.name.localeCompare(b.name)); // MUTATES input!
+  return users;
+};
+
+const getTimestamp = () => {
+  return Date.now(); // Non-deterministic! Different each call
+};
+
+const fetchAndProcess = async (id) => {
+  const data = await fetch(`/api/${id}`); // Side effect: network call
+  return data.json();
+};
+```
+
+### 2. Immutability Patterns
+
+**Mnemonic:** **"SPREAD-DONT-MUTATE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Spread operator for object updates | 🔴 `MISSING-SPREAD-UPDATE` - Direct mutation |
+| `[...array]` for array copies | 🔴 `MISSING-ARRAY-SPREAD` - Array mutation |
+| `Object.freeze()` for constants | 💡 `MISSING-FREEZE` - Accidental mutation |
+| Immutable array methods (map, filter) | ⚠️ `MISSING-IMMUT-METHODS` - Mutating methods |
+
+```javascript
+// PRESENT: Immutable update patterns
+
+// Object updates with spread
+const user = { name: 'Alice', age: 30, role: 'user' };
+const updatedUser = { ...user, role: 'admin' }; // New object
+
+// Nested object updates
+const state = { user: { name: 'Alice', settings: { theme: 'dark' } } };
+const newState = {
+  ...state,
+  user: {
+    ...state.user,
+    settings: {
+      ...state.user.settings,
+      theme: 'light'
+    }
+  }
+};
+
+// Array operations - immutable
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);           // New array
+const evens = numbers.filter(n => n % 2 === 0);   // New array
+const withSix = [...numbers, 6];                   // New array
+const withoutFirst = numbers.slice(1);             // New array
+const sorted = [...numbers].sort();                // Copy then sort
+
+// Frozen constants
+const CONFIG = Object.freeze({
+  API_URL: 'https://api.example.com',
+  TIMEOUT: 5000
+});
+
+
+// MISSING: Mutations
+const user = { name: 'Alice', role: 'user' };
+user.role = 'admin';  // MUTATES original!
+
+const numbers = [1, 2, 3];
+numbers.push(4);      // MUTATES original!
+numbers.sort();       // MUTATES original!
+numbers.reverse();    // MUTATES original!
+numbers.splice(1, 1); // MUTATES original!
+```
+
+### 3. Array Method Patterns
+
+**Mnemonic:** **"MAP-FILTER-REDUCE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `.map()` for transformations | ⚠️ `MISSING-MAP` - forEach with push |
+| `.filter()` for selection | ⚠️ `MISSING-FILTER` - Manual if checks |
+| `.reduce()` for aggregation | ⚠️ `MISSING-REDUCE` - Manual accumulation |
+| `.find()` for single item | ⚠️ `MISSING-FIND` - filter()[0] pattern |
+| Chained methods for pipelines | 💡 `MISSING-CHAIN` - Intermediate variables |
+
+```javascript
+// PRESENT: Declarative array methods
+
+// Transformation with map
+const names = users.map(user => user.name);
+const formatted = items.map(item => ({
+  ...item,
+  displayName: `${item.firstName} ${item.lastName}`
+}));
+
+// Selection with filter
+const activeUsers = users.filter(user => user.isActive);
+const adults = users.filter(user => user.age >= 18);
+
+// Aggregation with reduce
+const total = orders.reduce((sum, order) => sum + order.total, 0);
+const grouped = items.reduce((acc, item) => {
+  const key = item.category;
+  return { ...acc, [key]: [...(acc[key] || []), item] };
+}, {});
+
+// Single item with find
+const admin = users.find(user => user.role === 'admin');
+const index = users.findIndex(user => user.id === targetId);
+
+// Chained methods for pipelines
+const result = users
+  .filter(user => user.isActive)
+  .map(user => user.email)
+  .filter(email => email.endsWith('@company.com'))
+  .sort();
+
+
+// MISSING: Imperative patterns
+const names = [];
+for (let i = 0; i < users.length; i++) {
+  names.push(users[i].name);  // Verbose, mutation
+}
+
+const activeUsers = [];
+users.forEach(user => {
+  if (user.isActive) {
+    activeUsers.push(user);  // forEach with push = filter
+  }
+});
+
+// filter()[0] instead of find()
+const admin = users.filter(user => user.role === 'admin')[0];
+```
+
+### 4. Composition Patterns
+
+**Mnemonic:** **"COMPOSE-SMALL-FUNCTIONS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Pipe/compose for function chains | 💡 `MISSING-COMPOSE` - Nested calls |
+| Single-purpose functions | ⚠️ `MISSING-SINGLE-RESPONSIBILITY` - Kitchen sink functions |
+| Point-free style where clear | 💡 `MISSING-POINT-FREE` - Verbose wrappers |
+| Curried functions for reuse | 💡 `MISSING-CURRY` - Hardcoded arguments |
+
+```javascript
+// PRESENT: Function composition
+
+// Small, single-purpose functions
+const trim = str => str.trim();
+const toLowerCase = str => str.toLowerCase();
+const split = delim => str => str.split(delim);
+const join = delim => arr => arr.join(delim);
+
+// Pipe: left-to-right composition
+const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
+
+const normalizeSlug = pipe(
+  trim,
+  toLowerCase,
+  str => str.replace(/\s+/g, '-'),
+  str => str.replace(/[^a-z0-9-]/g, '')
+);
+
+normalizeSlug('  Hello World! '); // 'hello-world'
+
+// Compose: right-to-left composition
+const compose = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
+
+// Curried functions for reuse
+const multiply = a => b => a * b;
+const double = multiply(2);
+const triple = multiply(3);
+
+[1, 2, 3].map(double); // [2, 4, 6]
+[1, 2, 3].map(triple); // [3, 6, 9]
+
+// Point-free style
+const getNames = users => users.map(user => user.name);
+// vs point-free:
+const getName = user => user.name;
+const getNames = users => users.map(getName);
+
+
+// MISSING: Nested function calls
+const result = join('-')(split(' ')(toLowerCase(trim(input))));
+// Hard to read! Use pipe instead.
+
+// MISSING: Kitchen sink function
+const processUser = (user, action, format, validate) => {
+  // Does 4 things! Split into smaller functions
+};
+```
+
+### 5. Higher-Order Function Patterns
+
+**Mnemonic:** **"FUNCTIONS-AS-DATA"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Callbacks as function arguments | ⚠️ `MISSING-CALLBACK` - Hardcoded behavior |
+| Functions returning functions | 💡 `MISSING-FACTORY` - Repeated setup |
+| Closures for encapsulation | 💡 `MISSING-CLOSURE` - Exposed state |
+| Memoization for expensive ops | ⚠️ `MISSING-MEMOIZE` - Redundant computation |
+
+```javascript
+// PRESENT: Higher-order function patterns
+
+// Callback pattern
+const withLogging = (fn) => (...args) => {
+  console.log('Calling with:', args);
+  const result = fn(...args);
+  console.log('Result:', result);
+  return result;
+};
+
+const loggedAdd = withLogging((a, b) => a + b);
+
+// Function factory
+const createValidator = (rules) => (value) => {
+  return rules.every(rule => rule(value));
+};
+
+const isValidEmail = createValidator([
+  v => typeof v === 'string',
+  v => v.includes('@'),
+  v => v.length > 5
+]);
+
+// Closure for encapsulation
+const createCounter = (initial = 0) => {
+  let count = initial;
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    get: () => count
+  };
+};
+
+// Memoization
+const memoize = (fn) => {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (!cache.has(key)) {
+      cache.set(key, fn(...args));
+    }
+    return cache.get(key);
+  };
+};
+
+const expensiveCalc = memoize((n) => {
+  // Only computed once per unique n
+  return fibonacci(n);
+});
+
+
+// MISSING: Hardcoded behavior instead of HOF
+const processUsers = (users) => {
+  return users.map(user => user.name.toUpperCase());
+  // Can't reuse with different transformation!
+};
+
+// MISSING: No memoization for expensive computation
+const fibonacci = (n) => {
+  if (n < 2) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+  // Exponentially slow! Use memoization.
+};
+```
+
+### 6. Modern JavaScript FP Patterns
+
+**Mnemonic:** **"DESTRUCTURE-SPREAD-DEFAULT"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Destructuring in parameters | 💡 `MISSING-DESTRUCTURE` - Verbose access |
+| Optional chaining (`?.`) | ⚠️ `MISSING-OPTIONAL-CHAIN` - Verbose null checks |
+| Nullish coalescing (`??`) | ⚠️ `MISSING-NULLISH` - Incorrect falsy defaults |
+| Default parameters | 💡 `MISSING-DEFAULTS` - Manual default checks |
+
+```javascript
+// PRESENT: Modern JS FP patterns
+
+// Destructuring in parameters
+const formatUser = ({ name, email, role = 'user' }) => {
+  return `${name} <${email}> [${role}]`;
+};
+
+// Optional chaining
+const getCity = user => user?.address?.city ?? 'Unknown';
+const firstOrderTotal = user => user?.orders?.[0]?.total ?? 0;
+
+// Nullish coalescing (preserves 0 and '')
+const port = config.port ?? 3000;  // Only if null/undefined
+const name = user.name ?? 'Anonymous';
+
+// Default parameters
+const createUser = (name, options = {}) => {
+  const { role = 'user', active = true } = options;
+  return { name, role, active };
+};
+
+// Spread in function calls
+const numbers = [1, 2, 3];
+const max = Math.max(...numbers);
+
+// Rest parameters
+const sum = (...nums) => nums.reduce((a, b) => a + b, 0);
+
+
+// MISSING: Verbose patterns
+const formatUser = (user) => {
+  const name = user.name;
+  const email = user.email;
+  const role = user.role || 'user';  // || is wrong for falsy values!
+  return `${name} <${email}> [${role}]`;
+};
+
+// MISSING: Verbose null checks
+const getCity = (user) => {
+  if (user && user.address && user.address.city) {
+    return user.address.city;
+  }
+  return 'Unknown';
+};
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (causes bugs or major issues if missing):**
+- [ ] `MISSING-DETERMINISTIC` - Non-deterministic functions
+- [ ] `MISSING-NO-SIDE-EFFECTS` - Hidden side effects
+- [ ] `MISSING-SPREAD-UPDATE` - Direct object mutation
+- [ ] `MISSING-ARRAY-SPREAD` - Direct array mutation
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-SELF-CONTAINED` - Depends on external state
+- [ ] `MISSING-IMMUT-ARGS` - Mutates function arguments
+- [ ] `MISSING-IMMUT-METHODS` - Uses mutating array methods
+- [ ] `MISSING-MAP` - forEach+push instead of map
+- [ ] `MISSING-FILTER` - Manual if checks instead of filter
+- [ ] `MISSING-REDUCE` - Manual loops instead of reduce
+- [ ] `MISSING-FIND` - filter()[0] instead of find
+- [ ] `MISSING-SINGLE-RESPONSIBILITY` - Multi-purpose functions
+- [ ] `MISSING-CALLBACK` - Hardcoded behavior
+- [ ] `MISSING-MEMOIZE` - No memoization for expensive ops
+- [ ] `MISSING-OPTIONAL-CHAIN` - Verbose null checks
+- [ ] `MISSING-NULLISH` - `||` instead of `??` for defaults
+
+💡 **Recommendation (cleaner code):**
+- [ ] `MISSING-FREEZE` - No Object.freeze for constants
+- [ ] `MISSING-CHAIN` - Intermediate variables vs method chain
+- [ ] `MISSING-COMPOSE` - Nested calls vs pipe/compose
+- [ ] `MISSING-POINT-FREE` - Verbose wrapper functions
+- [ ] `MISSING-CURRY` - Hardcoded arguments vs currying
+- [ ] `MISSING-FACTORY` - Repeated setup vs factory
+- [ ] `MISSING-CLOSURE` - Exposed state vs closure
+- [ ] `MISSING-DESTRUCTURE` - Verbose property access
+- [ ] `MISSING-DEFAULTS` - Manual default checks
+
+---
+
 ## Summary
 
 Functional programming in JavaScript emphasizes:

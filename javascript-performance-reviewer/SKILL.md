@@ -3951,6 +3951,556 @@ jobs:
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [web.dev V8 Performance Tips](https://web.dev/articles/speed-v8), [Node.js Event Loop Guide](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop), [React memo docs](https://react.dev/reference/react/memo), [MDN Performance](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Performance/JavaScript)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Profiling & Measurement Patterns
+
+**Mnemonic:** **"MEASURE-BEFORE-OPTIMIZE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Performance profiling before optimization | 🔴 `MISSING-PROFILE-FIRST` - Optimizing without data |
+| Lighthouse/DevTools measurements | ⚠️ `MISSING-MEASURE-BASELINE` - No baseline for comparison |
+| Production monitoring (RUM) | ⚠️ `MISSING-RUM` - No real-world performance data |
+| Performance budgets | 💡 `MISSING-PERF-BUDGET` - No guardrails against regression |
+
+```javascript
+// PRESENT: Profiling-guided optimization
+// 1. Run lighthouse before changes
+// npx lighthouse http://localhost:3000 --output json > baseline.json
+
+// 2. Add console timing for suspect code
+console.time('dataProcessing');
+const result = processLargeDataset(data);
+console.timeEnd('dataProcessing');
+// → "dataProcessing: 1234.56ms"
+
+// 3. Use Performance API for precise measurement
+const start = performance.now();
+await heavyOperation();
+const duration = performance.now() - start;
+console.log(`Operation took ${duration.toFixed(2)}ms`);
+
+// 4. Profile in React DevTools for render times
+// React.Profiler wrapper for component timing
+
+// MISSING: Optimizing based on gut feeling
+function processData(items) {
+  // "I think this is slow, let me optimize..."
+  // No measurements, no profiling, just guessing!
+}
+```
+
+### 2. V8 Engine Optimization Patterns
+
+**Mnemonic:** **"HIDDEN-CLASSES-MATTER"** (Initialize consistent object shapes)
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Consistent object shapes (same properties, same order) | 🔴 `MISSING-HIDDEN-CLASS` - V8 deoptimization |
+| Monomorphic function calls (same argument types) | ⚠️ `MISSING-MONOMORPHIC` - Inline cache misses |
+| Properties initialized in constructor | ⚠️ `MISSING-CTOR-INIT` - Hidden class transitions |
+| Avoid property deletion (`delete obj.prop`) | 💡 `MISSING-NO-DELETE` - Forces slow mode |
+
+```javascript
+// PRESENT: V8-friendly object construction
+class User {
+  constructor(name, age, email) {
+    // Always initialize ALL properties in constructor
+    // Always in the SAME ORDER
+    this.name = name;
+    this.age = age;
+    this.email = email;
+    this.role = null;        // Initialize even if null
+    this.lastLogin = null;   // Consistent shape
+  }
+}
+
+// All instances share same hidden class = optimized
+const user1 = new User('Alice', 30, 'alice@example.com');
+const user2 = new User('Bob', 25, 'bob@example.com');
+
+// MISSING: V8 deoptimization traps
+function createUser(name) {
+  const user = { name }; // Only name
+  if (Math.random() > 0.5) {
+    user.age = 30;       // Sometimes age - different hidden class!
+  }
+  user.email = 'a@b.com'; // Added later - another hidden class!
+  return user;
+}
+
+// Different argument types = polymorphic = slow
+function add(a, b) { return a + b; }
+add(1, 2);       // Numbers - optimized
+add('a', 'b');   // Strings - deoptimized! Now polymorphic.
+
+// Property deletion forces slow mode
+delete user.role;  // BAD: Forces dictionary mode
+user.role = null;  // GOOD: Preserves hidden class
+```
+
+### 3. Event Loop Protection (Node.js)
+
+**Mnemonic:** **"NEVER-BLOCK-THE-LOOP"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Async file/crypto/compression APIs | 🔴 `MISSING-ASYNC-IO` - Blocks event loop |
+| Partitioned long computations | 🔴 `MISSING-PARTITION` - Starves other requests |
+| `setImmediate`/`setTimeout` for chunking | ⚠️ `MISSING-YIELD-LOOP` - No yielding to event loop |
+| Web Workers / worker_threads for CPU work | ⚠️ `MISSING-WORKER-OFFLOAD` - CPU blocks main thread |
+| Safe regex (no nested quantifiers) | 🔴 `MISSING-SAFE-REGEX` - ReDoS vulnerability |
+
+```javascript
+// PRESENT: Non-blocking file operations
+import { readFile } from 'fs/promises';
+
+async function loadConfig() {
+  const data = await readFile('config.json', 'utf8');
+  return JSON.parse(data);
+}
+
+// PRESENT: Partitioned computation with setImmediate
+function processLargeArray(items, callback) {
+  const results = [];
+  let index = 0;
+
+  function processChunk() {
+    const chunkEnd = Math.min(index + 1000, items.length);
+
+    while (index < chunkEnd) {
+      results.push(expensiveOperation(items[index]));
+      index++;
+    }
+
+    if (index < items.length) {
+      // Yield to event loop, then continue
+      setImmediate(processChunk);
+    } else {
+      callback(results);
+    }
+  }
+
+  processChunk();
+}
+
+// PRESENT: Worker thread for CPU-intensive work
+import { Worker } from 'worker_threads';
+
+function runHeavyTask(data) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker('./heavy-task.js', { workerData: data });
+    worker.on('message', resolve);
+    worker.on('error', reject);
+  });
+}
+
+// MISSING: Blocking synchronous operations
+import { readFileSync } from 'fs';
+
+function loadConfigBlocking() {
+  // BLOCKS entire event loop while reading!
+  const data = readFileSync('config.json', 'utf8');
+  return JSON.parse(data);
+}
+
+// MISSING: Unpartitioned heavy computation
+function processAllItems(items) {
+  // Blocks for SECONDS with large arrays!
+  return items.map(item => veryExpensiveOperation(item));
+}
+
+// MISSING: Vulnerable regex (ReDoS)
+const VULNERABLE_REGEX = /(\w+)+$/;  // Nested quantifiers!
+// Input: "aaaaaaaaaaaaaaaaaaaaaaaaaaaa!" takes SECONDS
+```
+
+### 4. React Memoization Patterns
+
+**Mnemonic:** **"MEMO-WHERE-MEASURED"** (Not premature, but where profiled)
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `React.memo()` for expensive child components | ⚠️ `MISSING-MEMO-COMPONENT` - Unnecessary re-renders |
+| `useMemo` for expensive calculations | ⚠️ `MISSING-USEMEMO` - Recalculates every render |
+| `useCallback` for callbacks passed to memoized children | ⚠️ `MISSING-USECALLBACK` - Breaks child memoization |
+| Stable object/array references in deps | 🔴 `MISSING-STABLE-REFS` - Always re-renders |
+
+```javascript
+// PRESENT: Proper React memoization
+import { memo, useMemo, useCallback } from 'react';
+
+// Memoized expensive child
+const ExpensiveList = memo(function ExpensiveList({ items, onItemClick }) {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id} onClick={() => onItemClick(item.id)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+});
+
+function Parent({ data }) {
+  // useMemo for expensive computation
+  const processedItems = useMemo(() => {
+    return data.map(item => ({
+      ...item,
+      displayName: computeExpensiveDisplayName(item)
+    }));
+  }, [data]);
+
+  // useCallback to maintain stable reference for memoized child
+  const handleItemClick = useCallback((id) => {
+    console.log('Clicked:', id);
+  }, []); // Stable reference
+
+  return <ExpensiveList items={processedItems} onItemClick={handleItemClick} />;
+}
+
+// MISSING: Broken memoization
+function Parent({ data }) {
+  // Creates new array every render - processedItems always different!
+  const processedItems = data.map(item => ({ ...item }));
+
+  // Creates new function every render - child always re-renders!
+  const handleClick = (id) => console.log(id);
+
+  // ExpensiveList re-renders EVERY TIME even with React.memo!
+  return <ExpensiveList items={processedItems} onItemClick={handleClick} />;
+}
+
+// MISSING: Object literals in JSX props
+function Parent() {
+  return (
+    // New object reference every render!
+    <Child style={{ color: 'red' }} />  // BAD
+    <Child data={{ id: 1 }} />          // BAD
+  );
+}
+
+// PRESENT: Stable object references
+const RED_STYLE = { color: 'red' };
+
+function Parent() {
+  return <Child style={RED_STYLE} />;  // Stable reference
+}
+```
+
+### 5. Async & Promise Patterns
+
+**Mnemonic:** **"PARALLEL-NOT-SERIAL"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `Promise.all()` for independent async ops | 🔴 `MISSING-PARALLEL-ASYNC` - Serial when could be parallel |
+| `Promise.allSettled()` when some failures OK | ⚠️ `MISSING-ALLSETTLED` - All-or-nothing when partial OK |
+| Abort controllers for cancellation | ⚠️ `MISSING-ABORT-CONTROLLER` - Wasted resources |
+| Error boundaries for promise chains | 💡 `MISSING-ASYNC-ERROR` - Silent failures |
+
+```javascript
+// PRESENT: Parallel independent operations
+async function loadDashboard(userId) {
+  // Run ALL independent fetches in parallel
+  const [user, orders, recommendations] = await Promise.all([
+    fetchUser(userId),
+    fetchOrders(userId),
+    fetchRecommendations(userId)
+  ]);
+
+  return { user, orders, recommendations };
+}
+// Total time: max(userTime, ordersTime, recommendationsTime)
+
+// PRESENT: Partial success with allSettled
+async function loadOptionalData(ids) {
+  const results = await Promise.allSettled(
+    ids.map(id => fetchData(id))
+  );
+
+  return results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value);
+}
+
+// PRESENT: Cancellable fetch
+async function searchWithCancel(query, signal) {
+  const response = await fetch(`/api/search?q=${query}`, { signal });
+  return response.json();
+}
+
+// In component:
+useEffect(() => {
+  const controller = new AbortController();
+  searchWithCancel(query, controller.signal).then(setResults);
+
+  return () => controller.abort(); // Cancel on cleanup
+}, [query]);
+
+// MISSING: Sequential when could be parallel
+async function loadDashboardSlow(userId) {
+  // Each waits for previous - SLOW!
+  const user = await fetchUser(userId);           // 200ms
+  const orders = await fetchOrders(userId);       // 300ms
+  const recommendations = await fetchRecommendations(userId); // 150ms
+
+  return { user, orders, recommendations };
+}
+// Total time: 200 + 300 + 150 = 650ms (should be 300ms!)
+```
+
+### 6. DOM & Rendering Patterns
+
+**Mnemonic:** **"BATCH-READS-WRITES"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Batched DOM reads, then writes | 🔴 `MISSING-DOM-BATCH` - Layout thrashing |
+| DocumentFragment for multiple insertions | ⚠️ `MISSING-FRAGMENT` - Multiple reflows |
+| `requestAnimationFrame` for visual updates | ⚠️ `MISSING-RAF` - Janky animations |
+| Passive event listeners for scroll/touch | ⚠️ `MISSING-PASSIVE-LISTENER` - Scroll jank |
+| Virtual scrolling for long lists | 🔴 `MISSING-VIRTUAL-SCROLL` - Thousands of DOM nodes |
+
+```javascript
+// PRESENT: Batched DOM operations
+function updateElements(elements, newData) {
+  // BATCH 1: Read all measurements first
+  const measurements = elements.map(el => ({
+    width: el.offsetWidth,
+    height: el.offsetHeight
+  }));
+
+  // BATCH 2: Then write all changes
+  elements.forEach((el, i) => {
+    el.style.transform = `scale(${newData[i].scale})`;
+  });
+}
+
+// PRESENT: DocumentFragment for insertions
+function addManyItems(container, items) {
+  const fragment = document.createDocumentFragment();
+
+  items.forEach(item => {
+    const li = document.createElement('li');
+    li.textContent = item.name;
+    fragment.appendChild(li);
+  });
+
+  container.appendChild(fragment); // Single reflow!
+}
+
+// PRESENT: requestAnimationFrame for animations
+function smoothScroll(element, target) {
+  const start = element.scrollTop;
+  const distance = target - start;
+  let startTime = null;
+
+  function step(currentTime) {
+    if (!startTime) startTime = currentTime;
+    const progress = Math.min((currentTime - startTime) / 500, 1);
+
+    element.scrollTop = start + distance * easeOutCubic(progress);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+// PRESENT: Passive event listener
+window.addEventListener('scroll', handleScroll, { passive: true });
+window.addEventListener('touchstart', handleTouch, { passive: true });
+
+// MISSING: Layout thrashing
+function thrashingUpdate(elements) {
+  elements.forEach(el => {
+    // Read-write-read-write interleaved = LAYOUT THRASH!
+    const width = el.offsetWidth;    // Forces layout
+    el.style.width = width + 10 + 'px';  // Invalidates layout
+    const height = el.offsetHeight;  // Forces layout AGAIN!
+    el.style.height = height + 10 + 'px';  // Invalidates AGAIN!
+  });
+}
+```
+
+### 7. Bundle & Loading Patterns
+
+**Mnemonic:** **"SPLIT-LAZY-COMPRESS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Code splitting by route | ⚠️ `MISSING-CODE-SPLIT` - Loads everything upfront |
+| Dynamic imports for heavy features | ⚠️ `MISSING-DYNAMIC-IMPORT` - Blocks initial load |
+| Tree shaking enabled | ⚠️ `MISSING-TREE-SHAKE` - Dead code in bundle |
+| Gzip/Brotli compression | 🔴 `MISSING-COMPRESSION` - 60-80% larger transfers |
+| Preload/prefetch hints | 💡 `MISSING-RESOURCE-HINTS` - Suboptimal loading |
+
+```javascript
+// PRESENT: Route-based code splitting (React)
+import { lazy, Suspense } from 'react';
+
+const Dashboard = lazy(() => import('./Dashboard'));
+const Settings = lazy(() => import('./Settings'));
+const Analytics = lazy(() => import('./Analytics'));
+
+function App() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/analytics" element={<Analytics />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
+// PRESENT: Dynamic import for heavy feature
+async function loadChartLibrary() {
+  const { Chart } = await import('chart.js');
+  return Chart;
+}
+
+// Only load Chart.js when user needs charts
+button.addEventListener('click', async () => {
+  const Chart = await loadChartLibrary();
+  new Chart(canvas, config);
+});
+
+// PRESENT: Resource hints in HTML
+// <link rel="preload" href="/fonts/main.woff2" as="font" crossorigin>
+// <link rel="prefetch" href="/js/dashboard.js">
+// <link rel="preconnect" href="https://api.example.com">
+
+// MISSING: Single monolithic bundle
+import Dashboard from './Dashboard';
+import Settings from './Settings';
+import Analytics from './Analytics';
+import HugeChartLibrary from 'huge-chart-library';
+import MassiveDataGrid from 'massive-data-grid';
+// Everything loaded upfront, even if user never uses it!
+```
+
+### 8. Data Structure Selection
+
+**Mnemonic:** **"RIGHT-STRUCTURE-FOR-JOB"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `Set` for unique value collections | ⚠️ `MISSING-SET-USAGE` - O(n) uniqueness checks |
+| `Map` for key-value lookups | ⚠️ `MISSING-MAP-USAGE` - O(n) array finds |
+| Object literals for small, static lookups | 💡 `MISSING-OBJECT-LOOKUP` - Overhead for simple cases |
+| Typed arrays for numeric data | 💡 `MISSING-TYPED-ARRAY` - Slower numeric operations |
+
+```javascript
+// PRESENT: Set for unique values
+const uniqueTags = new Set();
+
+function addTag(tag) {
+  uniqueTags.add(tag);  // O(1) - handles duplicates automatically
+}
+
+function hasTag(tag) {
+  return uniqueTags.has(tag);  // O(1) lookup
+}
+
+// PRESENT: Map for key-value lookups
+const usersById = new Map();
+
+function addUser(user) {
+  usersById.set(user.id, user);  // O(1)
+}
+
+function getUser(id) {
+  return usersById.get(id);  // O(1) lookup
+}
+
+// PRESENT: Object for small static lookups
+const HTTP_STATUS = {
+  OK: 200,
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500
+};
+
+// PRESENT: Typed array for numeric processing
+const audioData = new Float32Array(44100);
+const pixelData = new Uint8ClampedArray(width * height * 4);
+
+// MISSING: Array for uniqueness (O(n))
+const tags = [];
+
+function addTagSlow(tag) {
+  if (!tags.includes(tag)) {  // O(n) check!
+    tags.push(tag);
+  }
+}
+
+// MISSING: Array for lookups (O(n))
+const users = [];
+
+function getUserSlow(id) {
+  return users.find(u => u.id === id);  // O(n) scan!
+}
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (causes major performance issues if missing):**
+- [ ] `MISSING-PROFILE-FIRST` - No profiling before optimization
+- [ ] `MISSING-HIDDEN-CLASS` - Inconsistent object shapes
+- [ ] `MISSING-ASYNC-IO` - Sync file/crypto in Node.js
+- [ ] `MISSING-PARTITION` - Unpartitioned heavy computation
+- [ ] `MISSING-SAFE-REGEX` - Vulnerable regex patterns
+- [ ] `MISSING-PARALLEL-ASYNC` - Serial awaits for independent ops
+- [ ] `MISSING-DOM-BATCH` - Interleaved DOM reads/writes
+- [ ] `MISSING-VIRTUAL-SCROLL` - Thousands of DOM nodes
+- [ ] `MISSING-COMPRESSION` - No Gzip/Brotli
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-MONOMORPHIC` - Polymorphic function calls
+- [ ] `MISSING-CTOR-INIT` - Properties added after construction
+- [ ] `MISSING-YIELD-LOOP` - No yielding in long loops
+- [ ] `MISSING-WORKER-OFFLOAD` - CPU work on main thread
+- [ ] `MISSING-MEMO-COMPONENT` - Expensive components not memoized
+- [ ] `MISSING-USEMEMO` - Expensive calculations every render
+- [ ] `MISSING-USECALLBACK` - Callbacks breaking child memo
+- [ ] `MISSING-STABLE-REFS` - New objects/arrays in render
+- [ ] `MISSING-ALLSETTLED` - Promise.all when partial OK
+- [ ] `MISSING-ABORT-CONTROLLER` - No fetch cancellation
+- [ ] `MISSING-FRAGMENT` - Multiple DOM insertions
+- [ ] `MISSING-RAF` - JS animations without RAF
+- [ ] `MISSING-PASSIVE-LISTENER` - Non-passive scroll/touch
+- [ ] `MISSING-CODE-SPLIT` - Monolithic bundles
+- [ ] `MISSING-DYNAMIC-IMPORT` - Heavy libs loaded upfront
+- [ ] `MISSING-TREE-SHAKE` - Dead code in bundle
+- [ ] `MISSING-SET-USAGE` - Arrays for uniqueness
+- [ ] `MISSING-MAP-USAGE` - Arrays for lookups
+
+💡 **Recommendation (good practice):**
+- [ ] `MISSING-MEASURE-BASELINE` - No baseline metrics
+- [ ] `MISSING-RUM` - No production monitoring
+- [ ] `MISSING-PERF-BUDGET` - No performance budgets
+- [ ] `MISSING-NO-DELETE` - Property deletion in hot paths
+- [ ] `MISSING-ASYNC-ERROR` - Silent async failures
+- [ ] `MISSING-RESOURCE-HINTS` - No preload/prefetch
+- [ ] `MISSING-OBJECT-LOOKUP` - Map for tiny static lookups
+- [ ] `MISSING-TYPED-ARRAY` - Regular arrays for numeric data
+
+---
+
 ## Performance Wisdom
 
 > **"Premature optimization is the root of all evil."** - Donald Knuth

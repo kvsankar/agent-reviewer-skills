@@ -3169,6 +3169,440 @@ When reviewing code for refactoring, systematically check:
 
 ---
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging code smells, check whether **expected refactoring patterns are missing**. The absence of good practices is itself a finding.
+
+## How to Use This Section
+
+When reviewing code, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern creates significant maintenance debt
+- **⚠️ Warning** - Missing pattern weakens code quality
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Naming & Documentation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-DOCSTRING** | Docstrings on public modules, classes, and functions | No documentation for API consumers |
+| **MISSING-TYPE-HINTS** | Type annotations on public API signatures | No static type checking possible |
+| **MISSING-INTENT-NAME** | Names reveal intent (verb+noun for functions, nouns for classes) | Cryptic names like `do_it()`, `Manager`, `data` |
+| **MISSING-CONSTANT-NAMES** | Named constants for magic values | Magic numbers/strings scattered in code |
+| **MISSING-BOUNDARY-DOCS** | Documentation at module boundaries | No understanding of module contracts |
+
+**What to look for:**
+```python
+# PRESENT: Clear naming and documentation
+from typing import Optional
+
+def calculate_compound_interest(
+    principal: float,
+    annual_rate: float,
+    years: int,
+    compounds_per_year: int = 12
+) -> float:
+    """Calculate compound interest on a principal amount.
+
+    Args:
+        principal: Initial investment amount
+        annual_rate: Annual interest rate as decimal (e.g., 0.05 for 5%)
+        years: Number of years to compound
+        compounds_per_year: Compounding frequency (default: monthly)
+
+    Returns:
+        Final amount after compound interest
+
+    Example:
+        >>> calculate_compound_interest(1000, 0.05, 10)
+        1647.01
+    """
+    return principal * (1 + annual_rate / compounds_per_year) ** (compounds_per_year * years)
+```
+
+---
+
+## Code Organization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-MODULE-STRUCTURE** | Logical module organization (one concern per module) | God modules with mixed responsibilities |
+| **MISSING-INIT-EXPORTS** | Explicit `__all__` in `__init__.py` | Public API unclear |
+| **MISSING-PRIVATE-PREFIX** | Private helpers prefixed with `_` | Internal API exposed |
+| **MISSING-LAYERING** | Clear architectural layers (presentation/business/data) | Spaghetti architecture |
+| **MISSING-DEPENDENCY-DIRECTION** | Dependencies flow in one direction | Circular imports |
+
+**What to look for:**
+```python
+# PRESENT: Clear module structure
+# mypackage/__init__.py
+__all__ = ['UserService', 'User', 'UserRepository']
+
+from .models import User
+from .services import UserService
+from .repositories import UserRepository
+
+# Internal helpers not exported
+from ._utils import _validate_email
+```
+
+---
+
+## Single Responsibility
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SRP-CLASSES** | Classes have one reason to change | God classes doing everything |
+| **MISSING-SRP-FUNCTIONS** | Functions do one thing well | Multi-purpose functions |
+| **MISSING-SRP-MODULES** | Modules have cohesive purpose | Kitchen-sink modules |
+| **MISSING-EXTRACT-CLASS** | Complex data with behavior extracted to class | Primitive obsession |
+| **MISSING-EXTRACT-METHOD** | Complex logic extracted to named methods | Long methods (>20 lines) |
+
+**What to look for:**
+```python
+# PRESENT: Single responsibility
+class OrderPriceCalculator:
+    """Calculates order prices with discounts and taxes."""
+
+    def calculate(self, order: Order) -> Money:
+        subtotal = self._calculate_subtotal(order.items)
+        discount = self._apply_discounts(subtotal, order.coupons)
+        tax = self._calculate_tax(subtotal - discount, order.shipping_address)
+        return subtotal - discount + tax
+
+    def _calculate_subtotal(self, items: list[OrderItem]) -> Money: ...
+    def _apply_discounts(self, amount: Money, coupons: list[Coupon]) -> Money: ...
+    def _calculate_tax(self, amount: Money, address: Address) -> Money: ...
+
+# MISSING: God class
+class Order:
+    def calculate_price(self): ...      # Calculator responsibility
+    def send_confirmation(self): ...    # Notification responsibility
+    def save_to_database(self): ...     # Persistence responsibility
+    def generate_invoice_pdf(self): ... # Reporting responsibility
+```
+
+---
+
+## Dependency Management (Pythonic)
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PARAM-DEPS** | Dependencies as function parameters with defaults | Hardcoded calls inside functions |
+| **MISSING-DUCK-TYPING** | Duck typing ("if it quacks...") | Over-specified type constraints |
+| **MISSING-CLASSMETHOD-CTOR** | `@classmethod` alternative constructors | Complex `__init__` with mode flags |
+| **MISSING-PARTIAL-BINDING** | `functools.partial` for pre-binding args | Wrapper classes just to hold config |
+| **MISSING-MODULE-INJECTION** | Module-level defaults, overridable in tests | Import-time coupling |
+
+**What to look for:**
+```python
+# PRESENT: Pythonic dependency passing
+from functools import partial
+
+# Simple: dependencies as parameters with defaults
+def complete_order(order_id: str, *, get_order=repo.get, send_email=email.send):
+    """Dependencies are parameters - easy to test, no ceremony."""
+    order = get_order(order_id)
+    order.complete()
+    send_email(order.customer_email, "Order Complete")
+
+# Test: just pass different functions
+def test_complete_order():
+    fake_order = Order(customer_email="test@example.com")
+    emails_sent = []
+    complete_order(
+        "123",
+        get_order=lambda _: fake_order,
+        send_email=lambda to, msg: emails_sent.append((to, msg))
+    )
+    assert emails_sent == [("test@example.com", "Order Complete")]
+
+# Alternative constructors with @classmethod
+@dataclass
+class Config:
+    host: str
+    port: int
+    debug: bool = False
+
+    @classmethod
+    def from_env(cls) -> 'Config':
+        """Alternative constructor - clearer than __init__ flags."""
+        return cls(
+            host=os.environ['HOST'],
+            port=int(os.environ['PORT']),
+            debug=os.environ.get('DEBUG', '').lower() == 'true'
+        )
+
+    @classmethod
+    def for_testing(cls) -> 'Config':
+        return cls(host='localhost', port=8000, debug=True)
+
+# functools.partial for pre-binding
+send_welcome = partial(send_email, subject="Welcome!", template="welcome.html")
+send_welcome(to="user@example.com")  # subject and template already bound
+
+# MISSING: Java-style ceremony
+class OrderService:  # Unnecessary class wrapper
+    def __init__(self, email_sender: EmailSenderInterface):  # Over-specified
+        self._email_sender = email_sender  # Just to hold a reference
+```
+
+---
+
+## Error Handling
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-CUSTOM-EXCEPTIONS** | Domain-specific exception hierarchy | Generic exceptions everywhere |
+| **MISSING-EXCEPTION-CONTEXT** | Exceptions preserve original cause (`from e`) | Lost error context |
+| **MISSING-ERROR-BOUNDARY** | Clear error boundaries at module edges | Exceptions leak across layers |
+| **MISSING-RESULT-TYPE** | Result types for expected failures | Exceptions for control flow |
+| **MISSING-INVARIANT-CHECK** | Assertions for programming errors | Silent failures |
+
+**What to look for:**
+```python
+# PRESENT: Proper exception hierarchy
+class OrderError(Exception):
+    """Base exception for order domain."""
+
+class OrderNotFoundError(OrderError):
+    """Raised when order doesn't exist."""
+    def __init__(self, order_id: str):
+        self.order_id = order_id
+        super().__init__(f"Order not found: {order_id}")
+
+class InsufficientInventoryError(OrderError):
+    """Raised when inventory is insufficient."""
+    def __init__(self, product_id: str, requested: int, available: int):
+        self.product_id = product_id
+        self.requested = requested
+        self.available = available
+        super().__init__(f"Insufficient inventory for {product_id}")
+
+# Using the exceptions
+def get_order(order_id: str) -> Order:
+    order = repository.find(order_id)
+    if order is None:
+        raise OrderNotFoundError(order_id)
+    return order
+```
+
+---
+
+## Data Modeling
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-DATACLASS** | Dataclasses for data containers | Manual `__init__`, `__repr__`, `__eq__` |
+| **MISSING-IMMUTABILITY** | Immutable objects where appropriate (`frozen=True`) | Mutable state causing bugs |
+| **MISSING-VALUE-OBJECT** | Value objects for domain concepts (Money, Email) | Primitive obsession |
+| **MISSING-VALIDATION** | Validation in constructors | Invalid objects possible |
+| **MISSING-SLOTS** | `__slots__` for many-instance classes | Memory overhead |
+
+**What to look for:**
+```python
+# PRESENT: Proper data modeling
+from dataclasses import dataclass
+from typing import NewType
+
+@dataclass(frozen=True)
+class Money:
+    """Immutable value object for monetary amounts."""
+    amount: int  # Store as cents to avoid float issues
+    currency: str = "USD"
+
+    def __post_init__(self):
+        if self.amount < 0:
+            raise ValueError("Amount cannot be negative")
+
+    def add(self, other: 'Money') -> 'Money':
+        if self.currency != other.currency:
+            raise ValueError("Cannot add different currencies")
+        return Money(self.amount + other.amount, self.currency)
+
+@dataclass(frozen=True)
+class Email:
+    """Value object for validated email addresses."""
+    address: str
+
+    def __post_init__(self):
+        if '@' not in self.address or '.' not in self.address.split('@')[1]:
+            raise ValueError(f"Invalid email: {self.address}")
+```
+
+---
+
+## Abstraction Levels
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ABSTRACTION-CONSISTENCY** | Functions operate at one abstraction level | Mixed high/low level operations |
+| **MISSING-ENCAPSULATION** | Implementation details hidden | Internal state exposed |
+| **MISSING-TELL-DONT-ASK** | Objects perform operations, not expose data | Feature envy |
+| **MISSING-LOD** | Law of Demeter (talk to friends only) | Train wrecks like `a.b.c.d.method()` |
+| **MISSING-COMPOSITION** | Composition over inheritance | Deep inheritance hierarchies |
+
+**What to look for:**
+```python
+# PRESENT: Consistent abstraction level
+class ReportGenerator:
+    def generate_monthly_report(self, month: date) -> Report:
+        """High-level orchestration only."""
+        data = self._fetch_data(month)
+        analysis = self._analyze_data(data)
+        return self._format_report(analysis)
+
+    def _fetch_data(self, month: date) -> ReportData:
+        """Data layer operations."""
+        ...
+
+    def _analyze_data(self, data: ReportData) -> Analysis:
+        """Business logic."""
+        ...
+
+    def _format_report(self, analysis: Analysis) -> Report:
+        """Presentation layer."""
+        ...
+
+# MISSING: Mixed abstraction levels
+def generate_report(month):
+    # High-level
+    conn = psycopg2.connect(DATABASE_URL)  # Low-level DB detail
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM sales WHERE ...")  # SQL detail
+    # Business logic mixed with formatting
+    total = sum(row[2] for row in cursor.fetchall())
+    return f"<html><body>Total: {total}</body></html>"  # Presentation detail
+```
+
+---
+
+## Testability Design (Pythonic)
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PURE-FUNCTIONS** | Pure functions for business logic | Side effects everywhere |
+| **MISSING-QUERY-COMMAND** | Queries separated from commands (CQS) | Methods that read and write |
+| **MISSING-INJECTABLE-TIME** | Time/randomness as default parameters | Hardcoded `datetime.now()` calls |
+| **MISSING-PYTEST-FIXTURES** | pytest fixtures for test data | Repeated setup in every test |
+| **MISSING-MONKEYPATCH-SEAM** | Module-level functions patchable with monkeypatch | Buried dependencies |
+
+**What to look for:**
+```python
+# PRESENT: Pythonic testable design
+from datetime import datetime
+
+# Pure function - easy to test, no mocking needed
+def calculate_age(birth_date: date, today: date | None = None) -> int:
+    """Pure function with injectable 'now'."""
+    today = today or date.today()
+    age = today.year - birth_date.year
+    if (today.month, today.day) < (birth_date.month, birth_date.day):
+        age -= 1
+    return age
+
+# Test: just pass the date
+def test_calculate_age():
+    assert calculate_age(date(1990, 6, 15), today=date(2024, 1, 1)) == 33
+    assert calculate_age(date(1990, 6, 15), today=date(2024, 6, 15)) == 34
+
+# Pytest fixtures instead of builders
+@pytest.fixture
+def sample_user():
+    return User(name="Test", email="test@example.com")
+
+@pytest.fixture
+def admin_user(sample_user):
+    sample_user.role = "admin"
+    return sample_user
+
+def test_admin_permissions(admin_user):
+    assert admin_user.can_delete_posts()
+
+# Module-level function - easy to monkeypatch
+# myapp/notifications.py
+def send_email(to: str, subject: str, body: str) -> None:
+    """Module-level function, not buried in a class."""
+    smtp.send(to, subject, body)
+
+# Test with monkeypatch
+def test_order_sends_email(monkeypatch):
+    sent = []
+    monkeypatch.setattr('myapp.notifications.send_email',
+                        lambda to, subj, body: sent.append(to))
+    complete_order("123")
+    assert sent == ["customer@example.com"]
+
+# MISSING: Untestable - hardcoded time
+def is_expired(subscription):
+    return subscription.expires_at < datetime.now()  # Can't test edge cases!
+```
+
+---
+
+## Python Idioms
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-COMPREHENSION** | List/dict/set comprehensions | Verbose loops for transforms |
+| **MISSING-GENERATOR** | Generators for large sequences | Memory-heavy lists |
+| **MISSING-CONTEXT-MANAGER** | Context managers for resources | Resource leaks |
+| **MISSING-UNPACKING** | Tuple unpacking | Index-based access |
+| **MISSING-ENUMERATE** | `enumerate()` for index+value | Manual counter variables |
+
+**What to look for:**
+```python
+# PRESENT: Pythonic idioms
+# Comprehension
+valid_users = [u for u in users if u.is_active]
+
+# Generator for large data
+def read_large_file(path):
+    with open(path) as f:
+        for line in f:
+            yield process_line(line)
+
+# Context manager
+with DatabaseConnection() as conn:
+    conn.execute(query)
+# Auto-closes even on exception
+
+# Unpacking
+for index, (name, value) in enumerate(config.items()):
+    print(f"{index}: {name}={value}")
+```
+
+---
+
+## Expected Good Patterns Checklist
+
+Quick reference for absence checks:
+
+### 🔴 Critical (Must Have)
+- [ ] **MISSING-TYPE-HINTS** - Type hints on public APIs
+- [ ] **MISSING-SRP-FUNCTIONS** - Functions do one thing well
+- [ ] **MISSING-CUSTOM-EXCEPTIONS** - Domain exception hierarchy
+- [ ] **MISSING-PARAM-DEPS** - Dependencies as function parameters
+- [ ] **MISSING-PURE-FUNCTIONS** - Pure functions for business logic
+
+### ⚠️ Warning (Should Have)
+- [ ] **MISSING-DOCSTRING** - Public API documentation
+- [ ] **MISSING-MODULE-STRUCTURE** - Logical module organization
+- [ ] **MISSING-DATACLASS** - Dataclasses for data containers
+- [ ] **MISSING-CONTEXT-MANAGER** - Context managers for resources
+- [ ] **MISSING-CLASSMETHOD-CTOR** - Alternative constructors via `@classmethod`
+- [ ] **MISSING-PRIVATE-PREFIX** - Private helpers prefixed with `_`
+
+### 💡 Recommendation (Nice to Have)
+- [ ] **MISSING-VALUE-OBJECT** - Value objects for domain concepts
+- [ ] **MISSING-PYTEST-FIXTURES** - pytest fixtures for test data
+- [ ] **MISSING-COMPREHENSION** - List/dict/set comprehensions
+- [ ] **MISSING-GENERATOR** - Generators for large sequences
+- [ ] **MISSING-PARTIAL-BINDING** - `functools.partial` for pre-binding
+
+---
+
 # Refactoring Process
 
 ## Steps for Effective Refactoring

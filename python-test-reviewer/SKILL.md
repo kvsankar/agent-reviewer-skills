@@ -1871,6 +1871,314 @@ def test_order_schema():
 - Schedule synthetic checks (e.g., pytest scripts run via cron) hitting real environments and validating responses.
 - Alert on schema drift or SLA violations.
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging test issues, check whether **expected testing patterns are missing**. The absence of good practices is itself a finding.
+
+Based on [Python Unit Testing Best Practices](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/), [Common Mocking Problems](https://pytest-with-eric.com/mocking/pytest-common-mocking-problems/), [pytest Good Integration Practices](https://docs.pytest.org/en/stable/explanation/goodpractices.html), and [The Hitchhiker's Guide to Python - Testing](https://docs.python-guide.org/writing/tests/).
+
+## How to Use This Section
+
+When reviewing tests, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern creates significant test quality issues
+- **⚠️ Warning** - Missing pattern weakens test reliability
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Test Structure
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-AAA** | Arrange-Act-Assert structure | Tests are hard to read |
+| **MISSING-DESCRIPTIVE-NAME** | Names describe behavior, not implementation | Unclear what's being tested |
+| **MISSING-SINGLE-ASSERT** | One logical assertion per test | Tests fail for multiple reasons |
+| **MISSING-GIVEN-WHEN-THEN** | BDD-style naming (`test_when_x_then_y`) | Test intent unclear |
+| **MISSING-TEST-DOCSTRING** | Docstrings for complex test scenarios | No context for test purpose |
+
+**What to look for:**
+```python
+# PRESENT: Clear AAA structure with descriptive name
+def test_calculate_discount_returns_zero_for_inactive_user():
+    """Inactive users should not receive any discount."""
+    # Arrange
+    user = User(is_active=False, years_member=5)
+
+    # Act
+    discount = calculate_discount(user)
+
+    # Assert
+    assert discount == 0
+```
+
+**Attribution:** [Python Unit Testing Best Practices](https://pytest-with-eric.com/introduction/python-unit-testing-best-practices/)
+
+---
+
+## Test Isolation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-FIXTURE-ISOLATION** | Each test gets fresh fixtures | Shared state causes flaky tests |
+| **MISSING-DB-CLEANUP** | Database cleaned between tests | Test pollution |
+| **MISSING-MOCK-RESET** | Mocks reset between tests | Mock state leaks |
+| **MISSING-TMP-PATH** | Use `tmp_path` for file operations | Tests leave artifacts |
+| **MISSING-FREEZE-TIME** | Time frozen for time-dependent tests | Flaky time-based tests |
+
+**What to look for:**
+```python
+# PRESENT: Proper isolation with fixtures
+@pytest.fixture
+def user():
+    """Fresh user for each test."""
+    return User(name="Test", email="test@example.com")
+
+@pytest.fixture
+def db_session(tmp_path):
+    """Isolated database session."""
+    db_path = tmp_path / "test.db"
+    engine = create_engine(f"sqlite:///{db_path}")
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    yield session
+    session.close()
+```
+
+---
+
+## Test Coverage
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-HAPPY-PATH** | Tests for expected successful behavior | Only error cases tested |
+| **MISSING-ERROR-CASES** | Tests for error/exception scenarios | Only happy path tested |
+| **MISSING-EDGE-CASES** | Tests for boundary conditions | Edge cases cause bugs |
+| **MISSING-NONE-NULL** | Tests for None/null inputs | NoneType errors in production |
+| **MISSING-EMPTY-COLLECTION** | Tests for empty lists/dicts | Empty collection bugs |
+
+**What to look for:**
+```python
+# PRESENT: Comprehensive coverage
+class TestCalculateDiscount:
+    def test_happy_path_active_user_gets_discount(self): ...
+    def test_inactive_user_gets_no_discount(self): ...
+    def test_none_user_raises_value_error(self): ...
+    def test_zero_years_member_gets_no_discount(self): ...
+    def test_negative_years_raises_value_error(self): ...
+
+@pytest.mark.parametrize("years,expected", [
+    (0, 0),      # boundary
+    (1, 5),      # just above boundary
+    (5, 10),     # middle
+    (10, 15),    # max discount
+    (100, 15),   # way above max
+])
+def test_discount_tiers(years, expected): ...
+```
+
+---
+
+## Mocking & Dependencies
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-MOCK-BOUNDARY** | Mock at system boundaries (DB, API, time) | Mocking internal implementation |
+| **MISSING-MOCK-SPEC** | `spec=True` or `autospec=True` on mocks | Mocks accept invalid calls |
+| **MISSING-PATCH-TARGET** | Patch where used, not where defined | Wrong thing patched |
+| **MISSING-CONTEXT-MOCK** | Context manager for temporary mocks | Mock leaks to other tests |
+| **MISSING-FIXTURE-MOCK** | Reusable mock fixtures | Duplicated mock setup |
+
+**What to look for:**
+```python
+# PRESENT: Proper mocking
+@pytest.fixture
+def mock_email_service(mocker):
+    """Mock email at boundary, not internals."""
+    return mocker.patch(
+        'myapp.services.email.send_email',
+        autospec=True,  # Validates call signatures
+    )
+
+def test_order_completion_sends_email(mock_email_service):
+    complete_order(order_id="123")
+    mock_email_service.assert_called_once_with(
+        to="customer@example.com",
+        subject="Order Complete",
+    )
+
+# PRESENT: Patch where used, not where defined
+# If myapp/orders.py does: from myapp.email import send_email
+# Patch in orders, not in email module:
+@patch('myapp.orders.send_email')  # Correct
+# NOT @patch('myapp.email.send_email')  # Wrong!
+```
+
+**Attribution:** [Common Mocking Problems](https://pytest-with-eric.com/mocking/pytest-common-mocking-problems/)
+
+---
+
+## Dependency Injection for Testability
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-DI-PARAMS** | Dependencies passed as function parameters | Hardcoded dependencies inside functions |
+| **MISSING-DI-DEFAULTS** | Default arguments for production, overridable in tests | Can't inject test doubles |
+| **MISSING-FAKES** | Fake implementations (in-memory DB) over complex mocks | Over-mocking hides bugs |
+| **MISSING-INTERFACE-TEST** | Test public interfaces, not internal methods | Tests coupled to implementation |
+
+**What to look for:**
+```python
+# PRESENT: Dependency injection via parameters (Pythonic)
+def process_order(order_id: str, *, db=None, emailer=None):
+    """Dependencies as parameters with defaults."""
+    db = db or get_default_db()
+    emailer = emailer or get_default_emailer()
+    order = db.get_order(order_id)
+    emailer.send(order.customer_email, "Order processed")
+
+# Test: inject fakes
+def test_process_order_sends_email():
+    fake_db = FakeDatabase(orders={"123": Order(customer_email="test@x.com")})
+    fake_emailer = FakeEmailer()
+
+    process_order("123", db=fake_db, emailer=fake_emailer)
+
+    assert fake_emailer.sent == [("test@x.com", "Order processed")]
+
+# PRESENT: Fake over mock (simpler, catches more bugs)
+class FakeEmailer:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, to, message):
+        self.sent.append((to, message))
+```
+
+**Attribution:** [Common Mocking Problems - Use Fakes](https://pytest-with-eric.com/mocking/pytest-common-mocking-problems/)
+
+---
+
+## Assertions
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SPECIFIC-ASSERT** | Specific assertions (`assert x == 5`) | Vague `assert result` |
+| **MISSING-PYTEST-RAISES** | `pytest.raises` for exception testing | Generic try/except |
+| **MISSING-APPROX** | `pytest.approx` for floats | Float comparison fails |
+| **MISSING-ASSERT-MESSAGE** | Custom messages for complex assertions | Unclear failure messages |
+| **MISSING-COLLECTION-ASSERT** | Proper collection comparisons | Order-dependent failures |
+
+**What to look for:**
+```python
+# PRESENT: Proper assertions
+def test_division_result():
+    result = calculate_ratio(1, 3)
+    assert result == pytest.approx(0.333, rel=1e-2)
+
+def test_invalid_input_raises():
+    with pytest.raises(ValueError, match="must be positive"):
+        calculate_ratio(-1, 3)
+
+def test_user_list_contains_expected():
+    users = get_active_users()
+    assert {u.email for u in users} == {"a@test.com", "b@test.com"}
+```
+
+---
+
+## Test Organization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-TEST-CLASS** | Related tests grouped in classes | Tests scattered randomly |
+| **MISSING-CONFTEST** | Shared fixtures in conftest.py | Duplicated fixtures |
+| **MISSING-MARKERS** | pytest markers for categorization | Can't run test subsets |
+| **MISSING-PARAMETRIZE** | `@pytest.mark.parametrize` for variants | Duplicate test code |
+| **MISSING-SLOW-MARKER** | Slow tests marked for CI separation | CI too slow |
+
+**What to look for:**
+```python
+# conftest.py - PRESENT: Shared fixtures
+@pytest.fixture
+def authenticated_client(client, user):
+    client.force_login(user)
+    return client
+
+# test_orders.py - PRESENT: Good organization
+@pytest.mark.slow
+@pytest.mark.integration
+class TestOrderWorkflow:
+    def test_create_order(self, authenticated_client): ...
+    def test_cancel_order(self, authenticated_client): ...
+
+@pytest.mark.parametrize("status,expected", [
+    ("pending", True),
+    ("shipped", False),
+    ("delivered", False),
+])
+def test_order_is_cancellable(status, expected): ...
+```
+
+---
+
+## Test Quality
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-BEHAVIOR-TEST** | Tests verify behavior, not implementation | Brittle tests |
+| **MISSING-REFACTOR-SAFE** | Tests survive refactoring | Tests break on internal changes |
+| **MISSING-DETERMINISTIC** | Tests are deterministic (no random, no time) | Flaky tests |
+| **MISSING-FAST-UNIT** | Unit tests run in milliseconds | Slow test suite |
+| **MISSING-MEANINGFUL** | Tests would catch real bugs | Tests pass but bugs slip through |
+
+**What to look for:**
+```python
+# PRESENT: Behavior-focused, deterministic test
+def test_expired_subscription_denies_access(freezer):
+    """Test behavior: expired subscriptions can't access content."""
+    freezer.move_to("2024-06-01")
+    subscription = Subscription(expires_at=date(2024, 5, 31))
+
+    # Test behavior, not implementation
+    assert not subscription.allows_access()
+
+# MISSING: Implementation-focused, brittle test
+def test_subscription_internal_state():  # Bad: tests internals
+    subscription = Subscription(expires_at=date(2024, 5, 31))
+    assert subscription._is_expired == True  # Testing private state!
+```
+
+---
+
+## Expected Good Patterns Checklist
+
+Quick reference for absence checks:
+
+### 🔴 Critical (Must Have)
+- [ ] **MISSING-AAA** - Clear Arrange-Act-Assert structure
+- [ ] **MISSING-FIXTURE-ISOLATION** - Each test gets fresh fixtures
+- [ ] **MISSING-ERROR-CASES** - Error scenarios tested
+- [ ] **MISSING-MOCK-SPEC** - Mocks use autospec=True
+- [ ] **MISSING-DETERMINISTIC** - Tests are deterministic
+- [ ] **MISSING-PATCH-TARGET** - Patch where used, not where defined
+
+### ⚠️ Warning (Should Have)
+- [ ] **MISSING-DESCRIPTIVE-NAME** - Behavior-describing test names
+- [ ] **MISSING-EDGE-CASES** - Boundary conditions tested
+- [ ] **MISSING-PYTEST-RAISES** - Proper exception testing
+- [ ] **MISSING-CONFTEST** - Shared fixtures in conftest.py
+- [ ] **MISSING-PARAMETRIZE** - Parametrize for variants
+- [ ] **MISSING-DI-PARAMS** - Dependencies as parameters
+
+### 💡 Recommendation (Nice to Have)
+- [ ] **MISSING-FAKES** - Fakes over complex mocks
+- [ ] **MISSING-MARKERS** - pytest markers for categorization
+- [ ] **MISSING-BEHAVIOR-TEST** - Tests verify behavior, not implementation
+- [ ] **MISSING-APPROX** - pytest.approx for float comparisons
+- [ ] **MISSING-FREEZE-TIME** - Time frozen for time-dependent tests
+
+---
+
 # End of Guidelines
 
 Remember: Good tests are **readable, reliable, fast, and meaningful**. They test behavior, not implementation. They give confidence that code works and catches bugs when it doesn't. Quality over coverage, always.

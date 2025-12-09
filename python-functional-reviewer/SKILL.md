@@ -1127,6 +1127,428 @@ def tap(fn: Callable[[T], None]) -> Callable[[T], T]:
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [Python Functional Programming HOWTO](https://docs.python.org/3/howto/functional.html), [Real Python FP Guide](https://realpython.com/python-functional-programming/), [itertools docs](https://docs.python.org/3/library/itertools.html), [functools docs](https://docs.python.org/3/library/functools.html)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Pure Function Patterns
+
+**Mnemonic:** **"PURE-FUNCTIONS-FIRST"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Functions with no side effects | 🔴 `MISSING-PURE-FUNC` - Hidden state changes |
+| Same input → same output | 🔴 `MISSING-DETERMINISTIC` - Unpredictable behavior |
+| No modification of input data | ⚠️ `MISSING-IMMUTABLE-INPUT` - Caller data corrupted |
+| Return values instead of mutations | ⚠️ `MISSING-RETURN-VALUE` - Side-effect programming |
+
+```python
+# PRESENT: Pure function patterns
+from copy import deepcopy
+
+
+def add_tax(price: float, tax_rate: float = 0.1) -> float:
+    """Pure: same input always gives same output."""
+    return price * (1 + tax_rate)
+
+
+def filter_adults(users: list[dict]) -> list[dict]:
+    """Pure: doesn't modify input, returns new list."""
+    return [user for user in users if user['age'] >= 18]
+
+
+def update_user_status(user: dict, new_status: str) -> dict:
+    """Pure: returns new dict, doesn't modify original."""
+    return {**user, 'status': new_status}
+
+
+def process_items(items: list[str]) -> list[str]:
+    """Pure: creates new list, original unchanged."""
+    return [item.upper().strip() for item in items]
+
+
+# MISSING: Impure functions
+total = 0  # Module-level state!
+
+def add_to_total(amount: float) -> float:
+    global total  # Mutation of global state!
+    total += amount
+    return total
+
+
+def sort_users(users: list[dict]) -> list[dict]:
+    users.sort(key=lambda u: u['name'])  # MUTATES input!
+    return users  # Caller's list is now sorted
+
+
+def get_timestamp() -> float:
+    return time.time()  # Non-deterministic! Different each call
+```
+
+### 2. Generator & Lazy Evaluation Patterns
+
+**Mnemonic:** **"YIELD-DONT-RETURN"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Generator functions for large data | 🔴 `MISSING-GENERATOR` - Memory exhaustion |
+| Generator expressions over list comprehensions | ⚠️ `MISSING-GENEXPR` - Unnecessary memory |
+| `yield from` for nested generators | 💡 `MISSING-YIELD-FROM` - Verbose delegation |
+| `itertools.islice()` for partial iteration | 💡 `MISSING-ISLICE` - Loading full iterator |
+
+```python
+# PRESENT: Lazy evaluation with generators
+from itertools import islice
+
+
+def read_large_file(path: str):
+    """Generator: processes one line at a time, never loads entire file."""
+    with open(path) as f:
+        for line in f:
+            yield line.strip()
+
+
+def transform_data(items):
+    """Generator: transforms lazily, on demand."""
+    for item in items:
+        yield expensive_transform(item)
+
+
+# Generator expression instead of list comprehension
+large_data = range(10_000_000)
+squares = (x ** 2 for x in large_data)  # Generator: no memory until consumed
+first_10 = list(islice(squares, 10))  # Only compute what we need
+
+
+def flatten(nested):
+    """yield from for clean nested iteration."""
+    for item in nested:
+        if isinstance(item, list):
+            yield from flatten(item)  # Delegate to sub-generator
+        else:
+            yield item
+
+
+# MISSING: Eager evaluation (anti-pattern for large data)
+def read_large_file_bad(path: str) -> list[str]:
+    """Loads ENTIRE file into memory at once!"""
+    with open(path) as f:
+        return [line.strip() for line in f]  # Could be GBs!
+
+
+def transform_data_bad(items):
+    """Transforms ALL items before returning anything."""
+    result = []
+    for item in items:
+        result.append(expensive_transform(item))  # All in memory!
+    return result
+
+
+# List comprehension for large data (bad!)
+squares_bad = [x ** 2 for x in range(10_000_000)]  # 400MB+ in memory!
+```
+
+### 3. Higher-Order Function Patterns
+
+**Mnemonic:** **"FUNCTIONS-AS-DATA"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Functions passed as arguments | ⚠️ `MISSING-HOF` - Hardcoded behavior |
+| `functools.partial` for specialization | 💡 `MISSING-PARTIAL` - Verbose wrappers |
+| Function composition | 💡 `MISSING-COMPOSE` - Long procedural chains |
+| `@functools.wraps` on decorators | ⚠️ `MISSING-WRAPS` - Lost function metadata |
+
+```python
+# PRESENT: Higher-order function patterns
+from functools import partial, wraps, reduce
+from typing import Callable, TypeVar
+
+T = TypeVar('T')
+R = TypeVar('R')
+
+
+def apply_to_all(func: Callable[[T], R], items: list[T]) -> list[R]:
+    """HOF: accepts function as argument."""
+    return [func(item) for item in items]
+
+
+# functools.partial for specialization
+def power(base: int, exponent: int) -> int:
+    return base ** exponent
+
+square = partial(power, exponent=2)  # Specialized version
+cube = partial(power, exponent=3)
+
+squares = list(map(square, [1, 2, 3, 4]))  # [1, 4, 9, 16]
+
+
+# Function composition
+def compose(*funcs: Callable) -> Callable:
+    """Compose multiple functions right-to-left."""
+    def composed(x):
+        for func in reversed(funcs):
+            x = func(x)
+        return x
+    return composed
+
+clean_and_upper = compose(str.upper, str.strip, str.lower)
+result = clean_and_upper("  HeLLo  ")  # "HELLO"
+
+
+# Decorator with @wraps
+def log_calls(func: Callable) -> Callable:
+    @wraps(func)  # Preserves __name__, __doc__, etc.
+    def wrapper(*args, **kwargs):
+        print(f"Calling {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+
+# MISSING: Hardcoded behavior instead of HOF
+def process_items_hardcoded(items):
+    """Hardcoded transformation - can't reuse with different logic."""
+    return [item.upper() for item in items]  # Always upper!
+
+
+# MISSING: Decorator without @wraps
+def log_calls_bad(func):
+    def wrapper(*args, **kwargs):  # No @wraps!
+        return func(*args, **kwargs)
+    return wrapper
+
+@log_calls_bad
+def my_func():
+    """Important docstring."""
+    pass
+
+print(my_func.__name__)  # "wrapper" - metadata lost!
+print(my_func.__doc__)   # None - docstring lost!
+```
+
+### 4. Comprehension Patterns (Pythonic FP)
+
+**Mnemonic:** **"COMPREHENSIONS-OVER-MAP"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| List comprehension over `map()`+`list()` | 💡 `MISSING-LIST-COMP` - Less Pythonic |
+| Dict comprehension for transformations | 💡 `MISSING-DICT-COMP` - Verbose dict building |
+| Set comprehension for unique values | 💡 `MISSING-SET-COMP` - Extra set() call |
+| Conditional expressions in comprehensions | 💡 `MISSING-COMP-FILTER` - Separate filter step |
+
+```python
+# PRESENT: Pythonic comprehensions (preferred in Python)
+
+# List comprehension (more Pythonic than map)
+squares = [x ** 2 for x in range(10)]
+# vs: list(map(lambda x: x ** 2, range(10)))
+
+# With filtering (comprehension > map+filter)
+even_squares = [x ** 2 for x in range(10) if x % 2 == 0]
+# vs: list(filter(lambda x: x % 2 == 0, map(lambda x: x ** 2, range(10))))
+
+# Dict comprehension
+users_by_id = {user['id']: user for user in users}
+
+# Set comprehension
+unique_emails = {user['email'].lower() for user in users}
+
+# Nested comprehension (matrix flatten)
+matrix = [[1, 2], [3, 4], [5, 6]]
+flat = [num for row in matrix for num in row]  # [1, 2, 3, 4, 5, 6]
+
+
+# MISSING: Using map/filter when comprehension clearer
+# Less Pythonic
+squares_map = list(map(lambda x: x ** 2, range(10)))
+
+# Especially confusing with nested map/filter
+result = list(filter(
+    lambda x: x > 10,
+    map(lambda x: x ** 2, range(10))
+))
+
+# When to USE map/filter: pre-existing named function
+names = list(map(str.upper, raw_names))  # OK: str.upper exists
+lengths = list(map(len, strings))  # OK: len exists
+```
+
+### 5. itertools Patterns
+
+**Mnemonic:** **"ITERTOOLS-FOR-EFFICIENCY"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `chain()` for concatenating iterables | 💡 `MISSING-CHAIN` - Multiple loops |
+| `groupby()` for grouped processing | 💡 `MISSING-GROUPBY` - Manual grouping logic |
+| `accumulate()` for running totals | 💡 `MISSING-ACCUMULATE` - Manual accumulation |
+| `combinations/permutations` | 💡 `MISSING-COMBINATORICS` - Manual nested loops |
+
+```python
+# PRESENT: itertools for clean, efficient iteration
+from itertools import chain, groupby, accumulate, combinations, takewhile, dropwhile
+
+
+# chain() - combine multiple iterables
+all_items = chain(list1, list2, list3)  # Single lazy iterator
+for item in all_items:
+    process(item)
+
+
+# groupby() - group consecutive elements
+from operator import itemgetter
+
+data = [
+    {'dept': 'sales', 'name': 'Alice'},
+    {'dept': 'sales', 'name': 'Bob'},
+    {'dept': 'eng', 'name': 'Carol'},
+]
+# Must be sorted by key first!
+sorted_data = sorted(data, key=itemgetter('dept'))
+for dept, group in groupby(sorted_data, key=itemgetter('dept')):
+    print(f"{dept}: {[p['name'] for p in group]}")
+
+
+# accumulate() - running totals
+numbers = [1, 2, 3, 4, 5]
+running_sum = list(accumulate(numbers))  # [1, 3, 6, 10, 15]
+
+
+# combinations() - all k-combinations
+items = ['A', 'B', 'C']
+pairs = list(combinations(items, 2))  # [('A','B'), ('A','C'), ('B','C')]
+
+
+# takewhile/dropwhile - conditional slicing
+numbers = [2, 4, 6, 7, 8, 10]
+evens = list(takewhile(lambda x: x % 2 == 0, numbers))  # [2, 4, 6]
+
+
+# MISSING: Manual implementations instead of itertools
+# Don't do this:
+def chain_manual(*iterables):
+    for it in iterables:
+        for item in it:
+            yield item
+
+# Don't do this:
+running_total = 0
+running_sums = []
+for num in numbers:
+    running_total += num
+    running_sums.append(running_total)
+```
+
+### 6. functools Patterns
+
+**Mnemonic:** **"FUNCTOOLS-FOR-FUNCTIONS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `@lru_cache` for memoization | 🔴 `MISSING-MEMOIZATION` - Redundant computation |
+| `reduce()` for cumulative operations | 💡 `MISSING-REDUCE` - Verbose loops |
+| `@singledispatch` for type-based dispatch | 💡 `MISSING-DISPATCH` - Manual type checking |
+| `@cache` for simple memoization (3.9+) | 💡 `MISSING-CACHE-DECORATOR` - Manual caching |
+
+```python
+# PRESENT: functools for function manipulation
+from functools import lru_cache, reduce, singledispatch, cache
+
+
+# @lru_cache for expensive computations
+@lru_cache(maxsize=128)
+def fibonacci(n: int) -> int:
+    """Memoized: O(n) instead of O(2^n)."""
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+
+# @cache (Python 3.9+) - simpler unbounded cache
+@cache
+def expensive_computation(x: int, y: int) -> int:
+    return x ** y  # Cached forever
+
+
+# reduce() for cumulative operations
+from operator import mul
+
+product = reduce(mul, [1, 2, 3, 4, 5])  # 120
+# Equivalent to: 1 * 2 * 3 * 4 * 5
+
+
+# @singledispatch for type-based behavior
+@singledispatch
+def process(value):
+    raise NotImplementedError(f"No handler for {type(value)}")
+
+@process.register(str)
+def _(value: str) -> str:
+    return value.upper()
+
+@process.register(list)
+def _(value: list) -> list:
+    return [item.upper() if isinstance(item, str) else item for item in value]
+
+
+# MISSING: Redundant computation without memoization
+def fibonacci_slow(n: int) -> int:
+    """No memoization: O(2^n) - exponentially slow!"""
+    if n < 2:
+        return n
+    return fibonacci_slow(n - 1) + fibonacci_slow(n - 2)
+
+# fibonacci_slow(40) takes SECONDS
+# fibonacci(40) with @lru_cache is instant
+
+
+# MISSING: Manual loop instead of reduce
+product = 1
+for num in [1, 2, 3, 4, 5]:
+    product *= num  # Verbose!
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (causes bugs or major inefficiency if missing):**
+- [ ] `MISSING-PURE-FUNC` - Functions with hidden side effects
+- [ ] `MISSING-DETERMINISTIC` - Non-deterministic functions
+- [ ] `MISSING-GENERATOR` - Eager loading of large data
+- [ ] `MISSING-MEMOIZATION` - Redundant expensive computations
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-IMMUTABLE-INPUT` - Functions that modify their inputs
+- [ ] `MISSING-RETURN-VALUE` - Side-effect programming instead of returns
+- [ ] `MISSING-GENEXPR` - List comprehensions for large data
+- [ ] `MISSING-HOF` - Hardcoded behavior instead of callbacks
+- [ ] `MISSING-WRAPS` - Decorators without @wraps
+
+💡 **Recommendation (Pythonic style):**
+- [ ] `MISSING-PARTIAL` - Verbose wrappers instead of partial()
+- [ ] `MISSING-COMPOSE` - Long procedural chains
+- [ ] `MISSING-YIELD-FROM` - Manual delegation in generators
+- [ ] `MISSING-ISLICE` - Loading full iterator for partial use
+- [ ] `MISSING-LIST-COMP` - map() where comprehension cleaner
+- [ ] `MISSING-DICT-COMP` - Verbose dict building
+- [ ] `MISSING-SET-COMP` - Extra set() call
+- [ ] `MISSING-COMP-FILTER` - Separate filter instead of conditional
+- [ ] `MISSING-CHAIN` - Multiple loops instead of chain()
+- [ ] `MISSING-GROUPBY` - Manual grouping logic
+- [ ] `MISSING-ACCUMULATE` - Manual running totals
+- [ ] `MISSING-COMBINATORICS` - Manual nested loops for combinations
+- [ ] `MISSING-REDUCE` - Verbose loop for cumulative operation
+- [ ] `MISSING-DISPATCH` - Manual type checking instead of singledispatch
+- [ ] `MISSING-CACHE-DECORATOR` - Manual caching dict
+
+---
+
 ## Summary
 
 Functional programming in Python emphasizes:

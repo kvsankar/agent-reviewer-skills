@@ -2652,6 +2652,732 @@ When reviewing OpenAPI specifications, systematically check:
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [OpenAPI Best Practices](https://learn.openapis.org/best-practices.html), [APImatic OpenAPI Guide](https://www.apimatic.io/blog/2022/11/14-best-practices-to-write-openapi-for-better-api-consumption), [Redocly Discriminator Guide](https://redocly.com/learn/openapi/discriminator)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Component Reuse Patterns
+
+**Mnemonic:** **"COMPONENTS-NOT-INLINE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Schemas defined in `components/schemas` | 🔴 `MISSING-COMPONENT-SCHEMA` - Inline schemas with poor names |
+| Parameters in `components/parameters` | ⚠️ `MISSING-COMPONENT-PARAM` - Duplicate parameter definitions |
+| Responses in `components/responses` | ⚠️ `MISSING-COMPONENT-RESPONSE` - Inconsistent error responses |
+| Request bodies in `components/requestBodies` | 💡 `MISSING-COMPONENT-BODY` - Repeated request definitions |
+
+```yaml
+# PRESENT: Proper component reuse
+openapi: 3.0.3
+info:
+  title: My API
+  version: 1.0.0
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          description: User's email address
+        name:
+          type: string
+          description: User's display name
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error message
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: The requested resource was not found
+
+paths:
+  /users:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+# MISSING: Inline schemas (anti-pattern)
+paths:
+  /users:
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object  # Inline! Will get auto-generated name like "inline_response_200"
+                properties:
+                  id:
+                    type: string
+                  email:
+                    type: string
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object  # Another inline! Duplicated Error definition
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+```
+
+### 2. Example Patterns
+
+**Mnemonic:** **"EXAMPLES-EVERYWHERE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Examples for all schemas | 🔴 `MISSING-SCHEMA-EXAMPLE` - Unclear expected format |
+| Examples for request bodies | ⚠️ `MISSING-REQUEST-EXAMPLE` - Hard to test API |
+| Examples for responses | ⚠️ `MISSING-RESPONSE-EXAMPLE` - Unclear API output |
+| Examples for parameters | 💡 `MISSING-PARAM-EXAMPLE` - Unclear parameter format |
+
+```yaml
+# PRESENT: Comprehensive examples
+components:
+  schemas:
+    Order:
+      type: object
+      required:
+        - id
+        - items
+        - total
+      properties:
+        id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total:
+          type: number
+          format: decimal
+      example:  # Schema-level example
+        id: "550e8400-e29b-41d4-a716-446655440000"
+        items:
+          - productId: "prod-123"
+            quantity: 2
+            price: 29.99
+        total: 59.98
+
+paths:
+  /orders:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+            examples:  # Multiple named examples
+              single_item:
+                summary: Order with one item
+                value:
+                  items:
+                    - productId: "prod-123"
+                      quantity: 1
+              multiple_items:
+                summary: Order with multiple items
+                value:
+                  items:
+                    - productId: "prod-123"
+                      quantity: 2
+                    - productId: "prod-456"
+                      quantity: 1
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                items:
+                  - productId: "prod-123"
+                    quantity: 2
+                    price: 29.99
+                total: 59.98
+
+
+# MISSING: No examples
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        items:
+          type: array
+        total:
+          type: number
+      # No example! What does a real order look like?
+
+paths:
+  /orders:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+            # No examples! How do I call this API?
+```
+
+### 3. Validation & Constraint Patterns
+
+**Mnemonic:** **"CONSTRAIN-ALL-INPUTS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `required` array for required properties | 🔴 `MISSING-REQUIRED` - Optional when should be mandatory |
+| `format` for string types (email, uuid, etc.) | ⚠️ `MISSING-FORMAT` - No semantic validation |
+| `minimum`/`maximum` for numbers | ⚠️ `MISSING-NUMERIC-BOUNDS` - Unbounded inputs |
+| `minLength`/`maxLength` for strings | ⚠️ `MISSING-STRING-BOUNDS` - Unbounded strings |
+| `pattern` for formatted strings | 💡 `MISSING-PATTERN` - No regex validation |
+| `enum` for fixed value sets | ⚠️ `MISSING-ENUM` - Any value accepted |
+
+```yaml
+# PRESENT: Proper validation constraints
+components:
+  schemas:
+    CreateUser:
+      type: object
+      required:           # Explicitly mark required fields
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email   # Semantic format
+          maxLength: 255
+          description: User's email address
+        password:
+          type: string
+          format: password
+          minLength: 8    # Minimum security requirement
+          maxLength: 128
+          pattern: '^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$'  # Complexity
+          description: Password (min 8 chars, upper, lower, digit)
+        age:
+          type: integer
+          minimum: 13     # Business rule
+          maximum: 150
+          description: User's age (must be 13+)
+        status:
+          type: string
+          enum:           # Fixed value set
+            - active
+            - inactive
+            - pending
+          default: pending
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          pattern: '^[a-z0-9_]+$'  # Only lowercase, numbers, underscore
+          description: Username (3-30 chars, lowercase alphanumeric)
+
+
+# MISSING: No validation constraints
+components:
+  schemas:
+    CreateUser:
+      type: object
+      properties:
+        email:
+          type: string    # Any string accepted! No format!
+        password:
+          type: string    # Empty password? 10MB password? All valid!
+        age:
+          type: integer   # Negative? 10000? All valid!
+        status:
+          type: string    # "banana"? "💩"? All valid!
+      # No required array! Everything is optional!
+```
+
+### 4. Error Response Patterns
+
+**Mnemonic:** **"ERRORS-DOCUMENTED"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Error schema in components | 🔴 `MISSING-ERROR-SCHEMA` - Inconsistent error format |
+| 400 Bad Request documented | ⚠️ `MISSING-400` - Validation errors undocumented |
+| 401 Unauthorized documented | 🔴 `MISSING-401` - Auth errors undocumented |
+| 404 Not Found documented | ⚠️ `MISSING-404` - Missing resource errors |
+| 500 Server Error documented | 💡 `MISSING-500` - Server errors undocumented |
+
+```yaml
+# PRESENT: Comprehensive error documentation
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - VALIDATION_ERROR
+            - NOT_FOUND
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - INTERNAL_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+          description: Additional error details
+
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field that caused the error
+        reason:
+          type: string
+          description: Why the field is invalid
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: VALIDATION_ERROR
+            message: Invalid request parameters
+            details:
+              - field: email
+                reason: Invalid email format
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNAUTHORIZED
+            message: Authentication required
+
+paths:
+  /orders/{id}:
+    get:
+      responses:
+        '200':
+          description: Order details
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+# MISSING: No error responses
+paths:
+  /orders/{id}:
+    get:
+      responses:
+        '200':
+          description: Order details
+      # What happens on error? 🤷‍♂️
+```
+
+### 5. Security Patterns
+
+**Mnemonic:** **"SECURE-BY-DEFAULT"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `securitySchemes` in components | 🔴 `MISSING-SECURITY-SCHEMES` - No auth defined |
+| Global `security` requirement | 🔴 `MISSING-GLOBAL-SECURITY` - API unprotected by default |
+| Per-operation security (when different) | ⚠️ `MISSING-OPERATION-SECURITY` - Wrong auth applied |
+| OAuth scopes defined | ⚠️ `MISSING-OAUTH-SCOPES` - No scope documentation |
+
+```yaml
+# PRESENT: Proper security configuration
+openapi: 3.0.3
+info:
+  title: My Secure API
+  version: 1.0.0
+
+security:  # Global security - applies to all operations by default
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from /auth/login
+
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for machine-to-machine access
+
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.example.com/authorize
+          tokenUrl: https://auth.example.com/token
+          scopes:
+            read:users: Read user information
+            write:users: Create and update users
+            admin: Full administrative access
+
+paths:
+  /public/health:
+    get:
+      security: []  # Override: No auth required (public endpoint)
+      responses:
+        '200':
+          description: Health check
+
+  /users:
+    get:
+      security:
+        - OAuth2:
+            - read:users  # Specific scope required
+      responses:
+        '200':
+          description: List users
+
+  /admin/settings:
+    put:
+      security:
+        - OAuth2:
+            - admin  # Admin scope required
+      responses:
+        '200':
+          description: Settings updated
+
+
+# MISSING: No security configuration
+openapi: 3.0.3
+info:
+  title: My API
+  version: 1.0.0
+
+# No global security!
+# No securitySchemes!
+
+paths:
+  /users:
+    get:
+      # No security specified - is this protected? 🤷‍♂️
+      responses:
+        '200':
+          description: List users
+```
+
+### 6. Description & Documentation Patterns
+
+**Mnemonic:** **"DESCRIBE-EVERYTHING"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `description` on all schemas | ⚠️ `MISSING-SCHEMA-DESC` - Unclear data models |
+| `description` on all properties | ⚠️ `MISSING-PROPERTY-DESC` - Unclear field purpose |
+| `description` on all operations | ⚠️ `MISSING-OPERATION-DESC` - Unclear endpoint purpose |
+| `description` on all parameters | ⚠️ `MISSING-PARAM-DESC` - Unclear parameter usage |
+| Markdown formatting for complex descriptions | 💡 `MISSING-MARKDOWN` - Poor documentation formatting |
+
+```yaml
+# PRESENT: Comprehensive descriptions
+components:
+  schemas:
+    User:
+      type: object
+      description: |
+        A registered user account in the system.
+
+        ## Lifecycle
+        Users are created via `/auth/register` and can be in one of several states:
+        - `pending`: Email verification required
+        - `active`: Fully verified and active
+        - `suspended`: Temporarily disabled by admin
+
+        ## Related Resources
+        - Orders: `/users/{id}/orders`
+        - Profile: `/users/{id}/profile`
+      required:
+        - id
+        - email
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the user (UUID v4)
+          readOnly: true
+        email:
+          type: string
+          format: email
+          description: |
+            User's primary email address.
+            - Must be unique across all users
+            - Used for login and notifications
+            - Cannot be changed after verification
+        status:
+          type: string
+          enum: [pending, active, suspended]
+          description: |
+            Current account status:
+            - `pending`: Awaiting email verification
+            - `active`: Fully functional account
+            - `suspended`: Disabled by administrator
+
+paths:
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: |
+        Retrieves a single user by their unique identifier.
+
+        ## Authorization
+        - Own profile: Any authenticated user
+        - Other profiles: Requires `admin` scope
+
+        ## Response
+        Returns full user object including profile data.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier (UUID) of the user to retrieve
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+
+# MISSING: No descriptions
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+      # What is this? How do I use it? 🤷‍♂️
+
+paths:
+  /users/{id}:
+    get:
+      # No summary, no description
+      parameters:
+        - name: id
+          in: path
+          required: true
+          # What format? What does it identify? 🤷‍♂️
+```
+
+### 7. Discriminator & Polymorphism Patterns
+
+**Mnemonic:** **"DISCRIMINATE-UNIONS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `discriminator` with `oneOf`/`anyOf` | 💡 `MISSING-DISCRIMINATOR` - No polymorphism hint |
+| `mapping` in discriminator | 💡 `MISSING-DISCRIMINATOR-MAPPING` - Implicit mapping |
+| Discriminator property as `required` | 🔴 `MISSING-DISCRIMINATOR-REQUIRED` - Optional discriminator |
+
+```yaml
+# PRESENT: Proper discriminator usage
+components:
+  schemas:
+    Notification:
+      oneOf:
+        - $ref: '#/components/schemas/EmailNotification'
+        - $ref: '#/components/schemas/SmsNotification'
+        - $ref: '#/components/schemas/PushNotification'
+      discriminator:
+        propertyName: type
+        mapping:
+          email: '#/components/schemas/EmailNotification'
+          sms: '#/components/schemas/SmsNotification'
+          push: '#/components/schemas/PushNotification'
+
+    NotificationBase:
+      type: object
+      required:
+        - type  # Discriminator MUST be required!
+        - recipient
+      properties:
+        type:
+          type: string
+          description: Type of notification
+        recipient:
+          type: string
+          description: Recipient identifier
+
+    EmailNotification:
+      allOf:
+        - $ref: '#/components/schemas/NotificationBase'
+        - type: object
+          required:
+            - subject
+          properties:
+            type:
+              type: string
+              enum: [email]
+            subject:
+              type: string
+            htmlBody:
+              type: string
+
+    SmsNotification:
+      allOf:
+        - $ref: '#/components/schemas/NotificationBase'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [sms]
+            message:
+              type: string
+              maxLength: 160
+
+
+# MISSING: No discriminator (harder for code generators)
+components:
+  schemas:
+    Notification:
+      oneOf:
+        - $ref: '#/components/schemas/EmailNotification'
+        - $ref: '#/components/schemas/SmsNotification'
+      # No discriminator! Code generator doesn't know which type!
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (breaks code generation/validation if missing):**
+- [ ] `MISSING-COMPONENT-SCHEMA` - Inline schemas instead of components
+- [ ] `MISSING-SCHEMA-EXAMPLE` - No examples for schemas
+- [ ] `MISSING-REQUIRED` - No required array on schemas
+- [ ] `MISSING-ERROR-SCHEMA` - No standardized error format
+- [ ] `MISSING-401` - Auth errors undocumented
+- [ ] `MISSING-SECURITY-SCHEMES` - No security defined
+- [ ] `MISSING-GLOBAL-SECURITY` - No default security
+- [ ] `MISSING-DISCRIMINATOR-REQUIRED` - Optional discriminator property
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-COMPONENT-PARAM` - Duplicate parameter definitions
+- [ ] `MISSING-COMPONENT-RESPONSE` - Inconsistent responses
+- [ ] `MISSING-REQUEST-EXAMPLE` - No request examples
+- [ ] `MISSING-RESPONSE-EXAMPLE` - No response examples
+- [ ] `MISSING-FORMAT` - No semantic format on strings
+- [ ] `MISSING-NUMERIC-BOUNDS` - Unbounded numbers
+- [ ] `MISSING-STRING-BOUNDS` - Unbounded strings
+- [ ] `MISSING-ENUM` - No enum for fixed values
+- [ ] `MISSING-400` - Validation errors undocumented
+- [ ] `MISSING-404` - Not found errors undocumented
+- [ ] `MISSING-OPERATION-SECURITY` - Wrong auth assumptions
+- [ ] `MISSING-OAUTH-SCOPES` - No scope documentation
+- [ ] `MISSING-SCHEMA-DESC` - No schema descriptions
+- [ ] `MISSING-PROPERTY-DESC` - No property descriptions
+- [ ] `MISSING-OPERATION-DESC` - No operation descriptions
+- [ ] `MISSING-PARAM-DESC` - No parameter descriptions
+
+💡 **Recommendation (good practice):**
+- [ ] `MISSING-COMPONENT-BODY` - Repeated request bodies
+- [ ] `MISSING-PARAM-EXAMPLE` - No parameter examples
+- [ ] `MISSING-PATTERN` - No regex for formatted strings
+- [ ] `MISSING-500` - Server errors undocumented
+- [ ] `MISSING-MARKDOWN` - No markdown in descriptions
+- [ ] `MISSING-DISCRIMINATOR` - No polymorphism hint
+- [ ] `MISSING-DISCRIMINATOR-MAPPING` - Implicit discriminator mapping
+
+---
+
 # Severity Levels
 
 Categorize findings by severity:

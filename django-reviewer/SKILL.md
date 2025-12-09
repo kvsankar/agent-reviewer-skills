@@ -3325,6 +3325,555 @@ def tenant_cache_key(tenant_id, *parts):
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [OWASP Django Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Django_Security_Cheat_Sheet.html), [Django Security Docs](https://docs.djangoproject.com/en/5.2/topics/security/), [Django ORM Optimization](https://medium.com/django-unleashed/optimizing-django-queries-with-select-related-and-prefetch-related-e404af72e0eb)
+
+This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
+
+### 1. Security Settings Patterns
+
+**Mnemonic:** **"PRODUCTION-CHECKLIST"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `DEBUG = False` in production | 🔴 `MISSING-DEBUG-OFF` - Stack traces exposed |
+| `SECRET_KEY` from environment | 🔴 `MISSING-SECRET-ENV` - Key exposed in code |
+| `ALLOWED_HOSTS` configured | 🔴 `MISSING-ALLOWED-HOSTS` - Host header attacks |
+| `SECURE_SSL_REDIRECT = True` | ⚠️ `MISSING-SSL-REDIRECT` - HTTP allowed |
+| Session/CSRF cookies secure | ⚠️ `MISSING-SECURE-COOKIES` - Cookies over HTTP |
+| `./manage.py check --deploy` passing | 💡 `MISSING-DEPLOY-CHECK` - Undetected issues |
+
+```python
+# PRESENT: Production-ready settings
+import os
+from pathlib import Path
+
+# Security: Never DEBUG in production
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+# Security: Secret key from environment
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']  # Crash if missing!
+
+# Security: Explicit hosts
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+
+# Security: Force HTTPS
+SECURE_SSL_REDIRECT = not DEBUG
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Security: Secure cookies
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+
+# Security: Additional headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Security: HSTS (careful - hard to undo!)
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+
+# MISSING: Insecure settings
+DEBUG = True  # NEVER in production!
+SECRET_KEY = 'django-insecure-hardcoded-key'  # In repo!
+ALLOWED_HOSTS = ['*']  # Allows any host!
+# No SSL redirect, no secure cookies...
+```
+
+### 2. Query Optimization Patterns
+
+**Mnemonic:** **"SELECT-PREFETCH-ONLY"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `select_related()` for ForeignKey/OneToOne | 🔴 `MISSING-SELECT-RELATED` - N+1 queries |
+| `prefetch_related()` for ManyToMany/reverse FK | 🔴 `MISSING-PREFETCH-RELATED` - N+1 queries |
+| `.only()` / `.defer()` for column selection | ⚠️ `MISSING-FIELD-SELECTION` - Fetching unused columns |
+| `.values()` / `.values_list()` for simple data | 💡 `MISSING-VALUES-QUERY` - Full model instantiation |
+| `.exists()` instead of `count() > 0` | ⚠️ `MISSING-EXISTS-CHECK` - Counting all rows |
+| `.iterator()` for large querysets | ⚠️ `MISSING-ITERATOR` - Memory issues |
+
+```python
+# PRESENT: Optimized queries
+class OrderListView(ListView):
+    def get_queryset(self):
+        return (
+            Order.objects
+            # select_related for ForeignKey (single JOIN)
+            .select_related('customer', 'shipping_address')
+            # prefetch_related for ManyToMany (separate query)
+            .prefetch_related(
+                'items',
+                'items__product',
+                Prefetch(
+                    'items__product__categories',
+                    queryset=Category.objects.only('name')
+                )
+            )
+            # Only fetch needed fields
+            .only('id', 'created_at', 'status', 'customer__name')
+            .filter(status='pending')
+            .order_by('-created_at')
+        )
+
+
+# Efficient existence check
+if Order.objects.filter(customer=customer, status='pending').exists():
+    # Don't use: .count() > 0 or len(queryset) > 0
+    pass
+
+# Efficient iteration for large datasets
+def process_all_orders():
+    for order in Order.objects.filter(status='completed').iterator():
+        # Processes one at a time, doesn't load all into memory
+        process_order(order)
+
+
+# MISSING: N+1 query disaster
+class OrderListView(ListView):
+    queryset = Order.objects.all()  # No select_related!
+
+# In template:
+# {% for order in orders %}
+#   {{ order.customer.name }}  <!-- Query per order! -->
+#   {% for item in order.items.all %}  <!-- Query per order! -->
+#     {{ item.product.name }}  <!-- Query per item! -->
+#   {% endfor %}
+# {% endfor %}
+# Result: 1 + N + N + (N * M) queries = disaster!
+```
+
+### 3. Authentication & Authorization Patterns
+
+**Mnemonic:** **"DECORATOR-MIXIN-VALIDATE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `@login_required` on protected views | 🔴 `MISSING-LOGIN-REQUIRED` - Anonymous access |
+| `LoginRequiredMixin` for CBVs | 🔴 `MISSING-LOGIN-MIXIN` - Unprotected CBVs |
+| Object-level permissions checked | 🔴 `MISSING-OBJECT-PERM` - Users access others' data |
+| Password validators configured | ⚠️ `MISSING-PASSWORD-VALIDATORS` - Weak passwords |
+| CSRF token in forms | 🔴 `MISSING-CSRF-TOKEN` - CSRF attacks |
+
+```python
+# PRESENT: Proper authentication patterns
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
+
+# Function-based view with decorators
+@login_required
+@permission_required('orders.view_order', raise_exception=True)
+def order_detail(request, order_id):
+    # Object-level permission check!
+    order = get_object_or_404(Order, pk=order_id)
+    if order.customer.user != request.user and not request.user.is_staff:
+        raise PermissionDenied("You cannot view this order")
+    return render(request, 'order_detail.html', {'order': order})
+
+
+# Class-based view with mixins
+class OrderUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = Order
+    permission_required = 'orders.change_order'
+
+    def get_queryset(self):
+        # Filter to user's own orders (object-level security)
+        return super().get_queryset().filter(customer__user=self.request.user)
+
+
+# settings.py - Password validators
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+     'OPTIONS': {'min_length': 12}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+
+# MISSING: Unprotected views
+def order_detail(request, order_id):  # No @login_required!
+    order = Order.objects.get(pk=order_id)  # No permission check!
+    return render(request, 'order_detail.html', {'order': order})
+
+class OrderListView(ListView):  # No LoginRequiredMixin!
+    queryset = Order.objects.all()  # Shows ALL orders to anyone!
+```
+
+### 4. Model Design Patterns
+
+**Mnemonic:** **"INDEX-CONSTRAINT-TIMESTAMP"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `db_index=True` on filtered/joined columns | ⚠️ `MISSING-DB-INDEX` - Slow queries |
+| Database constraints (unique_together, etc.) | ⚠️ `MISSING-DB-CONSTRAINT` - Data integrity issues |
+| `created_at` / `updated_at` timestamps | 💡 `MISSING-TIMESTAMPS` - No audit trail |
+| `Meta.ordering` defined | 💡 `MISSING-DEFAULT-ORDER` - Inconsistent results |
+| Proper `on_delete` for ForeignKey | 🔴 `MISSING-ON-DELETE` - Orphaned records or errors |
+
+```python
+# PRESENT: Well-designed model
+from django.db import models
+from django.utils import timezone
+
+
+class Order(models.Model):
+    # Explicit on_delete handling
+    customer = models.ForeignKey(
+        'Customer',
+        on_delete=models.PROTECT,  # Don't delete customer with orders!
+        related_name='orders',
+        db_index=True  # Index for filtering/joining
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('processing', 'Processing'),
+            ('shipped', 'Shipped'),
+            ('delivered', 'Delivered'),
+        ],
+        default='pending',
+        db_index=True  # Frequently filtered
+    )
+
+    # Timestamps for audit trail
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Financial precision
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ['-created_at']  # Consistent default ordering
+        indexes = [
+            models.Index(fields=['status', 'created_at']),  # Composite index
+            models.Index(fields=['customer', 'status']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(total__gte=0),
+                name='order_total_non_negative'
+            ),
+        ]
+
+
+# MISSING: Poor model design
+class Order(models.Model):
+    customer = models.ForeignKey('Customer')  # No on_delete! Django 2+ error
+    status = models.CharField(max_length=20)  # No choices, no index
+    total = models.FloatField()  # Never use FloatField for money!
+    # No timestamps, no indexes, no constraints
+```
+
+### 5. Caching Patterns
+
+**Mnemonic:** **"CACHE-LAYER-INVALIDATE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Cache backend configured (Redis/Memcached) | ⚠️ `MISSING-CACHE-BACKEND` - No caching |
+| View-level caching for static pages | 💡 `MISSING-VIEW-CACHE` - Redundant rendering |
+| Query result caching for expensive queries | 💡 `MISSING-QUERY-CACHE` - Repeated DB hits |
+| Cache invalidation on data change | 🔴 `MISSING-CACHE-INVALIDATION` - Stale data |
+| Cache versioning/key prefixing | 💡 `MISSING-CACHE-VERSION` - Key collisions |
+
+```python
+# PRESENT: Proper caching patterns
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
+
+
+# View-level caching
+@cache_page(60 * 15)  # Cache for 15 minutes
+def product_catalog(request):
+    products = Product.objects.filter(active=True)
+    return render(request, 'catalog.html', {'products': products})
+
+
+# Low-level caching with invalidation
+class ProductService:
+    CACHE_KEY = 'featured_products_v1'
+    CACHE_TIMEOUT = 60 * 60  # 1 hour
+
+    @classmethod
+    def get_featured_products(cls):
+        products = cache.get(cls.CACHE_KEY)
+        if products is None:
+            products = list(
+                Product.objects
+                .filter(featured=True, active=True)
+                .select_related('category')
+                .only('id', 'name', 'price', 'image', 'category__name')
+            )
+            cache.set(cls.CACHE_KEY, products, cls.CACHE_TIMEOUT)
+        return products
+
+    @classmethod
+    def invalidate_cache(cls):
+        cache.delete(cls.CACHE_KEY)
+
+
+# Signal-based cache invalidation
+@receiver([post_save, post_delete], sender=Product)
+def invalidate_product_cache(sender, instance, **kwargs):
+    ProductService.invalidate_cache()
+
+
+# MISSING: No caching at all
+def product_catalog(request):
+    # Hits database on EVERY request!
+    products = Product.objects.filter(active=True)
+    return render(request, 'catalog.html', {'products': products})
+```
+
+### 6. Form & Input Validation Patterns
+
+**Mnemonic:** **"VALIDATE-CLEAN-ESCAPE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Form validation (not manual request.POST) | ⚠️ `MISSING-FORM-VALIDATION` - Invalid data |
+| `clean_*` methods for field validation | ⚠️ `MISSING-FIELD-CLEAN` - Business rules not enforced |
+| CSRF token in templates | 🔴 `MISSING-CSRF-TEMPLATE` - CSRF attacks |
+| Template auto-escaping respected | 🔴 `MISSING-XSS-PROTECTION` - XSS attacks |
+
+```python
+# PRESENT: Proper form handling
+from django import forms
+from django.core.exceptions import ValidationError
+
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['shipping_address', 'items']
+
+    def clean_shipping_address(self):
+        address = self.cleaned_data['shipping_address']
+        # Custom validation
+        if not address.is_deliverable:
+            raise ValidationError("We cannot ship to this address")
+        return address
+
+    def clean(self):
+        cleaned_data = super().clean()
+        items = cleaned_data.get('items', [])
+        if not items:
+            raise ValidationError("Order must have at least one item")
+        return cleaned_data
+
+
+# View using form properly
+@login_required
+def create_order(request):
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.customer = request.user.customer
+            order.save()
+            return redirect('order_detail', order_id=order.pk)
+    else:
+        form = OrderForm()
+    return render(request, 'create_order.html', {'form': form})
+
+
+# Template with CSRF token
+# {% csrf_token %}  <!-- REQUIRED! -->
+
+
+# MISSING: Manual POST handling (dangerous!)
+def create_order(request):
+    if request.method == 'POST':
+        # No validation! No CSRF check!
+        shipping_address = request.POST['shipping_address']
+        Order.objects.create(
+            customer=request.user.customer,
+            shipping_address_id=shipping_address  # Could be invalid!
+        )
+```
+
+### 7. Admin Security Patterns
+
+**Mnemonic:** **"CUSTOM-URL-2FA"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Custom admin URL (not `/admin/`) | 💡 `MISSING-ADMIN-URL` - Easy to find |
+| Admin staff restrictions | ⚠️ `MISSING-ADMIN-RESTRICT` - Too many admins |
+| Admin audit logging | 💡 `MISSING-ADMIN-AUDIT` - No change tracking |
+| 2FA for admin (django-otp, etc.) | ⚠️ `MISSING-ADMIN-2FA` - Password-only access |
+
+```python
+# PRESENT: Secured admin configuration
+
+# urls.py - Custom admin URL
+from django.contrib import admin
+from django.urls import path
+
+urlpatterns = [
+    path('secret-management-panel/', admin.site.urls),  # Not /admin/!
+]
+
+# settings.py - Admin security
+ADMINS = [('Admin', 'admin@example.com')]
+MANAGERS = ADMINS
+
+# admin.py - Custom admin site with restrictions
+from django.contrib.admin import AdminSite
+
+
+class SecureAdminSite(AdminSite):
+    site_header = 'My App Administration'
+
+    def has_permission(self, request):
+        # Extra permission checks
+        return (
+            super().has_permission(request) and
+            request.user.is_staff and
+            request.user.groups.filter(name='AdminAccess').exists()
+        )
+
+secure_admin = SecureAdminSite(name='secure_admin')
+
+
+# MISSING: Default admin URL
+urlpatterns = [
+    path('admin/', admin.site.urls),  # Easy to find and attack
+]
+```
+
+### 8. Testing Patterns
+
+**Mnemonic:** **"CLIENT-FACTORY-TRANSACTION"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Django test client for view tests | ⚠️ `MISSING-TEST-CLIENT` - Views untested |
+| Factory Boy / Model Bakery for fixtures | 💡 `MISSING-FACTORIES` - Brittle fixtures |
+| `@pytest.mark.django_db` or `TestCase` | 🔴 `MISSING-DB-TEST` - Tests can't access DB |
+| Transaction isolation in tests | ⚠️ `MISSING-TEST-ISOLATION` - Tests affect each other |
+
+```python
+# PRESENT: Proper Django tests
+import pytest
+from django.test import TestCase, Client
+from django.urls import reverse
+from model_bakery import baker
+
+
+class OrderViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = baker.make('auth.User')
+        self.customer = baker.make('Customer', user=self.user)
+        self.order = baker.make('Order', customer=self.customer)
+
+    def test_order_detail_requires_login(self):
+        """Unauthenticated users are redirected to login."""
+        url = reverse('order_detail', args=[self.order.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, f'/accounts/login/?next={url}')
+
+    def test_order_detail_shows_own_order(self):
+        """Users can view their own orders."""
+        self.client.force_login(self.user)
+        url = reverse('order_detail', args=[self.order.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.order.id)
+
+    def test_cannot_view_other_user_order(self):
+        """Users cannot view orders belonging to others."""
+        other_order = baker.make('Order')  # Different customer
+        self.client.force_login(self.user)
+        url = reverse('order_detail', args=[other_order.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+
+# pytest style
+@pytest.mark.django_db
+class TestOrderService:
+    def test_create_order_validates_inventory(self):
+        product = baker.make('Product', stock=0)
+        with pytest.raises(ValidationError):
+            OrderService.create_order(items=[{'product': product, 'quantity': 1}])
+
+
+# MISSING: No view tests
+class OrderTests(TestCase):
+    def test_order_model(self):
+        order = Order.objects.create(...)  # Only model tests
+        assert order.total == ...
+        # Views never tested!
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (security/data risk if missing):**
+- [ ] `MISSING-DEBUG-OFF` - DEBUG=True in production
+- [ ] `MISSING-SECRET-ENV` - SECRET_KEY hardcoded
+- [ ] `MISSING-ALLOWED-HOSTS` - ALLOWED_HOSTS not set
+- [ ] `MISSING-SELECT-RELATED` - N+1 queries on ForeignKey
+- [ ] `MISSING-PREFETCH-RELATED` - N+1 queries on ManyToMany
+- [ ] `MISSING-LOGIN-REQUIRED` - Unprotected views
+- [ ] `MISSING-LOGIN-MIXIN` - Unprotected class-based views
+- [ ] `MISSING-OBJECT-PERM` - No object-level permissions
+- [ ] `MISSING-CSRF-TOKEN` - Forms without CSRF
+- [ ] `MISSING-ON-DELETE` - ForeignKey without on_delete
+- [ ] `MISSING-CACHE-INVALIDATION` - Stale cached data
+- [ ] `MISSING-CSRF-TEMPLATE` - Templates without {% csrf_token %}
+- [ ] `MISSING-XSS-PROTECTION` - Unsafe template output
+- [ ] `MISSING-DB-TEST` - Tests can't access database
+
+⚠️ **Warning (significant impact):**
+- [ ] `MISSING-SSL-REDIRECT` - HTTP allowed in production
+- [ ] `MISSING-SECURE-COOKIES` - Cookies over HTTP
+- [ ] `MISSING-FIELD-SELECTION` - Fetching all columns
+- [ ] `MISSING-EXISTS-CHECK` - count() instead of exists()
+- [ ] `MISSING-ITERATOR` - Large querysets in memory
+- [ ] `MISSING-PASSWORD-VALIDATORS` - Weak passwords allowed
+- [ ] `MISSING-DB-INDEX` - Missing indexes
+- [ ] `MISSING-DB-CONSTRAINT` - No database constraints
+- [ ] `MISSING-CACHE-BACKEND` - No caching configured
+- [ ] `MISSING-FORM-VALIDATION` - Manual POST handling
+- [ ] `MISSING-FIELD-CLEAN` - No custom validation
+- [ ] `MISSING-ADMIN-RESTRICT` - Too many admin users
+- [ ] `MISSING-ADMIN-2FA` - No 2FA on admin
+- [ ] `MISSING-TEST-CLIENT` - Views not tested
+- [ ] `MISSING-TEST-ISOLATION` - Tests affect each other
+
+💡 **Recommendation (good practice):**
+- [ ] `MISSING-DEPLOY-CHECK` - manage.py check --deploy not run
+- [ ] `MISSING-VALUES-QUERY` - Full models for simple data
+- [ ] `MISSING-TIMESTAMPS` - No created_at/updated_at
+- [ ] `MISSING-DEFAULT-ORDER` - No Meta.ordering
+- [ ] `MISSING-VIEW-CACHE` - Static pages not cached
+- [ ] `MISSING-QUERY-CACHE` - Expensive queries not cached
+- [ ] `MISSING-CACHE-VERSION` - No cache key versioning
+- [ ] `MISSING-ADMIN-URL` - Default /admin/ URL
+- [ ] `MISSING-ADMIN-AUDIT` - No admin change logging
+- [ ] `MISSING-FACTORIES` - No test factories
+
+---
+
 ## Summary
 
 Production-ready Django applications must be:

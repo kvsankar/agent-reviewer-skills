@@ -2956,6 +2956,373 @@ searchInput.addEventListener('input', debounce((e) => {
 
 ---
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging code smells, check whether **expected refactoring patterns are missing**. The absence of good practices is itself a finding.
+
+## How to Use This Section
+
+When reviewing code, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern creates significant maintenance debt
+- **⚠️ Warning** - Missing pattern weakens code quality
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Naming & Documentation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-JSDOC** | JSDoc on public functions/classes | No documentation for API consumers |
+| **MISSING-TYPES** | TypeScript types or JSDoc `@param`/`@returns` | No type safety or IDE support |
+| **MISSING-INTENT-NAME** | Names reveal intent (`getUserById`, `isValidEmail`) | Cryptic names like `do()`, `handle()`, `data` |
+| **MISSING-CONST-NAME** | Named constants for magic values | Magic numbers/strings scattered in code |
+| **MISSING-README** | README at package/module level | No understanding of module purpose |
+
+**What to look for:**
+```typescript
+// PRESENT: Clear naming and documentation
+/**
+ * Calculate compound interest on a principal amount.
+ * @param principal - Initial investment amount
+ * @param annualRate - Annual interest rate as decimal (e.g., 0.05 for 5%)
+ * @param years - Number of years to compound
+ * @returns Final amount after compound interest
+ * @example
+ * calculateCompoundInterest(1000, 0.05, 10) // 1647.01
+ */
+export function calculateCompoundInterest(
+  principal: number,
+  annualRate: number,
+  years: number,
+  compoundsPerYear = 12
+): number {
+  return principal * Math.pow(1 + annualRate / compoundsPerYear, compoundsPerYear * years);
+}
+```
+
+---
+
+## Module Organization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-BARREL** | Index file exports public API (`index.ts`) | Internal modules directly imported |
+| **MISSING-PRIVATE** | Private helpers in separate files or `_` prefix | Internal API exposed |
+| **MISSING-LAYERS** | Clear separation (UI/business/data layers) | Spaghetti architecture |
+| **MISSING-COLOCATION** | Related code colocated (component + styles + tests) | Files scattered across directories |
+| **MISSING-SINGLE-EXPORT** | One main export per file | Multiple unrelated exports |
+
+**What to look for:**
+```typescript
+// PRESENT: Clear module structure
+// src/users/index.ts (barrel file)
+export { UserService } from './user.service';
+export { User, CreateUserDTO } from './user.types';
+export { useUser, useUsers } from './user.hooks';
+
+// Internal helpers not exported
+// src/users/_validation.ts (private by convention)
+```
+
+---
+
+## Single Responsibility
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SRP-FUNC** | Functions do one thing well (<20 lines) | Multi-purpose functions |
+| **MISSING-SRP-CLASS** | Classes have one reason to change | God classes doing everything |
+| **MISSING-SRP-MODULE** | Modules have cohesive purpose | Kitchen-sink modules |
+| **MISSING-EXTRACT-HOOK** | React logic extracted to custom hooks | Components with tangled logic |
+| **MISSING-EXTRACT-UTIL** | Reusable logic in utility functions | Copy-pasted logic |
+
+**What to look for:**
+```typescript
+// PRESENT: Single responsibility
+// Separate concerns into focused functions
+function calculateSubtotal(items: CartItem[]): number {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
+function applyDiscount(amount: number, discountPercent: number): number {
+  return amount * (1 - discountPercent / 100);
+}
+
+function calculateTax(amount: number, taxRate: number): number {
+  return amount * taxRate;
+}
+
+// Compose in orchestrator
+function calculateOrderTotal(order: Order): number {
+  const subtotal = calculateSubtotal(order.items);
+  const discounted = applyDiscount(subtotal, order.discountPercent);
+  return discounted + calculateTax(discounted, order.taxRate);
+}
+```
+
+---
+
+## Dependency Management
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PARAM-DEPS** | Dependencies as function parameters | Hardcoded imports inside functions |
+| **MISSING-DI-CONTEXT** | React Context for cross-cutting dependencies | Prop drilling or global imports |
+| **MISSING-FACTORY-FUNC** | Factory functions for complex object creation | Scattered construction logic |
+| **MISSING-CONFIG-PARAM** | Configuration as parameters with defaults | Hardcoded config values |
+| **MISSING-TESTABLE-SEAM** | Seams for test mocking (params, context) | Untestable code |
+
+**What to look for:**
+```typescript
+// PRESENT: Dependencies as parameters with defaults
+async function fetchUser(
+  userId: string,
+  { fetch = globalThis.fetch, baseUrl = API_BASE_URL } = {}
+): Promise<User> {
+  const response = await fetch(`${baseUrl}/users/${userId}`);
+  return response.json();
+}
+
+// Test: just pass different fetch
+test('fetchUser handles errors', async () => {
+  const mockFetch = vi.fn().mockResolvedValue({ json: () => ({ id: '1' }) });
+  const user = await fetchUser('1', { fetch: mockFetch });
+  expect(user.id).toBe('1');
+});
+
+// React: Context for cross-cutting concerns
+const ApiContext = createContext<ApiClient>(defaultClient);
+
+function UserProfile({ userId }: { userId: string }) {
+  const api = useContext(ApiContext);
+  // ...
+}
+```
+
+---
+
+## Error Handling
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ERROR-TYPES** | Custom error classes with context | Generic `Error` everywhere |
+| **MISSING-ERROR-BOUNDARY** | React Error Boundaries for UI failures | Crashes propagate to root |
+| **MISSING-RESULT-TYPE** | Result/Either types for expected failures | Exceptions for control flow |
+| **MISSING-TRY-CATCH** | Try-catch at async boundaries | Unhandled promise rejections |
+| **MISSING-ERROR-CONTEXT** | Errors include contextual information | "Something went wrong" |
+
+**What to look for:**
+```typescript
+// PRESENT: Proper error types
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly statusCode: number,
+    public readonly endpoint: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+class ValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field: string,
+    public readonly value: unknown
+  ) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// Result type for expected failures
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
+
+async function parseConfig(path: string): Promise<Result<Config, ValidationError>> {
+  // ...
+}
+```
+
+---
+
+## Data Modeling
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-INTERFACE** | TypeScript interfaces for data shapes | `any` or untyped objects |
+| **MISSING-READONLY** | `readonly` for immutable data | Accidental mutations |
+| **MISSING-DISCRIMINATED** | Discriminated unions for variants | Boolean flags or type field |
+| **MISSING-VALIDATION** | Runtime validation at boundaries (Zod, Yup) | Trust external data |
+| **MISSING-DTO** | Separate DTOs for API vs internal models | API shape leaks into domain |
+
+**What to look for:**
+```typescript
+// PRESENT: Proper data modeling
+// Discriminated union for state
+type AsyncState<T> =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: Error };
+
+// Readonly for immutability
+interface User {
+  readonly id: string;
+  readonly email: string;
+  readonly createdAt: Date;
+}
+
+// Zod for runtime validation
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  age: z.number().int().positive().max(150),
+});
+
+type User = z.infer<typeof UserSchema>;
+```
+
+---
+
+## Abstraction & Composition
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ABSTRACTION-LEVEL** | Functions at one abstraction level | Mixed high/low level operations |
+| **MISSING-COMPOSITION** | Composition over inheritance | Deep class hierarchies |
+| **MISSING-PURE-FUNCS** | Pure functions for business logic | Side effects mixed with logic |
+| **MISSING-PIPE-COMPOSE** | Function composition for transforms | Nested function calls |
+| **MISSING-EARLY-RETURN** | Guard clauses for edge cases | Deeply nested conditionals |
+
+**What to look for:**
+```typescript
+// PRESENT: Consistent abstraction level
+async function processOrder(orderId: string): Promise<OrderResult> {
+  // High-level orchestration only
+  const order = await fetchOrder(orderId);
+  const validated = validateOrder(order);
+  const priced = calculatePricing(validated);
+  await saveOrder(priced);
+  await notifyCustomer(priced);
+  return { success: true, orderId };
+}
+
+// PRESENT: Guard clauses
+function getDiscount(user: User): number {
+  if (!user.isActive) return 0;
+  if (!user.memberSince) return 0;
+
+  const yearsAsMember = getYearsSince(user.memberSince);
+  if (yearsAsMember < 1) return 0;
+  if (yearsAsMember < 3) return 5;
+  if (yearsAsMember < 5) return 10;
+  return 15;
+}
+```
+
+---
+
+## Testability Design
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PURE-FUNCS** | Pure functions for business logic | Untestable side effects |
+| **MISSING-MOCK-SEAM** | Functions accept dependencies as params | Can't mock dependencies |
+| **MISSING-TEST-UTILS** | Test utilities/factories for fixtures | Repeated test setup |
+| **MISSING-QUERY-CMD** | Queries separated from commands (CQS) | Methods that read and write |
+| **MISSING-TIME-INJECT** | Time/randomness as injectable params | Flaky time-dependent tests |
+
+**What to look for:**
+```typescript
+// PRESENT: Testable design
+// Pure function with injectable time
+function isExpired(
+  subscription: Subscription,
+  now: Date = new Date()
+): boolean {
+  return subscription.expiresAt < now;
+}
+
+// Test: just pass the date
+test('isExpired returns true for past date', () => {
+  const subscription = { expiresAt: new Date('2024-01-01') };
+  const now = new Date('2024-06-01');
+  expect(isExpired(subscription, now)).toBe(true);
+});
+
+// Test factory for fixtures
+function createUser(overrides: Partial<User> = {}): User {
+  return {
+    id: 'test-id',
+    email: 'test@example.com',
+    name: 'Test User',
+    ...overrides,
+  };
+}
+```
+
+---
+
+## Modern JavaScript/TypeScript
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-CONST-LET** | `const` by default, `let` when needed | Using `var` |
+| **MISSING-DESTRUCTURE** | Destructuring for object/array access | Repeated property access |
+| **MISSING-TEMPLATE-LIT** | Template literals for strings | String concatenation |
+| **MISSING-OPTIONAL-CHAIN** | Optional chaining (`?.`) | Manual null checks |
+| **MISSING-NULLISH-COAL** | Nullish coalescing (`??`) | `||` for defaults (breaks on 0, '') |
+| **MISSING-ARRAY-METHODS** | `map`/`filter`/`reduce` | Imperative `for` loops |
+| **MISSING-ASYNC-AWAIT** | async/await for promises | Callback chains or `.then()` chains |
+
+**What to look for:**
+```typescript
+// PRESENT: Modern JavaScript idioms
+const { name, email, address: { city } = {} } = user;
+
+const greeting = `Hello, ${name}!`;
+
+const displayName = user?.profile?.displayName ?? 'Anonymous';
+
+const activeUsers = users
+  .filter(u => u.isActive)
+  .map(u => u.name);
+
+const data = await fetchData();
+```
+
+---
+
+## Expected Good Patterns Checklist
+
+Quick reference for absence checks:
+
+### 🔴 Critical (Must Have)
+- [ ] **MISSING-TYPES** - TypeScript types on public APIs
+- [ ] **MISSING-SRP-FUNC** - Functions do one thing well
+- [ ] **MISSING-ERROR-TYPES** - Custom error classes with context
+- [ ] **MISSING-PARAM-DEPS** - Dependencies as function parameters
+- [ ] **MISSING-PURE-FUNCS** - Pure functions for business logic
+
+### ⚠️ Warning (Should Have)
+- [ ] **MISSING-JSDOC** - Public API documentation
+- [ ] **MISSING-BARREL** - Index file exports public API
+- [ ] **MISSING-INTERFACE** - TypeScript interfaces for data shapes
+- [ ] **MISSING-READONLY** - Readonly for immutable data
+- [ ] **MISSING-ERROR-BOUNDARY** - React Error Boundaries
+- [ ] **MISSING-FACTORY-FUNC** - Factory functions for construction
+
+### 💡 Recommendation (Nice to Have)
+- [ ] **MISSING-DISCRIMINATED** - Discriminated unions for variants
+- [ ] **MISSING-TEST-UTILS** - Test utilities/factories
+- [ ] **MISSING-RESULT-TYPE** - Result types for expected failures
+- [ ] **MISSING-PIPE-COMPOSE** - Function composition
+- [ ] **MISSING-VALIDATION** - Runtime validation (Zod, Yup)
+
+---
+
 ## Review Wisdom
 
 > "Any fool can write code that a computer can understand. Good programmers write code that humans can understand." - Martin Fowler

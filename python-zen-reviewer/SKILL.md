@@ -2291,6 +2291,373 @@ def charge_card():
 
 ---
 
+## Expected Good Patterns (Check for Absence)
+
+> **Sources:** [PEP 20 - The Zen of Python](https://peps.python.org/pep-0020/), [Real Python Zen Guide](https://realpython.com/zen-of-python/), [PEP 8 Style Guide](https://peps.python.org/pep-0008/)
+
+This section identifies the **absence of good patterns** based on Zen of Python principles. Use `MISSING-*` IDs for tracking.
+
+### 1. Readability & Explicitness Patterns
+
+**Mnemonic:** **"EXPLICIT-CLEAR-READABLE"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Type hints on function signatures | ⚠️ `MISSING-TYPE-HINTS` - Implicit types |
+| Descriptive variable names | ⚠️ `MISSING-DESCRIPTIVE-NAMES` - Cryptic code |
+| Explicit return statements | 💡 `MISSING-EXPLICIT-RETURN` - Implicit None |
+| Docstrings on public functions | ⚠️ `MISSING-DOCSTRING` - Undocumented behavior |
+
+```python
+# PRESENT: Explicit and readable
+from typing import Optional
+
+
+def calculate_total_price(
+    items: list[dict],
+    tax_rate: float = 0.1,
+    discount: Optional[float] = None
+) -> float:
+    """
+    Calculate total price with tax and optional discount.
+
+    Args:
+        items: List of items with 'price' and 'quantity' keys
+        tax_rate: Tax rate as decimal (default 10%)
+        discount: Optional discount as decimal (e.g., 0.2 for 20%)
+
+    Returns:
+        Total price including tax minus any discount
+    """
+    subtotal = sum(item['price'] * item['quantity'] for item in items)
+    total_with_tax = subtotal * (1 + tax_rate)
+
+    if discount is not None:
+        return total_with_tax * (1 - discount)
+
+    return total_with_tax
+
+
+# Descriptive variables
+user_email = "alice@example.com"
+order_items = [{"name": "Widget", "price": 10.00}]
+is_premium_member = True
+
+
+# MISSING: Implicit and cryptic
+def calc(i, t=0.1, d=None):  # What is i? t? d?
+    s = sum(x['price'] * x['quantity'] for x in i)
+    tw = s * (1 + t)
+    if d:  # Truthy check on d - what about d=0?
+        return tw * (1 - d)
+    # No explicit return - implicitly returns None if d is falsy!
+
+# Cryptic names
+e = "alice@example.com"  # e for email?
+l = [{"name": "Widget"}]  # l looks like 1!
+pm = True  # pm = premium_member? pm = post_meridiem?
+```
+
+### 2. Simplicity & Structure Patterns
+
+**Mnemonic:** **"SIMPLE-FLAT-SMALL"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Early returns to reduce nesting | 🔴 `MISSING-EARLY-RETURN` - Deep nesting |
+| Guard clauses for preconditions | ⚠️ `MISSING-GUARD-CLAUSE` - Buried conditions |
+| Functions doing one thing | ⚠️ `MISSING-SINGLE-PURPOSE` - Kitchen sink functions |
+| Max 3 levels of indentation | 💡 `MISSING-FLAT-STRUCTURE` - Pyramid of doom |
+
+```python
+# PRESENT: Flat and simple with early returns
+def process_order(order: Order) -> Result:
+    """Process an order with clear, flat structure."""
+    # Guard clauses - handle edge cases first
+    if order is None:
+        return Result.error("Order is required")
+
+    if not order.items:
+        return Result.error("Order has no items")
+
+    if not order.customer.is_verified:
+        return Result.error("Customer not verified")
+
+    # Happy path - minimal nesting
+    total = sum(item.price * item.quantity for item in order.items)
+    payment = charge_customer(order.customer, total)
+
+    if payment.failed:
+        return Result.error(payment.error_message)
+
+    return Result.success(order_id=order.id)
+
+
+# MISSING: Nested pyramid of doom
+def process_order(order):
+    if order is not None:
+        if order.items:
+            if order.customer.is_verified:
+                total = 0
+                for item in order.items:
+                    total += item.price * item.quantity
+                payment = charge_customer(order.customer, total)
+                if not payment.failed:
+                    return Result.success(order_id=order.id)
+                else:
+                    return Result.error(payment.error_message)
+            else:
+                return Result.error("Customer not verified")
+        else:
+            return Result.error("Order has no items")
+    else:
+        return Result.error("Order is required")
+```
+
+### 3. Error Handling Patterns
+
+**Mnemonic:** **"SPECIFIC-LOUD-DOCUMENTED"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Specific exception types | 🔴 `MISSING-SPECIFIC-EXCEPT` - Bare except |
+| Logging/handling in except blocks | 🔴 `MISSING-ERROR-HANDLING` - Silent failures |
+| Re-raising with context | ⚠️ `MISSING-RERAISE-CONTEXT` - Lost traceback |
+| Custom exceptions for domain errors | 💡 `MISSING-CUSTOM-EXCEPTIONS` - Generic errors |
+
+```python
+# PRESENT: Proper error handling
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+
+class OrderProcessingError(Exception):
+    """Custom exception for order processing failures."""
+    pass
+
+
+def fetch_order(order_id: str) -> Optional[Order]:
+    """Fetch order with proper error handling."""
+    try:
+        return database.get_order(order_id)
+
+    except ConnectionError as e:
+        logger.error(f"Database connection failed for order {order_id}: {e}")
+        raise OrderProcessingError(f"Unable to fetch order: {e}") from e
+
+    except KeyError:
+        # Explicit silence with explanation
+        logger.debug(f"Order {order_id} not found")
+        return None  # Expected case - order doesn't exist
+
+
+def process_payment(amount: float) -> PaymentResult:
+    """Process payment with specific error handling."""
+    try:
+        result = payment_gateway.charge(amount)
+        return PaymentResult(success=True, transaction_id=result.id)
+
+    except payment_gateway.InsufficientFundsError:
+        return PaymentResult(success=False, error="Insufficient funds")
+
+    except payment_gateway.CardDeclinedError as e:
+        logger.warning(f"Card declined: {e}")
+        return PaymentResult(success=False, error="Card declined")
+
+
+# MISSING: Bad error handling
+def fetch_order(order_id):
+    try:
+        return database.get_order(order_id)
+    except:  # Bare except! Catches SystemExit, KeyboardInterrupt!
+        pass  # Silent failure! Error passes silently!
+
+
+def process_payment(amount):
+    try:
+        result = payment_gateway.charge(amount)
+        return result
+    except Exception as e:  # Too broad
+        raise Exception("Payment failed")  # Lost original traceback!
+```
+
+### 4. Pythonic Idioms Patterns
+
+**Mnemonic:** **"IDIOMS-NOT-TRANSLATIONS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| `enumerate()` for indexed loops | ⚠️ `MISSING-ENUMERATE` - Manual indexing |
+| `zip()` for parallel iteration | ⚠️ `MISSING-ZIP` - Manual indexing |
+| Context managers (`with`) | 🔴 `MISSING-CONTEXT-MANAGER` - Resource leaks |
+| Comprehensions over map/filter | 💡 `MISSING-COMPREHENSION` - Less readable |
+| `in` for membership tests | ⚠️ `MISSING-IN-OPERATOR` - Manual search |
+
+```python
+# PRESENT: Pythonic idioms
+
+# enumerate() for indexed iteration
+for index, item in enumerate(items):
+    print(f"{index}: {item}")
+
+# zip() for parallel iteration
+for name, score in zip(names, scores):
+    print(f"{name}: {score}")
+
+# Context manager for resources
+with open("data.txt") as f:
+    content = f.read()
+
+# Comprehensions
+squares = [x ** 2 for x in range(10)]
+adults = [u for u in users if u.age >= 18]
+name_to_email = {u.name: u.email for u in users}
+
+# Membership testing
+if value in valid_values:
+    process(value)
+
+# EAFP: Easier to ask forgiveness than permission
+try:
+    value = my_dict[key]
+except KeyError:
+    value = default
+
+# Or use .get()
+value = my_dict.get(key, default)
+
+# Truthy/falsy testing
+if items:  # Not: if len(items) > 0
+    process(items)
+
+
+# MISSING: Non-Pythonic patterns
+
+# Manual indexing
+i = 0
+for item in items:
+    print(f"{i}: {item}")
+    i += 1
+
+# Manual parallel iteration
+for i in range(len(names)):
+    print(f"{names[i]}: {scores[i]}")
+
+# Missing context manager - RESOURCE LEAK!
+f = open("data.txt")
+content = f.read()
+# f.close()  # Might not be reached if exception!
+
+# map/filter with lambda (less readable)
+squares = list(map(lambda x: x ** 2, range(10)))
+adults = list(filter(lambda u: u.age >= 18, users))
+
+# Manual search
+found = False
+for v in valid_values:
+    if v == value:
+        found = True
+        break
+```
+
+### 5. Namespace & Organization Patterns
+
+**Mnemonic:** **"MODULES-NOT-GLOBALS"**
+
+| Expected Pattern | If Missing |
+|------------------|------------|
+| Imports at top of file | ⚠️ `MISSING-TOP-IMPORTS` - Scattered imports |
+| Specific imports (not `*`) | 🔴 `MISSING-SPECIFIC-IMPORT` - Namespace pollution |
+| Module organization by domain | 💡 `MISSING-MODULE-ORG` - Monolithic files |
+| No global mutable state | ⚠️ `MISSING-NO-GLOBALS` - Hidden dependencies |
+
+```python
+# PRESENT: Good namespace hygiene
+
+# All imports at top, specific
+from typing import Optional, List
+from dataclasses import dataclass
+from pathlib import Path
+
+from myapp.models import User, Order
+from myapp.services.payment import PaymentService
+
+# Constants (immutable) are OK at module level
+DEFAULT_TIMEOUT = 30
+MAX_RETRIES = 3
+
+# No mutable globals - use dependency injection
+@dataclass
+class Config:
+    api_key: str
+    timeout: int = DEFAULT_TIMEOUT
+
+
+def create_service(config: Config) -> PaymentService:
+    """Factory function - dependencies explicit."""
+    return PaymentService(api_key=config.api_key, timeout=config.timeout)
+
+
+# MISSING: Bad namespace practices
+
+from os import *  # Star import! What's in namespace now?
+from typing import *
+
+# Global mutable state - BAD!
+_cache = {}  # Hidden dependency
+config = None  # Assigned later somewhere
+
+def get_user(user_id):
+    global config  # Implicit dependency!
+    if user_id in _cache:
+        return _cache[user_id]
+    user = fetch_from_db(user_id, config.db_url)  # What if config is None?
+    _cache[user_id] = user
+    return user
+
+# Late import buried in function
+def process():
+    from datetime import datetime  # Hard to track dependencies
+    import json  # Mixed styles
+```
+
+---
+
+### Expected Patterns Summary Checklist
+
+**When Reviewing, Verify Presence Of:**
+
+🔴 **Critical (violates core Zen principles):**
+- [ ] `MISSING-EARLY-RETURN` - Deep nesting instead of guard clauses
+- [ ] `MISSING-SPECIFIC-EXCEPT` - Bare except or too-broad catches
+- [ ] `MISSING-ERROR-HANDLING` - Silent `pass` in except blocks
+- [ ] `MISSING-CONTEXT-MANAGER` - No `with` for files/resources
+- [ ] `MISSING-SPECIFIC-IMPORT` - Star imports (`from x import *`)
+
+⚠️ **Warning (impacts readability/maintainability):**
+- [ ] `MISSING-TYPE-HINTS` - No type annotations
+- [ ] `MISSING-DESCRIPTIVE-NAMES` - Cryptic variable names
+- [ ] `MISSING-DOCSTRING` - Undocumented public functions
+- [ ] `MISSING-GUARD-CLAUSE` - Conditions buried in nested code
+- [ ] `MISSING-SINGLE-PURPOSE` - Functions doing too many things
+- [ ] `MISSING-RERAISE-CONTEXT` - `raise Exception()` losing traceback
+- [ ] `MISSING-ENUMERATE` - Manual indexing in loops
+- [ ] `MISSING-ZIP` - Manual parallel iteration
+- [ ] `MISSING-IN-OPERATOR` - Manual membership search
+- [ ] `MISSING-TOP-IMPORTS` - Imports scattered in code
+- [ ] `MISSING-NO-GLOBALS` - Global mutable state
+
+💡 **Recommendation (more Pythonic):**
+- [ ] `MISSING-EXPLICIT-RETURN` - Implicit None returns
+- [ ] `MISSING-FLAT-STRUCTURE` - More than 3 levels of nesting
+- [ ] `MISSING-CUSTOM-EXCEPTIONS` - Using generic Exception
+- [ ] `MISSING-COMPREHENSION` - map/filter instead of comprehensions
+- [ ] `MISSING-MODULE-ORG` - Large monolithic files
+
+---
+
 # End of Guidelines
 
 Remember: The Zen of Python is not just philosophy—it's practical guidance for writing better Python code. When reviewing code, always ask: "Is this Pythonic?" and reference these principles.
