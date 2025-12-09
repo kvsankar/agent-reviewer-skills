@@ -53,6 +53,9 @@ htmlcov/
 WIP.md
 test-openapi.yaml
 claude-conversations-temp/
+claude-conversations/
+wip/
+retrospectives/
 
 # OS
 Thumbs.db

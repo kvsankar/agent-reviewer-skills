@@ -126,9 +126,15 @@ docs:
   reviewers:
     - agile-requirements-reviewer
 
+# Authenticity (AI/LLM code verification)
+authenticity:
+  description: Detect fabricated, hallucinated, or unearned code assertions
+  reviewers:
+    - code-authenticity-reviewer
+
 # Comprehensive
 complete:
-  description: All available reviewers (generates 18 reports)
+  description: All available reviewers (generates 19 reports)
   reviewers:
     # Python reviewers
     - python-refactoring-reviewer
@@ -151,6 +157,7 @@ complete:
     - django-reviewer
     - openapi-reviewer
     - database-schema-reviewer
+    - code-authenticity-reviewer
 
 all:
   description: Alias for complete
@@ -176,3 +183,4 @@ all:
     - django-reviewer
     - openapi-reviewer
     - database-schema-reviewer
+    - code-authenticity-reviewer

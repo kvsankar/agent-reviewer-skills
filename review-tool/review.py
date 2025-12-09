@@ -143,6 +143,10 @@ REVIEWERS = {
         'patterns': ['*.sql', 'schema.sql', 'migrations/*.sql', '**/migrations/*.py'],
         'description': 'Reviews database schemas for normalization and performance',
     },
+    'code-authenticity-reviewer': {
+        'patterns': ['*.py', '*.js', '*.jsx', '*.ts', '*.tsx', '*.java', '*.go', '*.rb', '*.rs', '*.c', '*.cpp', '*.cs'],
+        'description': 'Detects fabricated, hallucinated, or unearned code assertions',
+    },
 }
 
 
@@ -786,7 +790,7 @@ Available models:
   - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
   - claude-opus-4-20250514: Most capable model for complex tasks
 
-Available reviewers (18 total):
+Available reviewers (19 total):
 
   Python (7):
     python-refactoring-reviewer, python-functional-reviewer, python-zen-reviewer,
@@ -799,9 +803,9 @@ Available reviewers (18 total):
     javascript-security-privacy-reviewer, javascript-performance-reviewer,
     react-reviewer
 
-  Other (4):
+  Other (5):
     agile-requirements-reviewer, django-reviewer, openapi-reviewer,
-    database-schema-reviewer
+    database-schema-reviewer, code-authenticity-reviewer
 
 Available tags:
   python, javascript/js, react, django, security, testing/tests, functional/fp,

@@ -16,7 +16,7 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 - ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth (default)
 - ✅ **Zero Setup** - Python wrapper handles everything automatically
 - ✅ **Agentic Mode** - Claude explores repositories with bash tools (default)
-- ✅ **Multiple Reviewers** - Run 18 specialized reviewers in parallel
+- ✅ **Multiple Reviewers** - Run 19 specialized reviewers in parallel
 - ✅ **Fresh Context** - Each reviewer gets independent analysis
 - ✅ **Containerized** - Safe Docker environment for all operations
 - ✅ **Volume Mounts** - No rebuilds needed for code changes
@@ -124,7 +124,7 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `javascript-performance-reviewer` | Performance optimization |
 | `react-reviewer` | React best practices, hooks, patterns |
 
-### Other Reviewers (4)
+### Other Reviewers (5)
 
 | Reviewer | Focus Area |
 |----------|------------|
@@ -132,6 +132,7 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `django-reviewer` | Django production readiness |
 | `openapi-reviewer` | OpenAPI/Swagger specifications |
 | `database-schema-reviewer` | Database normalization, indexing |
+| `code-authenticity-reviewer` | Detect fabricated/hallucinated code assertions |
 
 ### Tags (Multiple Reviewers)
 
@@ -145,7 +146,8 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `testing` / `tests` | Python + JavaScript test reviewers |
 | `functional` / `fp` | Python + JavaScript functional reviewers |
 | `quality` | All refactoring and format reviewers |
-| `complete` / `all` | All 18 reviewers |
+| `authenticity` | Code authenticity reviewer (AI/LLM fabrication detection) |
+| `complete` / `all` | All 19 reviewers |
 
 **Customize tags:** Edit `tags.yaml` to create your own combinations.
 
