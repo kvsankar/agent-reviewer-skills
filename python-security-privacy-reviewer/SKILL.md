@@ -2762,6 +2762,268 @@ When reviewing code, systematically check:
 
 ---
 
+# Expected Good Patterns (Check for Absence)
+
+Beyond flagging vulnerabilities, check whether **expected security patterns are missing**. The absence of good practices is itself a finding.
+
+## How to Use This Section
+
+When reviewing code, check if these patterns are present. If missing, flag using the mnemonic ID:
+- **🔴 Critical** - Missing pattern creates immediate vulnerability
+- **⚠️ Warning** - Missing pattern weakens security posture
+- **💡 Recommendation** - Missing pattern is best practice
+
+---
+
+## Input Validation
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-VALIDATION-LAYER** | Centralized validation (pydantic, marshmallow, cerberus) | No consistent validation layer |
+| **MISSING-ALLOWLIST** | Allow-list validation (whitelist acceptable values) | Relying on deny-list/blacklist filtering |
+| **MISSING-TYPE-CHECK** | Type checking with runtime enforcement | Accepting unvalidated input types |
+| **MISSING-SIZE-LIMIT** | Size/length limits on inputs | Potential DoS via large payloads |
+| **MISSING-ENCODING-CHECK** | Encoding validation (UTF-8 specified) | Encoding confusion attacks possible |
+
+**What to look for:**
+```python
+# PRESENT: Centralized validation
+from pydantic import BaseModel, validator
+
+class UserInput(BaseModel):
+    email: str
+    age: int
+
+    @validator('age')
+    def age_must_be_valid(cls, v):
+        if not 0 <= v <= 150:
+            raise ValueError('Invalid age')
+        return v
+```
+
+---
+
+## Authentication & Session
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PASSWORD-HASH** | Password hashing with bcrypt/argon2/scrypt | Weak or no password hashing |
+| **MISSING-BRUTEFORCE-PROTECTION** | Failed login attempt limits | No brute-force protection |
+| **MISSING-SESSION-REGEN** | Session regeneration on login | Session fixation vulnerability |
+| **MISSING-COOKIE-FLAGS** | Secure + HttpOnly + SameSite cookie flags | Cookie theft/CSRF risk |
+| **MISSING-SESSION-TIMEOUT** | Session timeout/expiration | Indefinite session lifetime |
+| **MISSING-MFA** | MFA support for sensitive operations | Single-factor only |
+
+**What to look for:**
+```python
+# PRESENT: Proper session configuration
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
+```
+
+---
+
+## Authorization
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-AUTHZ-CHECK** | Authorization check on every endpoint | Endpoints accessible without authz |
+| **MISSING-AUTHZ-CENTRAL** | Centralized authz decorator/middleware | Ad-hoc permission checks |
+| **MISSING-RBAC** | Role-based or attribute-based access control | No access control model |
+| **MISSING-OWNERSHIP-CHECK** | Resource ownership verification | IDOR vulnerability |
+| **MISSING-FAIL-CLOSED** | Fail-closed on authz errors | Fail-open allows unauthorized access |
+
+**What to look for:**
+```python
+# PRESENT: Consistent authorization decorator
+@app.route('/user/<user_id>/data')
+@login_required
+@authorize_resource_owner
+def get_user_data(user_id):
+    ...
+```
+
+---
+
+## Cryptography & Secrets
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-SECRET-MGMT** | Secrets from environment variables or vault | Hardcoded secrets |
+| **MISSING-SECURE-RANDOM** | `secrets` module for security-sensitive random | Using `random` module |
+| **MISSING-CRYPTO-LIB** | Established crypto library (cryptography, bcrypt) | Custom/weak crypto |
+| **MISSING-KEY-ROTATION** | Key rotation mechanism | Static long-lived keys |
+| **MISSING-TLS-VERIFY** | TLS certificate validation enabled | `verify=False` in requests |
+
+**What to look for:**
+```python
+# PRESENT: Proper secret management
+import os
+from secrets import token_hex
+
+SECRET_KEY = os.environ['SECRET_KEY']  # From environment
+csrf_token = token_hex(32)  # Cryptographically secure
+```
+
+---
+
+## Error Handling & Logging
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-ERROR-HANDLER** | Generic error pages in production | Stack traces exposed to users |
+| **MISSING-SECURITY-LOGGING** | Security event logging (login, authz failures) | No audit trail |
+| **MISSING-LOG-SANITIZATION** | Log sanitization (no PII, no injection) | Sensitive data in logs |
+| **MISSING-STRUCTURED-LOGGING** | Structured logging with context | Unstructured/inconsistent logs |
+| **MISSING-DEBUG-OFF** | Debug mode disabled in production | `DEBUG=True` in production |
+
+**What to look for:**
+```python
+# PRESENT: Security event logging
+import logging
+security_logger = logging.getLogger('security')
+
+def login(username, password):
+    if not verify_password(username, password):
+        security_logger.warning(
+            "Failed login attempt",
+            extra={'username_hash': hash(username), 'ip': request.remote_addr}
+        )
+        raise AuthenticationError("Invalid credentials")
+```
+
+---
+
+## Dependencies & Supply Chain
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-DEP-PINNING** | Pinned dependency versions | Unpinned requirements |
+| **MISSING-DEP-AUDIT** | Vulnerability scanning (safety, pip-audit) in CI | No dependency auditing |
+| **MISSING-DEP-HASH** | Hash verification for packages | No integrity checking |
+| **MISSING-DEP-MINIMAL** | Minimal dependencies | Bloated dependency tree |
+| **MISSING-DEP-UPDATES** | Regular update schedule | Outdated packages with CVEs |
+
+**What to look for:**
+```txt
+# PRESENT: Pinned with hashes (requirements.txt)
+requests==2.31.0 \
+    --hash=sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f
+```
+
+```yaml
+# PRESENT: CI vulnerability scanning
+- name: Security audit
+  run: |
+    pip install pip-audit
+    pip-audit --strict
+```
+
+---
+
+## Framework Security (Django/Flask/FastAPI)
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-CSRF** | CSRF middleware enabled | CSRF protection missing |
+| **MISSING-SECURITY-HEADERS** | Security headers (HSTS, CSP, X-Frame-Options) | Missing security headers |
+| **MISSING-ADMIN-URL-CHANGE** | Admin URL changed from default | Default `/admin/` exposed |
+| **MISSING-DEBUG-OFF** | `DEBUG = False` in production | Debug mode enabled |
+| **MISSING-ALLOWED-HOSTS** | `ALLOWED_HOSTS` configured | Host header injection risk |
+| **MISSING-DEPLOY-CHECK** | `manage.py check --deploy` passing | Security misconfigurations |
+
+**What to look for (Django):**
+```python
+# PRESENT: Security settings
+DEBUG = False
+ALLOWED_HOSTS = ['example.com', 'www.example.com']
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+```
+
+---
+
+## Privacy (PII Handling)
+
+| Mnemonic | Expected Pattern | If Missing |
+|----------|------------------|------------|
+| **MISSING-PII-INVENTORY** | PII fields identified/annotated | Unknown PII locations |
+| **MISSING-DATA-INVENTORY** | Data inventory documented | No data mapping |
+| **MISSING-RETENTION-POLICY** | Retention policy implemented | Data kept indefinitely |
+| **MISSING-DELETION-CAPABILITY** | Deletion capability (right to be forgotten) | Cannot delete user data |
+| **MISSING-CONSENT-LOGGING** | Consent logging | No consent records |
+| **MISSING-PII-ENCRYPTION** | PII encryption at rest | Plaintext PII in database |
+
+**What to look for:**
+```python
+# PRESENT: PII annotation and handling
+from dataclasses import dataclass
+from typing import Annotated
+
+PII = 'pii'
+
+@dataclass
+class User:
+    user_id: str  # Not PII
+    email: Annotated[str, PII]  # Marked as PII
+    ssn_encrypted: bytes  # Encrypted at rest
+```
+
+---
+
+## Checklist Summary
+
+Use this quick checklist during reviews:
+
+### Input & Validation
+- [ ] **MISSING-VALIDATION-LAYER**: Centralized validation layer exists
+- [ ] **MISSING-ALLOWLIST**: Allow-list validation used
+- [ ] **MISSING-SIZE-LIMIT**: Input size limits enforced
+
+### Authentication & Authorization
+- [ ] **MISSING-PASSWORD-HASH**: Password hashing with strong algorithm
+- [ ] **MISSING-BRUTEFORCE-PROTECTION**: Brute-force protection present
+- [ ] **MISSING-AUTHZ-CHECK**: Authorization on every endpoint
+- [ ] **MISSING-COOKIE-FLAGS**: Session security configured
+
+### Cryptography
+- [ ] **MISSING-SECRET-MGMT**: Secrets from environment/vault
+- [ ] **MISSING-SECURE-RANDOM**: `secrets` module for random values
+- [ ] **MISSING-TLS-VERIFY**: TLS certificate validation enabled
+
+### Operations
+- [ ] **MISSING-SECURITY-LOGGING**: Security event logging present
+- [ ] **MISSING-DEBUG-OFF**: Debug mode disabled
+- [ ] **MISSING-DEP-PINNING**: Dependencies pinned and audited
+
+### Framework
+- [ ] **MISSING-CSRF**: CSRF protection enabled
+- [ ] **MISSING-SECURITY-HEADERS**: Security headers configured
+- [ ] **MISSING-DEPLOY-CHECK**: Production security checks passing
+
+### Privacy
+- [ ] **MISSING-PII-INVENTORY**: PII fields identified
+- [ ] **MISSING-RETENTION-POLICY**: Retention policy exists
+- [ ] **MISSING-DELETION-CAPABILITY**: Deletion capability implemented
+
+---
+
+## Sources
+
+This checklist is based on:
+- [OWASP Secure Coding Practices Quick Reference](https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/stable-en/02-checklist/05-checklist)
+- [OWASP Django Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Django_Security_Cheat_Sheet.html)
+- [OWASP Top 10 2025](https://owasp.org/Top10/)
+- [Python Security Best Practices](https://corgea.com/Learn/python-security-best-practices-a-comprehensive-guide-for-engineers)
+
+---
+
 # Severity Levels
 
 Categorize findings by severity:
