@@ -16,7 +16,7 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 - ✅ **No API Keys Needed** - Uses Claude Code subscription via OAuth (default)
 - ✅ **Zero Setup** - Python wrapper handles everything automatically
 - ✅ **Agentic Mode** - Claude explores repositories with bash tools (default)
-- ✅ **Multiple Reviewers** - Run 19 specialized reviewers in parallel
+- ✅ **Multiple Reviewers** - Run 20 specialized reviewers in parallel
 - ✅ **Fresh Context** - Each reviewer gets independent analysis
 - ✅ **Containerized** - Safe Docker environment for all operations
 - ✅ **Volume Mounts** - No rebuilds needed for code changes
@@ -124,7 +124,7 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `javascript-performance-reviewer` | Performance optimization |
 | `react-reviewer` | React best practices, hooks, patterns |
 
-### Other Reviewers (5)
+### Other Reviewers (6)
 
 | Reviewer | Focus Area |
 |----------|------------|
@@ -133,6 +133,7 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `openapi-reviewer` | OpenAPI/Swagger specifications |
 | `database-schema-reviewer` | Database normalization, indexing |
 | `code-authenticity-reviewer` | Detect fabricated/hallucinated code assertions |
+| `playwright-test-reviewer` | Playwright E2E tests, flaky patterns, React testing |
 
 ### Tags (Multiple Reviewers)
 
@@ -143,11 +144,12 @@ export ANTHROPIC_API_KEY='sk-ant-your-key-here'
 | `react` | React + JS refactoring, security, test reviewers |
 | `django` | Django + Python refactoring, security, test reviewers |
 | `security` | Python + JavaScript security reviewers |
-| `testing` / `tests` | Python + JavaScript test reviewers |
+| `testing` / `tests` | Python + JavaScript + Playwright test reviewers |
 | `functional` / `fp` | Python + JavaScript functional reviewers |
 | `quality` | All refactoring and format reviewers |
+| `playwright` / `e2e` | Playwright E2E test reviewer |
 | `authenticity` | Code authenticity reviewer (AI/LLM fabrication detection) |
-| `complete` / `all` | All 19 reviewers |
+| `complete` / `all` | All 20 reviewers |
 
 **Customize tags:** Edit `tags.yaml` to create your own combinations.
 
@@ -578,7 +580,7 @@ A: Agentic mode (default) explores as many files as needed. Batch mode reviews 5
 A: Yes, if you can clone them (SSH keys, credentials, etc.).
 
 **Q: What's the difference between reviewers and tags?**
-A: Reviewers are individual (e.g., `django-reviewer`). Tags expand to multiple reviewers (e.g., `python` → 6 reviewers).
+A: Reviewers are individual (e.g., `django-reviewer`). Tags expand to multiple reviewers (e.g., `python` → 7 reviewers).
 
 **Q: Can I run multiple reviews in parallel?**
 A: Yes! Each reviewer runs sequentially with fresh context, preventing cross-contamination.

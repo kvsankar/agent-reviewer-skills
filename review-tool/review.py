@@ -147,6 +147,10 @@ REVIEWERS = {
         'patterns': ['*.py', '*.js', '*.jsx', '*.ts', '*.tsx', '*.java', '*.go', '*.rb', '*.rs', '*.c', '*.cpp', '*.cs'],
         'description': 'Detects fabricated, hallucinated, or unearned code assertions',
     },
+    'playwright-test-reviewer': {
+        'patterns': ['*.spec.ts', '*.spec.js', '*.test.ts', '*.test.js', '**/e2e/**/*.ts', '**/e2e/**/*.js', '**/tests/**/*.ts', '**/tests/**/*.js', 'playwright.config.ts', 'playwright.config.js'],
+        'description': 'Reviews Playwright E2E tests for best practices, flaky patterns, and React-specific testing',
+    },
 }
 
 
@@ -790,7 +794,7 @@ Available models:
   - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
   - claude-opus-4-20250514: Most capable model for complex tasks
 
-Available reviewers (19 total):
+Available reviewers (20 total):
 
   Python (7):
     python-refactoring-reviewer, python-functional-reviewer, python-zen-reviewer,
@@ -803,13 +807,13 @@ Available reviewers (19 total):
     javascript-security-privacy-reviewer, javascript-performance-reviewer,
     react-reviewer
 
-  Other (5):
+  Other (6):
     agile-requirements-reviewer, django-reviewer, openapi-reviewer,
-    database-schema-reviewer, code-authenticity-reviewer
+    database-schema-reviewer, code-authenticity-reviewer, playwright-test-reviewer
 
 Available tags:
   python, javascript/js, react, django, security, testing/tests, functional/fp,
-  quality, complete/all
+  quality, playwright/e2e, complete/all
 
 Examples:
   # Review Python project (7 reviewers)

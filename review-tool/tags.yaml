@@ -108,12 +108,25 @@ testing:
   reviewers:
     - python-test-reviewer
     - javascript-test-reviewer
+    - playwright-test-reviewer
 
 tests:
   description: Alias for testing
   reviewers:
     - python-test-reviewer
     - javascript-test-reviewer
+    - playwright-test-reviewer
+
+# E2E / Playwright
+playwright:
+  description: Playwright E2E test best practices, flaky patterns, React testing
+  reviewers:
+    - playwright-test-reviewer
+
+e2e:
+  description: Alias for playwright
+  reviewers:
+    - playwright-test-reviewer
 
 # Documentation
 requirements:
@@ -134,9 +147,9 @@ authenticity:
 
 # Comprehensive
 complete:
-  description: All available reviewers (generates 19 reports)
+  description: All available reviewers (generates 20 reports)
   reviewers:
-    # Python reviewers
+    # Python reviewers (7)
     - python-refactoring-reviewer
     - python-functional-reviewer
     - python-zen-reviewer
@@ -144,7 +157,7 @@ complete:
     - python-test-reviewer
     - python-security-privacy-reviewer
     - python-performance-reviewer
-    # JavaScript reviewers
+    # JavaScript reviewers (7)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer
     - javascript-format-refactoring-reviewer
@@ -152,17 +165,18 @@ complete:
     - javascript-security-privacy-reviewer
     - javascript-performance-reviewer
     - react-reviewer
-    # Other reviewers
+    # Other reviewers (6)
     - agile-requirements-reviewer
     - django-reviewer
     - openapi-reviewer
     - database-schema-reviewer
     - code-authenticity-reviewer
+    - playwright-test-reviewer
 
 all:
   description: Alias for complete
   reviewers:
-    # Python reviewers
+    # Python reviewers (7)
     - python-refactoring-reviewer
     - python-functional-reviewer
     - python-zen-reviewer
@@ -170,7 +184,7 @@ all:
     - python-test-reviewer
     - python-security-privacy-reviewer
     - python-performance-reviewer
-    # JavaScript reviewers
+    # JavaScript reviewers (7)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer
     - javascript-format-refactoring-reviewer
@@ -178,9 +192,10 @@ all:
     - javascript-security-privacy-reviewer
     - javascript-performance-reviewer
     - react-reviewer
-    # Other reviewers
+    # Other reviewers (6)
     - agile-requirements-reviewer
     - django-reviewer
     - openapi-reviewer
     - database-schema-reviewer
     - code-authenticity-reviewer
+    - playwright-test-reviewer
