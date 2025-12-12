@@ -8,7 +8,13 @@ allowed-tools: [Read, Grep, Glob]
 
 1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
 
-2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+2. **REQUIRED: Read all skill files first** - Before reviewing any code, you MUST read these files from this skill's directory:
+   - `SKILL.md` (this file - main guidelines)
+   - `BRITTLE-FLAKY-PATTERNS.md` (critical flakiness patterns)
+   - `REACT-PATTERNS.md` (React/Next.js specific patterns)
+
+3. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - **Preamble listing skill files used** (see template below)
    - Each issue with its mnemonic ID
    - Problematic code snippets
    - Suggested improvements
@@ -17,6 +23,14 @@ allowed-tools: [Read, Grep, Glob]
 **Example invocation:**
 ```
 Use the Task tool to run playwright-test-reviewer on tests/e2e/ and write the report to reviews/e2e-review.md
+```
+
+**Required report preamble:**
+```markdown
+## Skill Files Used
+- SKILL.md (main guidelines)
+- BRITTLE-FLAKY-PATTERNS.md (flakiness patterns)
+- REACT-PATTERNS.md (React-specific patterns)
 ```
 
 ---
@@ -917,7 +931,7 @@ await page.getByRole('button', { name: 'Loading...' }).waitFor({ state: 'hidden'
 
 ## 6. Brittle & Flaky Test Patterns
 
-@BRITTLE-FLAKY-PATTERNS.md
+**⚠️ READ FILE: `BRITTLE-FLAKY-PATTERNS.md`** - Contains critical patterns for WAIT-HARD, WAIT-NET, LOC-CSS, WAIT-SEL, ASSERT-CATCH, ASSERT-WEAK, RACE-, and LOC-FILTER issues.
 
 ## 7. Test Organization
 
@@ -1371,7 +1385,7 @@ test('checkout flow', async ({ page }) => {
 
 ## 11. React-Specific Patterns
 
-@REACT-PATTERNS.md
+**⚠️ READ FILE: `REACT-PATTERNS.md`** - Contains React/Next.js patterns for REACT-HYDRATION, REACT-SUSPENSE, REACT-ROUTER, REACT-STATE, REACT-PORTAL, REACT-CONTEXT, and NEXT- issues.
 
 ## Expected Good Patterns (Check for Absence)
 

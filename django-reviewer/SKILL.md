@@ -8,7 +8,15 @@ allowed-tools: [Read, Grep, Glob]
 
 1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
 
-2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+2. **REQUIRED: Read all skill files first** - Before reviewing any code, you MUST read these files from this skill's directory:
+   - `SKILL.md` (this file - main guidelines)
+   - `MODELS-DATABASE.md` (model design, migrations, queries)
+   - `API-DESIGN.md` (DRF patterns, serializers, viewsets)
+   - `LOGGING-MONITORING.md` (logging, metrics, observability)
+   - `ANTI-PATTERNS.md` (common Django anti-patterns)
+
+3. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - **Preamble listing skill files used** (see template below)
    - Each issue with its mnemonic ID
    - Problematic code snippets
    - Suggested improvements
@@ -17,6 +25,16 @@ allowed-tools: [Read, Grep, Glob]
 **Example invocation:**
 ```
 Use the Task tool to run django-reviewer on myapp/views.py and write the report to reviews/django-review.md
+```
+
+**Required report preamble:**
+```markdown
+## Skill Files Used
+- SKILL.md (main guidelines)
+- MODELS-DATABASE.md (model design patterns)
+- API-DESIGN.md (DRF patterns)
+- LOGGING-MONITORING.md (observability)
+- ANTI-PATTERNS.md (anti-patterns)
 ```
 
 ---
@@ -710,7 +728,7 @@ Use Argon2 (winner of Password Hashing Competition). Enforce strong password pol
 
 ## Models & Database - Performance and Integrity
 
-@MODELS-DATABASE.md
+**⚠️ READ FILE: `MODELS-DATABASE.md`** - Contains patterns for MODEL-INDEX, MODEL-NULLABLE, MODEL-CASCADE, QUERY-SELECT, QUERY-NPLUSONE, MIGRATION-DATA, and other model/database patterns.
 
 ## Views & URLs - Security and Performance
 
@@ -1470,7 +1488,7 @@ Use async views for I/O-bound operations. Use Celery/background tasks for long-r
 
 ## API Design - Django REST Framework
 
-@API-DESIGN.md
+**⚠️ READ FILE: `API-DESIGN.md`** - Contains patterns for DRF-SERIALIZER, DRF-VIEWSET, DRF-PERMISSION, DRF-THROTTLE, DRF-PAGINATION, DRF-VERSIONING, and other REST API patterns.
 
 ## Testing - Comprehensive Test Coverage
 
@@ -1979,11 +1997,11 @@ Use PostgreSQL or MySQL for production. Enable connection pooling. Use read repl
 
 ## Logging & Monitoring
 
-@LOGGING-MONITORING.md
+**⚠️ READ FILE: `LOGGING-MONITORING.md`** - Contains patterns for LOG-STRUCTURED, LOG-LEVEL, LOG-SENSITIVE, MONITOR-METRICS, MONITOR-HEALTH, MONITOR-APM, and other observability patterns.
 
 ## Anti-Patterns - Common Mistakes
 
-@ANTI-PATTERNS.md
+**⚠️ READ FILE: `ANTI-PATTERNS.md`** - Contains patterns for ANTI-FAT-MODEL, ANTI-GOD-VIEW, ANTI-SETTINGS-IMPORT, ANTI-CIRCULAR, and other common Django anti-patterns.
 
 ## Multi-Tenancy & Data Isolation Patterns
 

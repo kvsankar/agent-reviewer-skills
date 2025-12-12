@@ -8,7 +8,12 @@ allowed-tools: [Read, Grep, Glob]
 
 1. **Run as a sub-task using the Task tool** - This ensures fresh context dedicated to the review, with no interference from prior conversation.
 
-2. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+2. **REQUIRED: Read all skill files first** - Before reviewing any code, you MUST read these files from this skill's directory:
+   - `SKILL.md` (this file - main guidelines)
+   - `EXPECTED-PATTERNS.md` (expected good patterns to check for absence)
+
+3. **Output a markdown file** - Write the review report to a `.md` file (not just console output). The file must include:
+   - **Preamble listing skill files used** (see template below)
    - Each issue with its mnemonic ID
    - Problematic code snippets
    - Suggested improvements
@@ -17,6 +22,13 @@ allowed-tools: [Read, Grep, Glob]
 **Example invocation:**
 ```
 Use the Task tool to run javascript-test-reviewer on src/__tests__/module.test.ts and write the report to reviews/test-review.md
+```
+
+**Required report preamble:**
+```markdown
+## Skill Files Used
+- SKILL.md (main guidelines)
+- EXPECTED-PATTERNS.md (expected good patterns)
 ```
 
 ---
@@ -2789,4 +2801,4 @@ JavaScript/TypeScript testing emphasizes:
 # Expected Good Patterns (Check for Absence)
 
 
-@EXPECTED-PATTERNS.md
+**⚠️ READ FILE: `EXPECTED-PATTERNS.md`** - Contains patterns for MISSING-DESCRIBE, MISSING-ARRANGE-ACT-ASSERT, MISSING-ASYNC-HANDLING, MISSING-QUERY-PREFERENCE, and other expected good patterns to check for absence.
