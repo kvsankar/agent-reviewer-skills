@@ -48,6 +48,44 @@ def print_error(msg: str):
     print(f"{Colors.RED}✗ {msg}{Colors.END}", file=sys.stderr)
 
 
+def get_compose_command() -> Optional[List[str]]:
+    """
+    Detect available Docker Compose command.
+
+    Returns:
+        List of command parts for subprocess, or None if not found.
+        - ['docker-compose'] for standalone docker-compose (v1)
+        - ['docker', 'compose'] for Docker Compose v2 plugin
+    """
+    # Try docker-compose (standalone, v1)
+    try:
+        result = subprocess.run(
+            ['docker-compose', '--version'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            return ['docker-compose']
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # Try docker compose (plugin, v2)
+    try:
+        result = subprocess.run(
+            ['docker', 'compose', 'version'],
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            return ['docker', 'compose']
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    return None
+
+
 def print_warning(msg: str):
     """Print a warning message"""
     print(f"{Colors.YELLOW}⚠ {msg}{Colors.END}")
@@ -86,21 +124,16 @@ def check_prerequisites() -> bool:
         print_error("Docker not found. Please install Docker first.")
         all_good = False
 
-    # Check docker-compose
-    try:
-        result = subprocess.run(
-            ['docker-compose', '--version'],
-            capture_output=True,
-            text=True,
-            timeout=5
-        )
-        if result.returncode == 0:
-            print_success(f"Docker Compose installed: {result.stdout.strip()}")
-        else:
-            print_error("Docker Compose not working properly")
-            all_good = False
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        print_error("Docker Compose not found. Please install docker-compose.")
+    # Check docker-compose (v1 standalone) or docker compose (v2 plugin)
+    compose_cmd = get_compose_command()
+    if compose_cmd:
+        # Get version info for display
+        version_cmd = compose_cmd + ['version'] if compose_cmd == ['docker', 'compose'] else compose_cmd + ['--version']
+        result = subprocess.run(version_cmd, capture_output=True, text=True, timeout=5)
+        version_info = result.stdout.strip() if result.returncode == 0 else ' '.join(compose_cmd)
+        print_success(f"Docker Compose installed: {version_info}")
+    else:
+        print_error("Docker Compose not found. Please install docker-compose or docker-compose-v2.")
         all_good = False
 
     return all_good
@@ -218,11 +251,13 @@ def build_docker_image() -> bool:
 
     print_info("Building Docker image (first time only, may take 2-3 minutes)...")
 
-    # Build the image
-    build_cmd = [
-        'docker-compose',
-        'build'
-    ]
+    # Build the image using detected compose command
+    compose_cmd = get_compose_command()
+    if not compose_cmd:
+        print_error("Docker Compose not found")
+        return False
+
+    build_cmd = compose_cmd + ['build']
 
     try:
         result = subprocess.run(
@@ -249,9 +284,14 @@ def run_review(args: argparse.Namespace) -> int:
 
     script_dir = get_script_dir()
 
+    # Get compose command (v1 or v2)
+    compose_cmd = get_compose_command()
+    if not compose_cmd:
+        print_error("Docker Compose not found")
+        return 1
+
     # Build docker-compose command
-    docker_cmd = [
-        'docker-compose',
+    docker_cmd = compose_cmd + [
         'run',
         '--rm',
         'reviewer',
@@ -431,9 +471,14 @@ For more details, see:
 
         script_dir = get_script_dir()
 
+        # Get compose command (v1 or v2)
+        compose_cmd = get_compose_command()
+        if not compose_cmd:
+            print_error("Docker Compose not found. Please install docker-compose or docker-compose-v2.")
+            sys.exit(1)
+
         # Run docker-compose with --list-reviewers
-        docker_cmd = [
-            'docker-compose',
+        docker_cmd = compose_cmd + [
             'run',
             '--rm',
             'reviewer',
@@ -447,7 +492,7 @@ For more details, see:
             print_error(f"Failed to list reviewers: {e}")
             sys.exit(1)
         except Exception as e:
-            print_error(f"Error running docker-compose: {e}")
+            print_error(f"Error running Docker Compose: {e}")
             sys.exit(1)
 
     # Validate required arguments (only needed when not listing)

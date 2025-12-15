@@ -17,7 +17,7 @@
 
 # Language-specific tags
 python:
-  description: Complete Python code review (7 reviewers)
+  description: Complete Python code review (8 reviewers)
   reviewers:
     - python-refactoring-reviewer
     - python-functional-reviewer
@@ -26,6 +26,7 @@ python:
     - python-test-reviewer
     - python-security-privacy-reviewer
     - python-performance-reviewer
+    - python-rhodes-reviewer
 
 javascript:
   description: Complete JavaScript/TypeScript code review (7 reviewers)
@@ -145,11 +146,22 @@ authenticity:
   reviewers:
     - code-authenticity-reviewer
 
+# Brandon Rhodes' Pythonic patterns
+rhodes:
+  description: Brandon Rhodes' Pythonic patterns and idioms
+  reviewers:
+    - python-rhodes-reviewer
+
+pythonic:
+  description: Alias for rhodes
+  reviewers:
+    - python-rhodes-reviewer
+
 # Comprehensive
 complete:
-  description: All available reviewers (generates 20 reports)
+  description: All available reviewers (generates 21 reports)
   reviewers:
-    # Python reviewers (7)
+    # Python reviewers (8)
     - python-refactoring-reviewer
     - python-functional-reviewer
     - python-zen-reviewer
@@ -157,6 +169,7 @@ complete:
     - python-test-reviewer
     - python-security-privacy-reviewer
     - python-performance-reviewer
+    - python-rhodes-reviewer
     # JavaScript reviewers (7)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer
@@ -176,7 +189,7 @@ complete:
 all:
   description: Alias for complete
   reviewers:
-    # Python reviewers (7)
+    # Python reviewers (8)
     - python-refactoring-reviewer
     - python-functional-reviewer
     - python-zen-reviewer
@@ -184,6 +197,7 @@ all:
     - python-test-reviewer
     - python-security-privacy-reviewer
     - python-performance-reviewer
+    - python-rhodes-reviewer
     # JavaScript reviewers (7)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer

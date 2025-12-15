@@ -151,6 +151,10 @@ REVIEWERS = {
         'patterns': ['*.spec.ts', '*.spec.js', '*.test.ts', '*.test.js', '**/e2e/**/*.ts', '**/e2e/**/*.js', '**/tests/**/*.ts', '**/tests/**/*.js', 'playwright.config.ts', 'playwright.config.js'],
         'description': 'Reviews Playwright E2E tests for best practices, flaky patterns, and React-specific testing',
     },
+    'python-rhodes-reviewer': {
+        'patterns': ['*.py'],
+        'description': 'Reviews Python code using Brandon Rhodes\' Pythonic patterns and idioms',
+    },
 }
 
 
@@ -431,11 +435,18 @@ IMPORTANT:
 Work methodically:
 - First understand the project structure
 - Then focus on files matching the review scope
-- Finally, write the detailed review in markdown format
+- Finally, OUTPUT the detailed review in markdown format
+
+CRITICAL OUTPUT REQUIREMENTS:
+- Do NOT write the review to a file
+- Do NOT save the review to disk
+- OUTPUT the COMPLETE review directly as your final response
+- The review must be comprehensive with specific code examples, line numbers, and detailed findings
+- Do NOT summarize - provide the FULL detailed review
 
 Current working directory is the repository root. All bash commands will execute there.
 
-Begin your review now.
+Begin your review now. When you're done exploring, output the complete review directly.
 """
 
             # CLI mode or SDK mode?
@@ -511,6 +522,35 @@ Begin your review now.
             return error_msg
 
         print("  [AGENTIC/CLI] Review complete")
+
+        # Check if Claude wrote the review to a file (common in agentic mode)
+        # Look for markdown files that might contain the full review
+        review_patterns = [
+            'review.md', 'REVIEW.md', '*-review.md', '*_review.md',
+            'reviews/*.md', 'output/*.md'
+        ]
+
+        # Search for review files created by Claude
+        import glob
+        for pattern in review_patterns:
+            matches = glob.glob(pattern)
+            for match in matches:
+                match_path = Path(match)
+                # Only consider files created during this run (within last 5 minutes)
+                if match_path.exists():
+                    file_age = datetime.now().timestamp() - match_path.stat().st_mtime
+                    if file_age < 300:  # Less than 5 minutes old
+                        try:
+                            with open(match_path, 'r', encoding='utf-8') as f:
+                                file_content = f.read()
+                            # If the file has substantial content, use it
+                            if len(file_content) > len(result.stdout):
+                                print(f"  [AGENTIC/CLI] Found review file: {match_path}")
+                                return file_content
+                        except Exception as e:
+                            print(f"  [AGENTIC/CLI] Warning: Could not read {match_path}: {e}")
+
+        # Fall back to stdout if no file found
         return result.stdout
 
     def review_cli(self, skill_prompt: str, code_context: str, repo_url: str) -> str:
@@ -794,12 +834,12 @@ Available models:
   - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
   - claude-opus-4-20250514: Most capable model for complex tasks
 
-Available reviewers (20 total):
+Available reviewers (21 total):
 
-  Python (7):
+  Python (8):
     python-refactoring-reviewer, python-functional-reviewer, python-zen-reviewer,
     python-format-refactoring-reviewer, python-test-reviewer,
-    python-security-privacy-reviewer, python-performance-reviewer
+    python-security-privacy-reviewer, python-performance-reviewer, python-rhodes-reviewer
 
   JavaScript/TypeScript (7):
     javascript-test-reviewer, javascript-refactoring-reviewer,
@@ -813,10 +853,10 @@ Available reviewers (20 total):
 
 Available tags:
   python, javascript/js, react, django, security, testing/tests, functional/fp,
-  quality, playwright/e2e, complete/all
+  quality, playwright/e2e, rhodes, complete/all
 
 Examples:
-  # Review Python project (7 reviewers)
+  # Review Python project (8 reviewers)
   uv run review.py --repo https://github.com/pallets/flask --reviewer python --use-claude-cli
 
   # Review React/JS project (7 reviewers)

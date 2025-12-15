@@ -2,7 +2,7 @@
 
 A curated collection of high-quality Claude Code skills for code review, requirements analysis, and software quality. Each skill focuses on a specific aspect of software development, providing detailed analysis and actionable recommendations.
 
-## 🎯 Available Skills (18 Total)
+## 🎯 Available Skills (19 Total)
 
 ### JavaScript/TypeScript Skills
 
@@ -118,7 +118,21 @@ Reviews React code for best practices, patterns, performance, accessibility, and
 
 ### Python Skills
 
-#### 8. **Agile Requirements Reviewer**
+#### 8. **Rhodes Python Code Reviewer** ⭐ NEW
+Reviews Python code using Brandon Rhodes' 70 coding principles from 15+ years of conference talks.
+
+**Focus Areas:**
+- Architecture (HOIST-IO, FUNC-SHELL, composition over inheritance)
+- Testing (pure functions, avoiding mocks, test confidence)
+- API Design (explicit names, immutability, showing cost)
+- Naming (precise nouns, relentless verbs)
+- Module Design (from python-patterns.guide)
+
+**Use when:** Reviewing Python code for architecture, testability, clarity, or learning Rhodes' principles
+
+---
+
+#### 9. **Agile Requirements Reviewer**
 Reviews software specifications, user stories, and use cases using agile requirements best practices.
 
 **Focus Areas:**
@@ -132,7 +146,7 @@ Reviews software specifications, user stories, and use cases using agile require
 
 ---
 
-#### 9. **Django Reviewer**
+#### 10. **Django Reviewer**
 Comprehensive production readiness review for Django projects focusing on security, performance, and scalability.
 
 **Focus Areas:**
@@ -148,7 +162,7 @@ Comprehensive production readiness review for Django projects focusing on securi
 
 ---
 
-#### 10. **Python Functional Reviewer**
+#### 11. **Python Functional Reviewer**
 Reviews Python code for functional programming patterns and best practices.
 
 **Focus Areas:**
@@ -161,7 +175,7 @@ Reviews Python code for functional programming patterns and best practices.
 
 ---
 
-#### 11. **Python Performance Reviewer**
+#### 12. **Python Performance Reviewer**
 Reviews Python code for performance optimization opportunities.
 
 **Focus Areas:**
@@ -178,7 +192,7 @@ Reviews Python code for performance optimization opportunities.
 
 ---
 
-#### 12. **Python Security & Privacy Reviewer**
+#### 13. **Python Security & Privacy Reviewer**
 Comprehensive Python security and privacy review covering OWASP Top 10 and data protection.
 
 **Focus Areas:**
@@ -191,7 +205,7 @@ Comprehensive Python security and privacy review covering OWASP Top 10 and data 
 
 ---
 
-#### 13. **Python Refactoring Reviewer**
+#### 14. **Python Refactoring Reviewer**
 Identifies refactoring opportunities to improve code quality, readability, and maintainability.
 
 **Focus Areas:**
@@ -204,7 +218,7 @@ Identifies refactoring opportunities to improve code quality, readability, and m
 
 ---
 
-#### 14. **Python Zen Reviewer**
+#### 15. **Python Zen Reviewer**
 Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 **Focus Areas:**
@@ -217,7 +231,7 @@ Reviews code against the 19 principles of the Zen of Python (PEP 20).
 
 ---
 
-#### 15. **Python Format/Style Refactoring Reviewer**
+#### 16. **Python Format/Style Refactoring Reviewer**
 Solves formatting and style issues through refactoring, not just line wrapping.
 
 **Focus Areas:**
@@ -232,7 +246,7 @@ Solves formatting and style issues through refactoring, not just line wrapping.
 
 ### General/Cross-Language Skills
 
-#### 16. **Python Test Reviewer**
+#### 17. **Python Test Reviewer**
 Reviews Python tests for quality and suggests multiple testing strategies.
 
 **Focus Areas:**
@@ -245,7 +259,7 @@ Reviews Python tests for quality and suggests multiple testing strategies.
 
 ---
 
-#### 17. **OpenAPI Reviewer**
+#### 18. **OpenAPI Reviewer**
 Reviews OpenAPI/Swagger specifications for completeness, consistency, and API design best practices.
 
 **Focus Areas:**
@@ -260,7 +274,7 @@ Reviews OpenAPI/Swagger specifications for completeness, consistency, and API de
 
 ---
 
-#### 18. **Database Schema Reviewer**
+#### 19. **Database Schema Reviewer**
 Reviews relational database schemas for normalization, performance, and data integrity.
 
 **Focus Areas:**
@@ -291,8 +305,8 @@ python install_skills.py
 ```
 
 This will automatically:
-- Install all 18 skills to `~/.claude/skills/` on Windows
-- Install all 18 skills to `~/.claude/skills/` on WSL (if available)
+- Install all 19 skills to `~/.claude/skills/` on Windows
+- Install all 19 skills to `~/.claude/skills/` on WSL (if available)
 - Handle existing installations by replacing them with the latest version
 
 ### Manual Installation
@@ -368,6 +382,8 @@ Once installed, skills activate automatically based on keywords in your requests
 "Optimize this slow Python code"
 "Find performance bottlenecks in this function"
 "Review this code for security issues"
+"Review this Python code using Rhodes guidelines"
+"What would Brandon Rhodes say about this architecture?"
 "Make this code more Pythonic"
 "Refactor this Python code to be more maintainable"
 "Review these pytest tests for quality"
@@ -386,6 +402,7 @@ Or invoke directly:
 "Use the javascript-performance-reviewer on this slow component"
 "Use the react-reviewer on this React component"
 "Use the agile-requirements-reviewer on this specification"
+"Use the python-rhodes-reviewer on this Python code"
 "Use the django-reviewer on this Django project"
 "Use the python-performance-reviewer on this slow code"
 "Use the python-security-privacy-reviewer on this file"
@@ -422,7 +439,7 @@ uv run review.py --repo https://github.com/user/project \
 **Features:**
 - 🔍 Automatically discovers and reviews relevant files
 - 📊 Generates detailed markdown reports with findings
-- 🎯 Supports all 18 reviewers
+- 🎯 Supports all 19 reviewers
 - ⚡ Can run multiple reviewers in one command
 - 🛡️ Includes security, performance, and quality analysis
 - 📦 Uses uv for fast, modern Python management
@@ -504,7 +521,7 @@ All guidelines are **self-contained** - no external dependencies needed.
 
 When you use a skill, you get structured feedback:
 
-```markdown
+`````markdown
 ## Security Review: user_authentication.py
 
 ### ✅ Security Strengths
@@ -529,7 +546,9 @@ cursor.execute(query, (username,))
 Prevents attackers from injecting malicious SQL...
 
 ---
-```
+`````
+
+**📂 See more examples:** [sample_reviews/](review-tool/sample_reviews/) contains 16 complete reviews of real open source projects including [HTTPie](https://github.com/httpie/cli) and [Datasette](https://github.com/simonw/datasette).
 
 ## 🤝 Contributing
 
@@ -545,7 +564,21 @@ This collection is provided as-is for use with Claude Code. Individual skills in
 
 ## 🙏 Acknowledgments
 
-These skills build upon the work of many contributors to software engineering best practices:
+These skills build upon the work of many contributors to software engineering best practices.
+
+### Special Thanks to Brandon Rhodes
+
+> Hey, folks, this is Brandon Rhodes, making a personal comment on this project, since Sankar was kind enough to ask my permission before making it public! While I myself am dismayed at the broad impact of AI on society so far, and have always been skeptical about automated code review (I've always used 'pyflakes' instead of 'flake8' because flake8's clumsy attempts to apply PEP-8 produce so much noise), I see no reason to stand in the way of this experiment. It tries to distill some of the guidelines that I've offered in my talks into a set of rules that can be applied by machine. I can't guess whether Claude Code will really understand when my ideas are useful and when they're not, but it's interesting to see how many pieces of advice worked their way into my talks over so many years.
+>
+> — Brandon Rhodes (December 2025)
+
+The **Rhodes Python Code Reviewer** skill summarizes 70 coding principles from Brandon Rhodes' 15+ years of conference presentations (2010-2024) and his [Python Patterns Guide](https://python-patterns.guide/). This skill was released with Brandon Rhodes' permission. We are grateful for his decades of contributions to Python education.
+
+- **Website:** https://rhodesmill.org/brandon/
+- **Talks:** https://rhodesmill.org/brandon/talks/
+- **Python Patterns:** https://python-patterns.guide/
+
+### Additional Acknowledgments
 
 **JavaScript/TypeScript:**
 - **Jest Team** - Jest documentation and testing best practices
