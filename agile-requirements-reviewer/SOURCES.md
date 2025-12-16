@@ -550,7 +550,7 @@ Requirements practices continue to evolve with technology and methodology advanc
 
 ---
 
-**Last Updated:** 2024
+**Last Updated:** November 2025
 **Skill Version:** 1.0
 
 *This skill stands on the shoulders of giants in requirements engineering, business analysis, and agile methodology.*

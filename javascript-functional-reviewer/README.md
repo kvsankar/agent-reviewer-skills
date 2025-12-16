@@ -60,7 +60,7 @@ This skill analyzes JavaScript code for:
 
 ## 📋 Example Review Output
 
-```markdown
+````markdown
 ## Review: userService.js
 
 ### ✅ Strengths
@@ -120,7 +120,7 @@ Never mutate function arguments - always return new objects with the desired cha
 
 ### 💡 Functional Programming Wisdom
 > "Functional programming is about writing pure functions, removing hidden inputs and outputs, so that as much of our code as possible just describes a relationship between inputs and outputs."
-```
+````
 
 ## 🚀 Installation
 

@@ -67,7 +67,7 @@ Use the 50+ guidelines embedded below. All guidelines include:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Refactoring Review: [File/Function Name]
 
 ### ✅ Strengths
@@ -100,7 +100,7 @@ Use the 50+ guidelines embedded below. All guidelines include:
 
 ### 💡 Refactoring Wisdom
 > "[Relevant quote or principle]"
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with **Intent + MNEMONIC ID** (e.g., **READABILITY: EXTRACT-FUNC**)

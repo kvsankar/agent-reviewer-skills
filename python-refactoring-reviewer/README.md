@@ -74,7 +74,7 @@ A structured refactoring review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Refactoring Review: order_processor.py
 
 ### ✅ Strengths
@@ -197,7 +197,7 @@ SRP Violation - Order had multiple responsibilities (calculation, persistence, n
 ### 💡 Refactoring Wisdom
 > "Any fool can write code that a computer can understand. Good programmers write code that humans can understand."
 > — Martin Fowler, Refactoring
-```
+````
 
 ## The 70 Guidelines
 

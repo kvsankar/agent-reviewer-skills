@@ -68,7 +68,7 @@ Use the 30+ guidelines embedded below. All guidelines include:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## JavaScript Format Refactoring Review: [File/Function Name]
 
 ### ✅ Well-Structured Code
@@ -109,7 +109,7 @@ Use the 30+ guidelines embedded below. All guidelines include:
 
 ### 💡 Refactoring Wisdom
 > "Don't fight ESLint—refactor so it has nothing to complain about."
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with **ESLint Rule + MNEMONIC ID**

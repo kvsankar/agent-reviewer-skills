@@ -67,7 +67,7 @@ A comprehensive React review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## React Review: UserProfile.jsx
 
 ### 🔴 Critical Issues
@@ -89,7 +89,7 @@ useEffect(() => {
 ```
 
 **Why:** Without userId in dependencies, the effect only runs once and uses stale userId value.
-```
+````
 
 ## The 65+ React Guidelines
 

@@ -67,7 +67,7 @@ A structured review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Review: data_processor.py
 
 ### ✅ Strengths
@@ -106,7 +106,7 @@ Pure functions are easier to test, debug, and reason about. They always return t
 ### 💡 Functional Programming Wisdom
 > "Python is a multi-paradigm language. Combine functional with imperative approaches as needed—don't force pure functional style."
 > — Python Functional Programming HOWTO
-```
+````
 
 ## The 40+ Guidelines
 

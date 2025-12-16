@@ -38,7 +38,7 @@ Use the 70 guidelines embedded below in this skill document. All guidelines incl
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Review: [File/Function Name]
 
 ### ✅ Strengths
@@ -72,7 +72,7 @@ Use the 70 guidelines embedded below in this skill document. All guidelines incl
 ### 💡 Rhodes Wisdom
 > "[Relevant quote from Rhodes' talks]"
 > — [Talk name] ([Year])
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with the **MNEMONIC ID in bold** (e.g., **HOIST-IO**)
@@ -186,7 +186,7 @@ Channel Brandon Rhodes' teaching style:
 
 ## Example Review
 
-```markdown
+````markdown
 ## Review: data_processor.py
 
 ### ✅ Strengths
@@ -254,7 +254,7 @@ If you need `patch()` to test your code, it signals that I/O is too tightly coup
 ### 💡 Rhodes Wisdom
 > "Using mock.patch() indicates code has coupled I/O that should be separated. Tests should act as a 'second caller' from day one to reveal coupling issues."
 > — Hoisting Your I/O (2015)
-```
+````
 
 ## Review Checklist
 
@@ -272,7 +272,7 @@ If you need `patch()` to test your code, it signals that I/O is too tightly coup
 - [ ] At least one Rhodes quote in the "Rhodes Wisdom" section
 
 **Format Verification:**
-```markdown
+````markdown
 #### MNEMONIC-ID: Description
 **Current code:**
 ```python
@@ -284,7 +284,7 @@ If you need `patch()` to test your code, it signals that I/O is too tightly coup
 ```
 **Why this matters:**
 [explanation]
-```
+````
 
 ## When NOT to Comment
 

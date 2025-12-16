@@ -239,5 +239,5 @@ All referenced materials are used in accordance with their respective licenses f
 
 **Note**: This skill provides guidance based on established standards and best practices. Always refer to the official specifications for authoritative information.
 
-**Last Updated**: November 2024
+**Last Updated**: November 2025
 **OpenAPI Version Covered**: 3.0.x and 3.1.x

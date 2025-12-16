@@ -364,7 +364,7 @@ For authoritative information, always refer to:
 
 ---
 
-**Last Updated:** 2024
+**Last Updated:** November 2025
 **Skill Version:** 1.0
 
 *This skill stands on the shoulders of giants in the JavaScript functional programming community.*

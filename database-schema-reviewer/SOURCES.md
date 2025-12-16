@@ -312,5 +312,5 @@ All referenced materials are used in accordance with their respective licenses f
 
 **Note**: This skill provides guidance based on established database theory and vendor best practices. Always refer to official documentation for your specific database version.
 
-**Last Updated**: November 2024
+**Last Updated**: November 2025
 **Database Versions Covered**: MySQL 8.0+, PostgreSQL 14+, SQL Server 2019+

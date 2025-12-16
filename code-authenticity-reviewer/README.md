@@ -170,7 +170,7 @@ and write findings to reviews/authenticity.md
 
 ## Output Format
 
-```markdown
+````markdown
 ## Code Authenticity Review: [File/Function Name]
 
 ### Authenticity Score: [HIGH/MEDIUM/LOW]
@@ -198,7 +198,7 @@ def calculate_average(numbers):
 - [ ] No magic constants for computed values
 - [ ] Tests verify actual behavior
 - [ ] Claims backed by computation
-```
+````
 
 ## Why This Matters
 

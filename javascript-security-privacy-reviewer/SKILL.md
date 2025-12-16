@@ -75,7 +75,7 @@ Use the 60+ guidelines embedded below in this skill document. All guidelines inc
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Security & Privacy Review: [File/Function Name]
 
 ### ✅ Strengths
@@ -123,7 +123,7 @@ Use the 60+ guidelines embedded below in this skill document. All guidelines inc
 - [ ] GDPR requirements met
 - [ ] Secrets not in code
 - [ ] Dependencies up to date
-```
+````
 
 **Key Requirements:**
 - Start each issue with the **MNEMONIC ID in bold** (e.g., **XSS-ESCAPE**)

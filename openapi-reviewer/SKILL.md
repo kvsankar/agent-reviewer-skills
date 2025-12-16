@@ -61,7 +61,7 @@ Use the 50+ guidelines embedded below in this skill document. All guidelines inc
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## OpenAPI Specification Review: [API Name]
 
 ### ✅ Strengths
@@ -110,7 +110,7 @@ Use the 50+ guidelines embedded below in this skill document. All guidelines inc
 - [ ] Complete security definitions
 - [ ] Examples provided
 - [ ] Error responses documented
-```
+````
 
 **Key Requirements:**
 - Start each issue with the **MNEMONIC ID in bold** (e.g., **API-VERSION**)

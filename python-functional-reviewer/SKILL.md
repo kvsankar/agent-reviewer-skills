@@ -58,7 +58,7 @@ Use the 40+ guidelines embedded below in this skill document.
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Review: [File/Function Name]
 
 ### ✅ Strengths
@@ -91,7 +91,7 @@ Use the 40+ guidelines embedded below in this skill document.
 
 ### 💡 Functional Programming Wisdom
 > "[Relevant quote from sources]"
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with the **MNEMONIC ID in bold** (e.g., **PURE-FUNC**)
@@ -155,7 +155,7 @@ Use the 40+ guidelines embedded below in this skill document.
 
 ## Example Review
 
-```markdown
+````markdown
 ## Review: data_processor.py
 
 ### ✅ Strengths
@@ -214,7 +214,7 @@ Combine functional with imperative approaches as needed—Python is multi-paradi
 ### 💡 Functional Programming Wisdom
 > "Python is a multi-paradigm language. Combine functional with imperative approaches as needed—don't force pure functional style."
 > — Python Functional Programming HOWTO
-```
+````
 
 ## Review Checklist
 

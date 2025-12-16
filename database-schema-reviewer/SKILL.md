@@ -62,7 +62,7 @@ Use the 60+ guidelines embedded below. All guidelines include mnemonic IDs (like
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Database Schema Review: [Schema/Database Name]
 
 ### ✅ Strengths
@@ -122,7 +122,7 @@ CREATE TABLE users (
 - [ ] Indexes on frequently queried columns
 - [ ] Appropriate data types
 - [ ] Consistent naming conventions
-```
+````
 
 **Key Requirements:**
 - Start each issue with **MNEMONIC ID in bold**

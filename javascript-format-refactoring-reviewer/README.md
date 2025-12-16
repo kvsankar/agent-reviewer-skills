@@ -86,7 +86,7 @@ A structured refactoring review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## JavaScript Format Refactoring Review: userService.js
 
 ### ✅ Well-Structured Code
@@ -209,7 +209,7 @@ function calculateDiscount(customer, order) {
 
 ### 💡 Refactoring Wisdom
 > "Good structure leads to good style automatically. Refactor for clarity, and ESLint compliance follows naturally."
-```
+````
 
 ## The 30+ Guidelines
 

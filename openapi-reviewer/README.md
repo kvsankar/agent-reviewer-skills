@@ -74,7 +74,7 @@ Best practices to improve the API:
 
 ## Example Review Output
 
-```markdown
+````markdown
 ## OpenAPI Specification Review: User Management API
 
 ### ✅ Strengths
@@ -110,7 +110,7 @@ paths:
           type: integer
           format: int64
 ```
-```
+````
 
 ## Guidelines Covered
 

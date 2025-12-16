@@ -82,7 +82,7 @@ A comprehensive refactoring review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Refactoring Review: OrderProcessor
 
 ### ✅ Strengths
@@ -162,7 +162,7 @@ function sendOrderConfirmation(order) {
 - Self-documenting through function names
 
 **Code smell addressed:** Long Method
-```
+````
 
 ## The 50+ Guidelines
 

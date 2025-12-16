@@ -134,7 +134,7 @@ Each review includes:
 
 Example output:
 
-```markdown
+````markdown
 ## Django Review: UserAuthentication Module
 
 ### 🚨 Critical Issues
@@ -175,7 +175,7 @@ posts = Post.objects.select_related('author').all()
 
 **Why this matters:**
 N+1 queries create massive database load...
-```
+````
 
 ## ✅ Best For
 

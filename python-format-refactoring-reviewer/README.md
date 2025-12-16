@@ -83,7 +83,7 @@ A structured refactoring review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Format/Style Refactoring Review: order_processor.py
 
 ### ✅ Well-Structured Code
@@ -165,7 +165,7 @@ def process_order(order):
 
 ### 💡 Refactoring Wisdom
 > "Good structure leads to good style automatically. Refactor for clarity, and formatting takes care of itself."
-```
+````
 
 ## The 40+ Guidelines
 

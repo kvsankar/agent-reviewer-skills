@@ -60,7 +60,7 @@ Use the 45+ guidelines embedded below in this skill document.
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Review: [File/Function Name]
 
 ### ✅ Strengths
@@ -93,7 +93,7 @@ Use the 45+ guidelines embedded below in this skill document.
 
 ### 💡 Functional Programming Wisdom
 > "[Relevant quote from sources]"
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with the **MNEMONIC ID in bold** (e.g., **PURE-FUNC**)
@@ -183,7 +183,7 @@ Use the 45+ guidelines embedded below in this skill document.
 
 ## Example Review
 
-```markdown
+````markdown
 ## Review: userService.js
 
 ### ✅ Strengths
@@ -276,7 +276,7 @@ Never mutate function arguments - always return new objects with the desired cha
 ### 💡 Functional Programming Wisdom
 > "Functional programming is about writing pure functions, about removing hidden inputs and outputs as far as we can, so that as much of our code as possible just describes a relationship between inputs and outputs."
 > — Eric Elliott
-```
+````
 
 ## Review Checklist
 

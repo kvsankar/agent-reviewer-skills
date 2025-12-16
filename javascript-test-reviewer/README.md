@@ -82,7 +82,7 @@ A comprehensive test review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Test Review: LoginForm Component
 
 ### TEST-COMPONENT: Testing React Components
@@ -149,7 +149,7 @@ expect(wrapper.state('email')).toBe('test'); // ❌ Tests state, not behavior
 
 **Recommendation:**
 Use Testing Library (Strategy 1) with user-centric queries and userEvent. Test from the user's perspective, not implementation details.
-```
+````
 
 ## The 55+ Guidelines
 

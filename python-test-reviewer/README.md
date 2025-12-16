@@ -79,7 +79,7 @@ A comprehensive test review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Test Review: shopping_cart.py
 
 ### TEST-STATEFUL: Testing Stateful Objects
@@ -123,7 +123,7 @@ def test_add_item(cart):  # Injected
 
 **Recommendation:**
 Use fixture-based setup as default for stateful objects. It's most Pythonic and works well with pytest.
-```
+````
 
 ## The 25 High-Quality Guidelines
 

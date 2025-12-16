@@ -60,7 +60,7 @@ This skill analyzes requirements documents, user stories, and use cases for:
 
 ## 📋 Example Review Output
 
-```markdown
+````markdown
 ## Requirements Review: Checkout Flow Specification
 
 ### ✅ Strengths
@@ -173,7 +173,7 @@ exception flows (errors). Use case format makes this explicit.
 ### 💡 Requirements Wisdom
 > "Requirements should focus on WHAT the system must do or a quality it must have,
 > not HOW it's built. Stay in the problem domain."
-```
+````
 
 ## 🚀 Installation
 

@@ -67,7 +67,7 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Zen of Python Review: [File/Function Name]
 
 ### ✅ Pythonic Strengths
@@ -100,7 +100,7 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 ### 🎓 Zen Wisdom
 > "[Quote a relevant Zen of Python principle]"
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with **Zen Principle + MNEMONIC ID** (e.g., **BEAUTIFUL: ZEN-FORMAT**)

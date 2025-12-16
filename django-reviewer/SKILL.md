@@ -77,7 +77,7 @@ Use the 100+ guidelines embedded in this skill document, organized by category.
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Django Review: [Project/App Name]
 
 ### ✅ Strengths
@@ -113,7 +113,7 @@ Use the 100+ guidelines embedded in this skill document, organized by category.
 
 ### 💡 Django Wisdom
 > "[Relevant quote from Django documentation or Two Scoops]"
-```
+````
 
 **Key Requirements:**
 - Start each issue with the **MNEMONIC ID in bold**

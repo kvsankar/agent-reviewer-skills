@@ -80,7 +80,7 @@ Best practices to improve the schema:
 
 ## Example Review Output
 
-```markdown
+````markdown
 ## Database Schema Review: E-commerce Database
 
 ### ✅ Strengths
@@ -121,7 +121,7 @@ CREATE TABLE orders (
 
 **Impact:**
 Violates 3NF due to transitive dependencies. Customer data duplicated across orders, leading to update anomalies and data inconsistency.
-```
+````
 
 ## Guidelines Covered
 

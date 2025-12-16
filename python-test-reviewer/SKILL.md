@@ -70,7 +70,7 @@ Use the 25 guidelines embedded below. Each guideline includes:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Test Review: [Module/Function Name]
 
 ### ✅ Well-Tested Code
@@ -110,7 +110,7 @@ Use the 25 guidelines embedded below. Each guideline includes:
 
 ### 💡 Testing Wisdom
 > "Tests should verify behavior, not implementation." - Martin Fowler
-```
+````
 
 **Key Requirements:**
 - Show production code FIRST before test strategies

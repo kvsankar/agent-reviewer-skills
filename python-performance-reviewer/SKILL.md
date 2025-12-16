@@ -75,7 +75,7 @@ Use the 50+ guidelines embedded below. All guidelines include:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Performance Review: [File/Function Name]
 
 ### ✅ Efficient Code
@@ -114,7 +114,7 @@ Use the 50+ guidelines embedded below. All guidelines include:
 
 #### [MNEMONIC-ID]: [Suggestion]
 [Same structure as above]
-```
+````
 
 **Key Requirements:**
 - Start each issue with **MNEMONIC ID in bold** (e.g., **ALGO-COMPLEX**)

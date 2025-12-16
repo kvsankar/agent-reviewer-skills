@@ -84,7 +84,7 @@ A comprehensive security review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Security & Privacy Review: UserController
 
 ### 🔴 Critical Issues (Immediate Fix Required)
@@ -109,7 +109,7 @@ db.query(query, [userId]);
 SQL injection allows attackers to execute arbitrary SQL, leading to data theft, modification, or deletion.
 
 **Compliance:** OWASP A03:2021 - Injection, CWE-89
-```
+````
 
 ## The 72 Security Guidelines
 

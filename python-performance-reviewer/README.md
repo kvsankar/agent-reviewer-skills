@@ -87,7 +87,7 @@ A comprehensive performance review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Performance Review: process_users.py
 
 ### 🐌 Performance Issues
@@ -117,7 +117,7 @@ def has_duplicates(items):
 - Reduces complexity from O(n²) to O(n)
 
 **Related:** LIST-VS-SET, DICT-LOOKUP
-```
+````
 
 ## The 50+ Performance Guidelines
 

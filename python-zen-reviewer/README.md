@@ -74,7 +74,7 @@ A structured Zen of Python review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Zen of Python Review: user_manager.py
 
 ### ✅ Pythonic Strengths
@@ -132,7 +132,7 @@ Python's built-in sum() is optimized, well-tested, and immediately recognizable 
 
 ### 🎓 Zen Wisdom
 > "Beautiful is better than ugly. Explicit is better than implicit."
-```
+````
 
 ## The 40+ Guidelines
 

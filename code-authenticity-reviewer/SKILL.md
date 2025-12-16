@@ -53,7 +53,7 @@ Use the 25 guidelines below. Each has a mnemonic ID that you must reference in y
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Code Authenticity Review: [File/Function Name]
 
 ### Authenticity Score: [HIGH/MEDIUM/LOW]
@@ -89,7 +89,7 @@ Use the 25 guidelines below. Each has a mnemonic ID that you must reference in y
 - [ ] Tests verify actual behavior
 - [ ] Claims backed by computation
 - [ ] References point to real code
-```
+````
 
 ### Authenticity Score Reference
 

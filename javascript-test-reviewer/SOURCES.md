@@ -6,7 +6,7 @@ This JavaScript Test Reviewer skill was created through extensive research of au
 
 **Philosophy:** Teach developers HOW to think about testing in JavaScript/TypeScript, emphasizing Testing Library principles and user-centric approaches.
 
-**Created:** January 2025
+**Created:** November 2025
 
 ---
 
@@ -333,9 +333,9 @@ This JavaScript Test Reviewer skill was created through extensive research of au
 ## Research Process
 
 ### Web Searches Performed
-1. **"Jest best practices official documentation 2024"** - Found Jest docs, patterns
+1. **"Jest best practices official documentation 2025"** - Found Jest docs, patterns
 2. **"Testing Library principles Kent C Dodds"** - Located Testing Library philosophy
-3. **"JavaScript testing strategies patterns 2024"** - Yoni Goldberg's guide
+3. **"JavaScript testing strategies patterns 2025"** - Yoni Goldberg's guide
 4. **"React Testing Library vs Enzyme comparison"** - User-centric vs implementation testing
 5. **"MSW Mock Service Worker examples patterns"** - API mocking best practices
 6. **"Cypress E2E testing best practices page object pattern"** - E2E organization
@@ -532,8 +532,8 @@ All guidelines were verified against:
 ## Updates and Maintenance
 
 - **Version:** 1.0
-- **Created:** January 2025
-- **Last Updated:** January 2025
+- **Created:** November 2025
+- **Last Updated:** November 2025
 - **JavaScript Compatibility:** ES6+, modern async/await
 - **Framework Versions:**
   - Jest 29+
@@ -659,7 +659,7 @@ All based on Testing Library, Kent C. Dodds, Jest documentation, and modern Java
 
 ---
 
-**Created:** January 2025
-**Last Updated:** January 2025
+**Created:** November 2025
+**Last Updated:** November 2025
 **Skill Version:** 1.0
 **Focus:** User-centric testing, quality over coverage, multiple strategies with trade-offs

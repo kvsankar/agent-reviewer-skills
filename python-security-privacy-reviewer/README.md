@@ -72,7 +72,7 @@ A structured security and privacy review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Security & Privacy Review: user_auth.py
 
 ### ✅ Strengths
@@ -204,7 +204,7 @@ MFA significantly reduces account takeover risk even if passwords are compromise
 - [x] PII Encryption - PII encrypted at rest
 - [ ] PII Logging - Email logged in plaintext
 - [ ] GDPR Article 32 - Security measures incomplete
-```
+````
 
 ## The 60+ Guidelines
 

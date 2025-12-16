@@ -6,7 +6,7 @@ This JavaScript Security & Privacy Reviewer skill was created through extensive 
 
 **Philosophy:** Teach developers HOW to write secure JavaScript/TypeScript code by showing real vulnerabilities and their fixes, mapped to industry standards.
 
-**Created:** January 2025
+**Created:** November 2025
 
 ---
 
@@ -355,7 +355,7 @@ This JavaScript Security & Privacy Reviewer skill was created through extensive 
 
 ### Web Searches Performed
 1. **"OWASP Top 10 2021"** - Latest web security risks
-2. **"Node.js security best practices 2024"** - Platform-specific security
+2. **"Node.js security best practices 2025"** - Platform-specific security
 3. **"JavaScript XSS prevention"** - XSS mitigation techniques
 4. **"GDPR technical requirements"** - Privacy compliance
 5. **"JWT security best practices"** - Token security
@@ -473,8 +473,8 @@ All guidelines were verified against:
 ## Updates and Maintenance
 
 - **Version:** 1.0
-- **Created:** January 2025
-- **Last Updated:** January 2025
+- **Created:** November 2025
+- **Last Updated:** November 2025
 - **JavaScript Compatibility:** ES6+, Node.js 14+
 - **Framework Coverage:** React, Vue, Angular, Express, Fastify, NestJS
 
@@ -562,7 +562,7 @@ All based on OWASP, CWE, NIST, and GDPR standards.
 
 ---
 
-**Created:** January 2025
-**Last Updated:** January 2025
+**Created:** November 2025
+**Last Updated:** November 2025
 **Skill Version:** 1.0
 **Focus:** OWASP Top 10, GDPR/CCPA compliance, JavaScript/Node.js security

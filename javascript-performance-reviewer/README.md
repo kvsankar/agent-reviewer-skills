@@ -88,7 +88,7 @@ A comprehensive performance review with:
 
 ### Example Review
 
-```markdown
+````markdown
 ## Performance Review: UserList.jsx
 
 ### 🐌 Performance Issues
@@ -130,7 +130,7 @@ function matchUsers(users, orders) {
 - 900x faster for large datasets
 
 **Related:** ALGO-COMPLEX, DATA-STRUCTURE
-```
+````
 
 ## The 55+ Performance Guidelines
 

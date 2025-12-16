@@ -6,7 +6,7 @@ This JavaScript Refactoring Reviewer skill was created through extensive researc
 
 **Philosophy:** Teach developers HOW to refactor JavaScript/TypeScript code systematically, following proven principles (SOLID, DRY) and modern JavaScript patterns (ES6+).
 
-**Created:** January 2025
+**Created:** November 2025
 
 ---
 
@@ -320,7 +320,7 @@ This JavaScript Refactoring Reviewer skill was created through extensive researc
 ## Research Process
 
 ### Web Searches Performed
-1. **"JavaScript refactoring best practices 2024"** - Modern refactoring patterns
+1. **"JavaScript refactoring best practices 2025"** - Modern refactoring patterns
 2. **"SOLID principles JavaScript examples"** - SOLID in JavaScript context
 3. **"clean-code-javascript patterns"** - Clean code for JavaScript
 4. **"Martin Fowler refactoring catalog"** - Refactoring techniques
@@ -469,8 +469,8 @@ All guidelines were verified against:
 ## Updates and Maintenance
 
 - **Version:** 1.0
-- **Created:** January 2025
-- **Last Updated:** January 2025
+- **Created:** November 2025
+- **Last Updated:** November 2025
 - **JavaScript Compatibility:** ES6+ (ES2015 and later)
 - **TypeScript Compatibility:** All examples work in TypeScript
 
@@ -616,7 +616,7 @@ Combined with modern JavaScript best practices:
 
 ---
 
-**Created:** January 2025
-**Last Updated:** January 2025
+**Created:** November 2025
+**Last Updated:** November 2025
 **Skill Version:** 1.0
 **Focus:** Practical JavaScript/TypeScript refactoring based on established principles and modern best practices

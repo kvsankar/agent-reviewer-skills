@@ -69,7 +69,7 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Format/Style Refactoring Review: [File/Function Name]
 
 ### ✅ Well-Structured Code
@@ -110,7 +110,7 @@ Use the 40+ guidelines embedded below. All guidelines include:
 
 ### 💡 Refactoring Wisdom
 > "Don't fight the linter—refactor so it has nothing to complain about." - Brandon Rhodes
-```
+````
 
 **Key Requirements:**
 - Start each suggestion with **Style Issue + MNEMONIC ID**

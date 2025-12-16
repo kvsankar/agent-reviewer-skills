@@ -86,7 +86,7 @@ Use the 50+ guidelines embedded below. Each guideline includes:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Playwright Test Review: [Test Suite/File Name]
 
 ### ✅ Strengths
@@ -133,7 +133,7 @@ Use the 50+ guidelines embedded below. Each guideline includes:
 - [ ] No hardcoded timeouts
 - [ ] Proper error handling
 - [ ] Accessibility testing
-```
+````
 
 ---
 

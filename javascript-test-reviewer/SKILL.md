@@ -82,7 +82,7 @@ Use the 55+ guidelines embedded below. Each guideline includes:
 
 **Required Review Structure:**
 
-```markdown
+````markdown
 ## Test Review: [Module/Function Name]
 
 ### ✅ Well-Tested Code
@@ -122,7 +122,7 @@ Use the 55+ guidelines embedded below. Each guideline includes:
 
 ### 💡 Testing Wisdom
 > "Write tests. Not too many. Mostly integration." - Kent C. Dodds
-```
+````
 
 **Key Requirements:**
 - Show production code FIRST before test strategies
