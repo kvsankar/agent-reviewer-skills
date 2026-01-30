@@ -126,7 +126,16 @@ REVIEWERS = {
         'patterns': ['*.jsx', '*.tsx', '*.js', '*.ts'],
         'description': 'Reviews React code for best practices and patterns',
     },
-    # Other reviewers (4)
+    'javascript-react-native-expo-reviewer': {
+        'patterns': ['*.js', '*.jsx', '*.ts', '*.tsx', 'app.json', 'app.config.js', 'app.config.ts', 'eas.json'],
+        'description': 'Reviews React Native code developed with Expo',
+    },
+    # Mobile testing (1)
+    'appium-test-reviewer': {
+        'patterns': ['*.test.js', '*.test.ts', '*.spec.js', '*.spec.ts', '**/test/**/*.py', '**/tests/**/*.py', '**/*_test.py', '**/*Test.java', '**/*Test.kt'],
+        'description': 'Reviews Appium mobile automation tests',
+    },
+    # Other reviewers (6)
     'agile-requirements-reviewer': {
         'patterns': ['*.md', 'requirements.txt', 'REQUIREMENTS.md', 'stories/*.md', 'docs/*.md'],
         'description': 'Reviews requirements, user stories, and specifications',
@@ -834,26 +843,29 @@ Available models:
   - claude-sonnet-4-20250514 (default): Fast, intelligent model for daily use
   - claude-opus-4-20250514: Most capable model for complex tasks
 
-Available reviewers (21 total):
+Available reviewers (23 total):
 
   Python (8):
     python-refactoring-reviewer, python-functional-reviewer, python-zen-reviewer,
     python-format-refactoring-reviewer, python-test-reviewer,
     python-security-privacy-reviewer, python-performance-reviewer, python-rhodes-reviewer
 
-  JavaScript/TypeScript (7):
+  JavaScript/TypeScript (8):
     javascript-test-reviewer, javascript-refactoring-reviewer,
     javascript-format-refactoring-reviewer, javascript-functional-reviewer,
     javascript-security-privacy-reviewer, javascript-performance-reviewer,
-    react-reviewer
+    react-reviewer, javascript-react-native-expo-reviewer
+
+  Mobile Testing (1):
+    appium-test-reviewer
 
   Other (6):
     agile-requirements-reviewer, django-reviewer, openapi-reviewer,
     database-schema-reviewer, code-authenticity-reviewer, playwright-test-reviewer
 
 Available tags:
-  python, javascript/js, react, django, security, testing/tests, functional/fp,
-  quality, playwright/e2e, rhodes, complete/all
+  python, javascript/js, react, react-native/expo, mobile, django, security,
+  testing/tests, functional/fp, quality, playwright/e2e, appium, rhodes, complete/all
 
 Examples:
   # Review Python project (8 reviewers)

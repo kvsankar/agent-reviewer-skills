@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a collection of 20 Claude Code skills for code review, requirements analysis, and software quality. Each skill is a specialized reviewer that provides detailed analysis with concrete examples, mnemonic IDs, and actionable recommendations.
+This is a collection of 23 Claude Code skills for code review, requirements analysis, and software quality. Each skill is a specialized reviewer that provides detailed analysis with concrete examples, mnemonic IDs, and actionable recommendations.
 
 The repository consists of:
-- **20 skill directories** (`*-reviewer/`) containing SKILL.md, README.md, and SOURCES.md
+- **23 skill directories** (`*-reviewer/`) containing SKILL.md, README.md, and SOURCES.md
 - **Installation script** (`install_skills.py`) for automated deployment to Windows/WSL
 - **Review tool** (`review-tool/`) for automated GitHub repository reviews using the Claude Agent SDK
 
@@ -15,7 +15,7 @@ The repository consists of:
 
 ```
 claude-skills/
-├── *-reviewer/              # 20 skill directories
+├── *-reviewer/              # 23 skill directories
 │   ├── SKILL.md            # Skill definition and review guidelines
 │   ├── README.md           # User documentation
 │   └── SOURCES.md          # Attribution and references
@@ -30,7 +30,7 @@ claude-skills/
 
 ## Available Skills
 
-### Python Skills (7)
+### Python Skills (8)
 - `python-refactoring-reviewer` - Code smells, SOLID, design patterns
 - `python-functional-reviewer` - Functional programming patterns
 - `python-zen-reviewer` - PEP 20 principles
@@ -38,8 +38,9 @@ claude-skills/
 - `python-test-reviewer` - Test quality and strategies
 - `python-security-privacy-reviewer` - Security, OWASP, GDPR
 - `python-performance-reviewer` - Performance optimization
+- `python-rhodes-reviewer` - Brandon Rhodes' Pythonic patterns
 
-### JavaScript/TypeScript Skills (7)
+### JavaScript/TypeScript Skills (8)
 - `javascript-test-reviewer` - Jest, Vitest, Testing Library
 - `javascript-refactoring-reviewer` - SOLID, modern patterns
 - `javascript-format-refactoring-reviewer` - ESLint/Prettier fixes
@@ -47,6 +48,10 @@ claude-skills/
 - `javascript-security-privacy-reviewer` - XSS, CSRF, OWASP
 - `javascript-performance-reviewer` - Performance optimization
 - `react-reviewer` - React best practices, hooks
+- `javascript-react-native-expo-reviewer` - React Native with Expo
+
+### Mobile Testing Skills (1)
+- `appium-test-reviewer` - Appium mobile automation tests
 
 ### Other Skills (6)
 - `agile-requirements-reviewer` - Requirements, user stories
@@ -81,9 +86,10 @@ cd review-tool
 ./review-cli.py --repo <URL> --reviewer python
 
 # Multiple reviewers using tags
-./review-cli.py --repo <URL> --reviewer python    # All 7 Python reviewers
-./review-cli.py --repo <URL> --reviewer javascript # All 7 JS reviewers
-./review-cli.py --repo <URL> --reviewer complete   # All 20 reviewers
+./review-cli.py --repo <URL> --reviewer python    # All 8 Python reviewers
+./review-cli.py --repo <URL> --reviewer javascript # All 8 JS reviewers
+./review-cli.py --repo <URL> --reviewer mobile     # React Native + Appium
+./review-cli.py --repo <URL> --reviewer complete   # All 23 reviewers
 
 # Batch mode (small repos only)
 ./review-cli.py --repo <URL> --reviewer python --mode batch
@@ -160,9 +166,10 @@ Skills are self-contained with no external dependencies. All guidelines are embe
 - API Key: Uses `ANTHROPIC_API_KEY` environment variable
 
 **Reviewer tags** (tags.yaml):
-- Tags expand to multiple reviewers (e.g., `python` → 7 reviewers)
+- Tags expand to multiple reviewers (e.g., `python` → 8 reviewers)
 - Each reviewer runs independently with fresh context
 - Prevents cross-contamination between reviews
+- Mobile tags: `mobile`, `react-native`, `expo`, `appium`
 
 ### Key Files
 

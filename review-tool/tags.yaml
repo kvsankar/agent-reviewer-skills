@@ -103,6 +103,35 @@ react:
     - javascript-security-privacy-reviewer
     - javascript-test-reviewer
 
+# React Native / Expo
+react-native:
+  description: React Native with Expo best practices
+  reviewers:
+    - javascript-react-native-expo-reviewer
+    - react-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-security-privacy-reviewer
+
+expo:
+  description: Alias for react-native
+  reviewers:
+    - javascript-react-native-expo-reviewer
+    - react-reviewer
+    - javascript-refactoring-reviewer
+    - javascript-security-privacy-reviewer
+
+# Mobile testing
+mobile:
+  description: Mobile development and testing (React Native, Appium)
+  reviewers:
+    - javascript-react-native-expo-reviewer
+    - appium-test-reviewer
+
+appium:
+  description: Appium mobile automation tests
+  reviewers:
+    - appium-test-reviewer
+
 # Testing
 testing:
   description: Test quality, coverage, and patterns
@@ -110,6 +139,7 @@ testing:
     - python-test-reviewer
     - javascript-test-reviewer
     - playwright-test-reviewer
+    - appium-test-reviewer
 
 tests:
   description: Alias for testing
@@ -117,6 +147,7 @@ tests:
     - python-test-reviewer
     - javascript-test-reviewer
     - playwright-test-reviewer
+    - appium-test-reviewer
 
 # E2E / Playwright
 playwright:
@@ -159,7 +190,7 @@ pythonic:
 
 # Comprehensive
 complete:
-  description: All available reviewers (generates 21 reports)
+  description: All available reviewers (generates 23 reports)
   reviewers:
     # Python reviewers (8)
     - python-refactoring-reviewer
@@ -170,7 +201,7 @@ complete:
     - python-security-privacy-reviewer
     - python-performance-reviewer
     - python-rhodes-reviewer
-    # JavaScript reviewers (7)
+    # JavaScript reviewers (8)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer
     - javascript-format-refactoring-reviewer
@@ -178,6 +209,9 @@ complete:
     - javascript-security-privacy-reviewer
     - javascript-performance-reviewer
     - react-reviewer
+    - javascript-react-native-expo-reviewer
+    # Mobile testing (1)
+    - appium-test-reviewer
     # Other reviewers (6)
     - agile-requirements-reviewer
     - django-reviewer
@@ -198,7 +232,7 @@ all:
     - python-security-privacy-reviewer
     - python-performance-reviewer
     - python-rhodes-reviewer
-    # JavaScript reviewers (7)
+    # JavaScript reviewers (8)
     - javascript-test-reviewer
     - javascript-refactoring-reviewer
     - javascript-format-refactoring-reviewer
@@ -206,6 +240,9 @@ all:
     - javascript-security-privacy-reviewer
     - javascript-performance-reviewer
     - react-reviewer
+    - javascript-react-native-expo-reviewer
+    # Mobile testing (1)
+    - appium-test-reviewer
     # Other reviewers (6)
     - agile-requirements-reviewer
     - django-reviewer
