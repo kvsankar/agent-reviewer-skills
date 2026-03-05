@@ -49,9 +49,9 @@ When reviewing React code:
 
 ## React Guidelines
 
-### 1. Component Design (10 guidelines)
+## 1. Component Design (10 guidelines)
 
-#### SINGLE-RESPONSIBILITY: Components Should Do One Thing
+### SINGLE-RESPONSIBILITY: Components Should Do One Thing
 
 **Severity:** Warning
 
@@ -126,7 +126,7 @@ function NotificationsSidebar({ userId }) {
 
 ---
 
-#### COMPOSITION: Prefer Composition Over Props Drilling
+### COMPOSITION: Prefer Composition Over Props Drilling
 
 **Severity:** Warning
 
@@ -218,7 +218,7 @@ function Card({ header, children, footer }) {
 
 ---
 
-#### PROP-TYPES: Define Clear Component Interfaces
+### PROP-TYPES: Define Clear Component Interfaces
 
 **Severity:** Warning
 
@@ -310,7 +310,7 @@ UserCard.defaultProps = {
 
 ---
 
-#### CONTROLLED-VS-UNCONTROLLED: Choose Appropriate Form Strategy
+### CONTROLLED-VS-UNCONTROLLED: Choose Appropriate Form Strategy
 
 **Severity:** Info
 
@@ -393,7 +393,7 @@ function RegistrationForm({ onSubmit }) {
 
 ---
 
-#### LIFTING-STATE: Lift State to Common Ancestor
+### LIFTING-STATE: Lift State to Common Ancestor
 
 **Severity:** Info
 
@@ -479,7 +479,7 @@ function Calculator() {
 
 ---
 
-#### STATE-COLOCATION: Keep State Close to Where It's Used
+### STATE-COLOCATION: Keep State Close to Where It's Used
 
 **Severity:** Warning
 
@@ -563,7 +563,7 @@ function TabPanel() {
 
 ---
 
-#### DERIVED-STATE: Avoid Redundant State
+### DERIVED-STATE: Avoid Redundant State
 
 **Severity:** Warning
 
@@ -628,7 +628,7 @@ function ProductList({ products }) {
 
 ---
 
-#### AVOID-SYNC: Don't Sync State with useEffect
+### AVOID-SYNC: Don't Sync State with useEffect
 
 **Severity:** Warning
 
@@ -708,7 +708,7 @@ function EditForm({ userId }) {
 
 ---
 
-#### CHILDREN-PATTERN: Use Children for Flexible Composition
+### CHILDREN-PATTERN: Use Children for Flexible Composition
 
 **Severity:** Info
 
@@ -785,7 +785,7 @@ function ModalFooter({ children }) {
 
 ---
 
-#### COMPONENT-NAMING: Use Clear Naming Conventions
+### COMPONENT-NAMING: Use Clear Naming Conventions
 
 **Severity:** Info
 
@@ -840,9 +840,9 @@ function UserList({ users }) {
 
 ---
 
-### 2. Hooks (12 guidelines)
+## 2. Hooks (12 guidelines)
 
-#### USE-EFFECT-DEPS: Correct useEffect Dependencies
+### USE-EFFECT-DEPS: Correct useEffect Dependencies
 
 **Severity:** Critical
 
@@ -919,7 +919,7 @@ function DataFetcher({ fetchFn }) {
 
 ---
 
-#### USE-EFFECT-CLEANUP: Always Clean Up Side Effects
+### USE-EFFECT-CLEANUP: Always Clean Up Side Effects
 
 **Severity:** Critical
 
@@ -1033,7 +1033,7 @@ function UserProfile({ userId }) {
 
 ---
 
-#### CUSTOM-HOOKS: Extract Reusable Logic into Custom Hooks
+### CUSTOM-HOOKS: Extract Reusable Logic into Custom Hooks
 
 **Severity:** Info
 
@@ -1161,7 +1161,7 @@ function useDebounce(value, delay) {
 
 ---
 
-#### HOOK-RULES: Follow the Rules of Hooks
+### HOOK-RULES: Follow the Rules of Hooks
 
 **Severity:** Critical
 
@@ -1267,7 +1267,7 @@ function Form() {
 
 ---
 
-#### USE-CALLBACK: Stabilize Function References
+### USE-CALLBACK: Stabilize Function References
 
 **Severity:** Warning
 
@@ -1340,7 +1340,7 @@ function SimpleButton({ onClick }) {
 
 ---
 
-#### USE-MEMO: Memoize Expensive Calculations
+### USE-MEMO: Memoize Expensive Calculations
 
 **Severity:** Warning
 
@@ -1395,7 +1395,7 @@ function Greeting({ firstName, lastName }) {
 
 ---
 
-#### STALE-CLOSURE: Avoid Stale Closures
+### STALE-CLOSURE: Avoid Stale Closures
 
 **Severity:** Critical
 
@@ -1502,7 +1502,7 @@ function Counter() {
 
 ---
 
-#### USE-REF: Use Refs Appropriately
+### USE-REF: Use Refs Appropriately
 
 **Severity:** Info
 
@@ -1600,7 +1600,7 @@ function MeasuredComponent() {
 
 ---
 
-#### USE-REDUCER: Use useReducer for Complex State
+### USE-REDUCER: Use useReducer for Complex State
 
 **Severity:** Info
 
@@ -1731,7 +1731,7 @@ function ShoppingCart() {
 
 ---
 
-#### USE-CONTEXT: Use Context Effectively
+### USE-CONTEXT: Use Context Effectively
 
 **Severity:** Warning
 
@@ -1836,7 +1836,7 @@ function App() {
 
 ---
 
-#### USE-LAYOUT-EFFECT: Know When to Use useLayoutEffect
+### USE-LAYOUT-EFFECT: Know When to Use useLayoutEffect
 
 **Severity:** Info
 
@@ -1905,7 +1905,7 @@ function AutosizeTextarea({ value, onChange }) {
 
 ---
 
-#### OVER-MEMO: Don't Over-Memoize
+### OVER-MEMO: Don't Over-Memoize
 
 **Severity:** Info
 
@@ -1996,9 +1996,9 @@ function Dashboard({ data }) {
 
 ---
 
-### 3. Rendering & Performance (8 guidelines)
+## 3. Rendering & Performance (8 guidelines)
 
-#### MEMO-COMPONENT: Memoize Components Appropriately
+### MEMO-COMPONENT: Memoize Components Appropriately
 
 **Severity:** Warning
 
@@ -2085,7 +2085,7 @@ function ProductList({ products, category }) {
 
 ---
 
-#### KEY-PROP: Use Keys Correctly
+### KEY-PROP: Use Keys Correctly
 
 **Severity:** Critical
 
@@ -2148,7 +2148,7 @@ function CommentList({ comments }) {
 
 ---
 
-#### LIST-RENDER: Optimize List Rendering
+### LIST-RENDER: Optimize List Rendering
 
 **Severity:** Warning
 
@@ -2227,7 +2227,7 @@ function VirtualizedUserList({ users }) {
 
 ---
 
-#### CONDITIONAL-RENDER: Handle Conditional Rendering Properly
+### CONDITIONAL-RENDER: Handle Conditional Rendering Properly
 
 **Severity:** Info
 
@@ -2314,7 +2314,7 @@ function UserStatus({ user }) {
 
 ---
 
-#### AVOID-INLINE-OBJECTS: Avoid Creating Objects in JSX
+### AVOID-INLINE-OBJECTS: Avoid Creating Objects in JSX
 
 **Severity:** Warning
 
@@ -2377,7 +2377,7 @@ function Dashboard() {
 
 ---
 
-#### LAZY-LOADING: Lazy Load Components
+### LAZY-LOADING: Lazy Load Components
 
 **Severity:** Info
 
@@ -2460,7 +2460,7 @@ function TabButton({ tab, onSelect }) {
 
 ---
 
-#### SUSPENSE: Use Suspense for Loading States
+### SUSPENSE: Use Suspense for Loading States
 
 **Severity:** Info
 
@@ -2560,7 +2560,7 @@ function Dashboard() {
 
 ---
 
-#### TRANSITIONS: Use Transitions for Non-Urgent Updates
+### TRANSITIONS: Use Transitions for Non-Urgent Updates
 
 **Severity:** Info
 
@@ -2649,9 +2649,9 @@ function SearchResults({ query }) {
 
 ---
 
-### 4. Patterns (8 guidelines)
+## 4. Patterns (8 guidelines)
 
-#### COMPOUND-COMPONENTS: Use Compound Components Pattern
+### COMPOUND-COMPONENTS: Use Compound Components Pattern
 
 **Severity:** Info
 
@@ -2763,7 +2763,7 @@ function AccordionContent({ children, isExpanded }) {
 
 ---
 
-#### RENDER-PROPS: Use Render Props for Flexible Rendering
+### RENDER-PROPS: Use Render Props for Flexible Rendering
 
 **Severity:** Info
 
@@ -2836,7 +2836,7 @@ function MyComponent() {
 
 ---
 
-#### HIGHER-ORDER-COMPONENTS: Use HOCs Sparingly
+### HIGHER-ORDER-COMPONENTS: Use HOCs Sparingly
 
 **Severity:** Info
 
@@ -2915,7 +2915,7 @@ function RequireAuth({ children }) {
 
 ---
 
-#### CONTROLLED-COMPONENTS: Build Controlled Components
+### CONTROLLED-COMPONENTS: Build Controlled Components
 
 **Severity:** Info
 
@@ -2990,7 +2990,7 @@ const [selected, setSelected] = useState(null);
 
 ---
 
-#### CONTAINER-PRESENTATIONAL: Separate Logic from Presentation
+### CONTAINER-PRESENTATIONAL: Separate Logic from Presentation
 
 **Severity:** Info
 
@@ -3103,7 +3103,7 @@ function UserList() {
 
 ---
 
-#### FORWARD-REF: Forward Refs to DOM Elements
+### FORWARD-REF: Forward Refs to DOM Elements
 
 **Severity:** Warning
 
@@ -3198,7 +3198,7 @@ function Form() {
 
 ---
 
-#### PORTALS: Use Portals for Modals and Tooltips
+### PORTALS: Use Portals for Modals and Tooltips
 
 **Severity:** Info
 
@@ -3289,7 +3289,7 @@ function Tooltip({ targetRef, content, isOpen }) {
 
 ---
 
-#### CONTEXT-MODULE: Organize Context with Module Pattern
+### CONTEXT-MODULE: Organize Context with Module Pattern
 
 **Severity:** Info
 
@@ -3377,9 +3377,9 @@ export function useUser() {
 
 ---
 
-### 5. Accessibility (8 guidelines)
+## 5. Accessibility (8 guidelines)
 
-#### SEMANTIC-HTML: Use Semantic HTML Elements
+### SEMANTIC-HTML: Use Semantic HTML Elements
 
 **Severity:** Warning
 
@@ -3458,7 +3458,7 @@ function Article() {
 
 ---
 
-#### ARIA-LABELS: Use ARIA Attributes Correctly
+### ARIA-LABELS: Use ARIA Attributes Correctly
 
 **Severity:** Warning
 
@@ -3552,7 +3552,7 @@ function Accordion({ items }) {
 
 ---
 
-#### KEYBOARD-NAV: Ensure Keyboard Navigation
+### KEYBOARD-NAV: Ensure Keyboard Navigation
 
 **Severity:** Critical
 
@@ -3673,7 +3673,7 @@ function Dropdown({ options, onSelect }) {
 
 ---
 
-#### FOCUS-MANAGEMENT: Manage Focus Properly
+### FOCUS-MANAGEMENT: Manage Focus Properly
 
 **Severity:** Warning
 
@@ -3791,7 +3791,7 @@ function Modal({ isOpen, onClose, children }) {
 
 ---
 
-#### HEADING-ORDER: Use Correct Heading Hierarchy
+### HEADING-ORDER: Use Correct Heading Hierarchy
 
 **Severity:** Warning
 
@@ -3868,7 +3868,7 @@ function Section({ title, level = 2, children }) {
 
 ---
 
-#### SCREEN-READER: Consider Screen Reader Experience
+### SCREEN-READER: Consider Screen Reader Experience
 
 **Severity:** Warning
 
@@ -3981,7 +3981,7 @@ function ScreenReaderOnly({ children }) {
 
 ---
 
-#### COLOR-CONTRAST: Ensure Sufficient Color Contrast
+### COLOR-CONTRAST: Ensure Sufficient Color Contrast
 
 **Severity:** Warning
 
@@ -4060,7 +4060,7 @@ function Button({ variant = 'primary', children }) {
 
 ---
 
-#### FOCUS-VISIBLE: Style Focus States
+### FOCUS-VISIBLE: Style Focus States
 
 **Severity:** Warning
 
@@ -4140,9 +4140,9 @@ function Button({ children, onClick }) {
 
 ---
 
-### 6. Error Handling (5 guidelines)
+## 6. Error Handling (5 guidelines)
 
-#### ERROR-BOUNDARY: Use Error Boundaries
+### ERROR-BOUNDARY: Use Error Boundaries
 
 **Severity:** Critical
 
@@ -4244,7 +4244,7 @@ function App() {
 
 ---
 
-#### ASYNC-ERROR: Handle Async Errors Properly
+### ASYNC-ERROR: Handle Async Errors Properly
 
 **Severity:** Warning
 
@@ -4352,7 +4352,7 @@ function Form() {
 
 ---
 
-#### LOADING-STATE: Handle Loading States
+### LOADING-STATE: Handle Loading States
 
 **Severity:** Info
 
@@ -4446,7 +4446,7 @@ function DataList() {
 
 ---
 
-#### FORM-VALIDATION: Provide Clear Validation Feedback
+### FORM-VALIDATION: Provide Clear Validation Feedback
 
 **Severity:** Warning
 
@@ -4576,7 +4576,7 @@ function Form() {
 
 ---
 
-#### NULL-CHECK: Handle Null/Undefined Safely
+### NULL-CHECK: Handle Null/Undefined Safely
 
 **Severity:** Warning
 
@@ -4657,9 +4657,9 @@ function UserCard({ user = { name: 'Guest', address: null } }) {
 
 ---
 
-### 7. Testing (6 guidelines)
+## 7. Testing (6 guidelines)
 
-#### TEST-BEHAVIOR: Test Behavior, Not Implementation
+### TEST-BEHAVIOR: Test Behavior, Not Implementation
 
 **Severity:** Warning
 
@@ -4738,7 +4738,7 @@ it('should be keyboard navigable', async () => {
 
 ---
 
-#### TEST-QUERIES: Use Correct Testing Library Queries
+### TEST-QUERIES: Use Correct Testing Library Queries
 
 **Severity:** Info
 
@@ -4799,7 +4799,7 @@ it('shows error after invalid submit', async () => {
 
 ---
 
-#### MOCK-BOUNDARIES: Mock at System Boundaries
+### MOCK-BOUNDARIES: Mock at System Boundaries
 
 **Severity:** Info
 
@@ -4890,7 +4890,7 @@ beforeEach(() => {
 
 ---
 
-#### TEST-ASYNC: Handle Async Operations in Tests
+### TEST-ASYNC: Handle Async Operations in Tests
 
 **Severity:** Warning
 
@@ -4977,7 +4977,7 @@ it('searches after debounce', async () => {
 
 ---
 
-#### TEST-HOOK: Test Custom Hooks
+### TEST-HOOK: Test Custom Hooks
 
 **Severity:** Info
 
@@ -5066,7 +5066,7 @@ it('uses theme from context', () => {
 
 ---
 
-#### TEST-ACCESSIBILITY: Test Accessibility
+### TEST-ACCESSIBILITY: Test Accessibility
 
 **Severity:** Warning
 

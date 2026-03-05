@@ -38,7 +38,7 @@ When reviewing JavaScript/TypeScript code:
 5. **Consider Context** - Not all optimizations are worth the complexity
 6. **Use Mnemonic IDs** - Easy reference codes (e.g., ALGO-COMPLEX, DOM-BATCH)
 
-### Profiling Playbook
+## Profiling Playbook
 
 Before suggesting code changes, gather evidence:
 
@@ -63,9 +63,9 @@ Before suggesting code changes, gather evidence:
 
 ## Performance Guidelines
 
-### 1. Algorithm Complexity (8 guidelines)
+## 1. Algorithm Complexity (8 guidelines)
 
-#### ALGO-COMPLEX: Optimize Algorithm Complexity
+### ALGO-COMPLEX: Optimize Algorithm Complexity
 
 **Impact:** Critical
 
@@ -119,7 +119,7 @@ function hasDuplicates(arr) {
 
 ---
 
-#### NESTED-LOOP: Avoid Nested Loops
+### NESTED-LOOP: Avoid Nested Loops
 
 **Impact:** High
 
@@ -174,7 +174,7 @@ function matchUsers(users, orders) {
 
 ---
 
-#### LINEAR-SEARCH: Replace Linear Search with Binary Search or Map
+### LINEAR-SEARCH: Replace Linear Search with Binary Search or Map
 
 **Impact:** High
 
@@ -245,7 +245,7 @@ const exists = dataSet.has(target); // O(1)
 
 ---
 
-#### EARLY-EXIT: Return Early to Avoid Unnecessary Work
+### EARLY-EXIT: Return Early to Avoid Unnecessary Work
 
 **Impact:** Medium
 
@@ -301,7 +301,7 @@ function findExpensiveMatch(items) {
 
 ---
 
-#### CACHE-RESULT: Cache Expensive Computations
+### CACHE-RESULT: Cache Expensive Computations
 
 **Impact:** High
 
@@ -384,7 +384,7 @@ function ExpensiveComponent({ data }) {
 
 ---
 
-#### REDUNDANT-CALC: Eliminate Redundant Calculations
+### REDUNDANT-CALC: Eliminate Redundant Calculations
 
 **Impact:** Medium
 
@@ -446,7 +446,7 @@ function validateEmails(emails) {
 
 ---
 
-#### PRECOMPUTE: Precompute When Possible
+### PRECOMPUTE: Precompute When Possible
 
 **Impact:** Medium
 
@@ -517,7 +517,7 @@ function fibonacci(n) {
 
 ---
 
-#### DEBOUNCE-THROTTLE: Debounce/Throttle Frequent Operations
+### DEBOUNCE-THROTTLE: Debounce/Throttle Frequent Operations
 
 **Impact:** High
 
@@ -615,9 +615,9 @@ window.addEventListener('scroll', () => {
 
 ---
 
-### 2. Data Structures (8 guidelines)
+## 2. Data Structures (8 guidelines)
 
-#### DATA-STRUCTURE: Choose Appropriate Data Structures
+### DATA-STRUCTURE: Choose Appropriate Data Structures
 
 **Impact:** High
 
@@ -685,7 +685,7 @@ function addTag(tag) {
 
 ---
 
-#### OBJECT-LITERAL: Use Object Literals for Small Lookups
+### OBJECT-LITERAL: Use Object Literals for Small Lookups
 
 **Impact:** Low
 
@@ -736,7 +736,7 @@ function getStatusCode(status) {
 
 ---
 
-#### ARRAY-METHODS: Use Appropriate Array Methods
+### ARRAY-METHODS: Use Appropriate Array Methods
 
 **Impact:** Medium
 
@@ -811,7 +811,7 @@ const squared = numbers.map(n => n * n);
 
 ---
 
-#### ARRAY-CHAIN: Optimize Array Method Chains
+### ARRAY-CHAIN: Optimize Array Method Chains
 
 **Impact:** Medium
 
@@ -881,7 +881,7 @@ const result = transduce(
 
 ---
 
-#### SPREAD-CLONE: Avoid Excessive Spreading
+### SPREAD-CLONE: Avoid Excessive Spreading
 
 **Impact:** Medium
 
@@ -954,7 +954,7 @@ const nextState = produce(state, draft => {
 
 ---
 
-#### IMMUTABLE-LIB: Use Immutable Libraries for Complex State
+### IMMUTABLE-LIB: Use Immutable Libraries for Complex State
 
 **Impact:** Medium
 
@@ -1013,7 +1013,7 @@ const next = state.setIn(['user', 'name'], 'Bob');  // Structural sharing
 
 ---
 
-#### WEAK-MAP: Use WeakMap for Object-Keyed Caches
+### WEAK-MAP: Use WeakMap for Object-Keyed Caches
 
 **Impact:** Medium
 
@@ -1087,7 +1087,7 @@ class Component {
 
 ---
 
-#### TYPED-ARRAYS: Use Typed Arrays for Numeric Data
+### TYPED-ARRAYS: Use Typed Arrays for Numeric Data
 
 **Impact:** High
 
@@ -1157,9 +1157,9 @@ gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
 ---
 
-### 3. Memory Management (6 guidelines)
+## 3. Memory Management (6 guidelines)
 
-#### MEMORY-LEAK: Avoid Memory Leaks
+### MEMORY-LEAK: Avoid Memory Leaks
 
 **Impact:** Critical
 
@@ -1273,7 +1273,7 @@ function process() {
 
 ---
 
-#### CLOSURE-SCOPE: Be Mindful of Closure Scope
+### CLOSURE-SCOPE: Be Mindful of Closure Scope
 
 **Impact:** Medium
 
@@ -1342,7 +1342,7 @@ function createHandler(name) {
 
 ---
 
-#### LAZY-INIT: Lazy Initialize Expensive Objects
+### LAZY-INIT: Lazy Initialize Expensive Objects
 
 **Impact:** Medium
 
@@ -1429,7 +1429,7 @@ function App() {
 
 ---
 
-#### GC-FRIENDLY: Write Garbage Collector Friendly Code
+### GC-FRIENDLY: Write Garbage Collector Friendly Code
 
 **Impact:** Low
 
@@ -1506,7 +1506,7 @@ function removeParticle(particle) {
 
 ---
 
-#### DETACHED-DOM: Avoid Detached DOM Nodes
+### DETACHED-DOM: Avoid Detached DOM Nodes
 
 **Impact:** Medium
 
@@ -1578,7 +1578,7 @@ useEffect(() => {
 
 ---
 
-#### MEMORY-MEASURE: Measure Memory Usage
+### MEMORY-MEASURE: Measure Memory Usage
 
 **Impact:** Low (measurement tool, not optimization)
 
@@ -1651,10 +1651,10 @@ console.log('Object size:', roughSizeOfObject(myObject), 'bytes');
 
 ---
 
-### 4. DOM Operations (7 guidelines)
+## 4. DOM Operations (7 guidelines)
 
 
-#### DOM-BATCH: Batch DOM Operations
+### DOM-BATCH: Batch DOM Operations
 
 **Impact:** High
 
@@ -1718,7 +1718,7 @@ container.style.display = '';  // Single reflow
 
 ---
 
-#### LAYOUT-THRASH: Avoid Layout Thrashing
+### LAYOUT-THRASH: Avoid Layout Thrashing
 
 **Impact:** Critical
 
@@ -1810,7 +1810,7 @@ requestAnimationFrame(() => {
 
 ---
 
-#### VIRTUAL-SCROLL: Use Virtual Scrolling for Long Lists
+### VIRTUAL-SCROLL: Use Virtual Scrolling for Long Lists
 
 **Impact:** Critical
 
@@ -1908,7 +1908,7 @@ function App() {
 
 ---
 
-#### EVENT-PASSIVE: Use Passive Event Listeners
+### EVENT-PASSIVE: Use Passive Event Listeners
 
 **Impact:** Medium
 
@@ -1972,7 +1972,7 @@ useEffect(() => {
 
 ---
 
-#### EVENT-DELEGATE: Use Event Delegation
+### EVENT-DELEGATE: Use Event Delegation
 
 **Impact:** Medium
 
@@ -2043,7 +2043,7 @@ function List({ items }) {
 
 ---
 
-#### CSS-CHANGES: Use CSS for Animations, Not JavaScript
+### CSS-CHANGES: Use CSS for Animations, Not JavaScript
 
 **Impact:** High
 
@@ -2118,7 +2118,7 @@ element.animate([
 
 ---
 
-#### RAF-ANIMATION: Use requestAnimationFrame for JavaScript Animations
+### RAF-ANIMATION: Use requestAnimationFrame for JavaScript Animations
 
 **Impact:** Medium
 
@@ -2202,9 +2202,9 @@ cancelAnimationFrame(rafId);
 
 ---
 
-### 5. Async Operations (7 guidelines)
+## 5. Async Operations (7 guidelines)
 
-#### PROMISE-PARALLEL: Run Independent Promises in Parallel
+### PROMISE-PARALLEL: Run Independent Promises in Parallel
 
 **Impact:** High
 
@@ -2277,7 +2277,7 @@ async function fetchFastest() {
 
 ---
 
-#### ASYNC-AWAIT: Use Async/Await Over Promises Chains
+### ASYNC-AWAIT: Use Async/Await Over Promises Chains
 
 **Impact:** Low (readability, not performance)
 
@@ -2351,7 +2351,7 @@ const data = await fetchData();
 
 ---
 
-#### LAZY-LOAD: Lazy Load Heavy Resources
+### LAZY-LOAD: Lazy Load Heavy Resources
 
 **Impact:** High
 
@@ -2447,7 +2447,7 @@ function Button({ onClick }) {
 
 ---
 
-#### WEB-WORKERS: Use Web Workers for Heavy Computation
+### WEB-WORKERS: Use Web Workers for Heavy Computation
 
 **Impact:** High
 
@@ -2551,7 +2551,7 @@ function useWorker(workerFunction) {
 
 ---
 
-#### PRELOAD-PREFETCH: Use Resource Hints
+### PRELOAD-PREFETCH: Use Resource Hints
 
 **Impact:** Medium
 
@@ -2632,7 +2632,7 @@ function Link({ href, children }) {
 
 ---
 
-#### ABORT-REQUESTS: Cancel Unnecessary Requests
+### ABORT-REQUESTS: Cancel Unnecessary Requests
 
 **Impact:** Medium
 
@@ -2723,7 +2723,7 @@ cancel('Request canceled');
 
 ---
 
-#### STREAM-RESPONSE: Stream Large Responses
+### STREAM-RESPONSE: Stream Large Responses
 
 **Impact:** High
 
@@ -2806,9 +2806,9 @@ eventSource.close();
 
 ---
 
-### 6. Bundling & Loading (6 guidelines)
+## 6. Bundling & Loading (6 guidelines)
 
-#### CODE-SPLIT: Split Code by Route
+### CODE-SPLIT: Split Code by Route
 
 **Impact:** High
 
@@ -2891,7 +2891,7 @@ export default function Dashboard() {
 
 ---
 
-#### TREE-SHAKE: Enable Tree Shaking
+### TREE-SHAKE: Enable Tree Shaking
 
 **Impact:** Medium
 
@@ -2954,7 +2954,7 @@ import { format, parse } from 'date-fns';  // Only includes these 2 functions
 
 ---
 
-#### DYNAMIC-IMPORT: Use Dynamic Imports Strategically
+### DYNAMIC-IMPORT: Use Dynamic Imports Strategically
 
 **Impact:** Medium
 
@@ -3023,7 +3023,7 @@ button.addEventListener('click', async () => {
 
 ---
 
-#### COMPRESSION: Enable Compression
+### COMPRESSION: Enable Compression
 
 **Impact:** High
 
@@ -3100,7 +3100,7 @@ location ~ \.(js|css|svg)$ {
 
 ---
 
-#### BUNDLE-ANALYSIS: Analyze Bundle Size
+### BUNDLE-ANALYSIS: Analyze Bundle Size
 
 **Impact:** Low (analysis tool, not optimization)
 
@@ -3182,7 +3182,7 @@ module.exports = {
 
 ---
 
-#### CDN-ASSETS: Serve Assets from CDN
+### CDN-ASSETS: Serve Assets from CDN
 
 **Impact:** Medium
 
@@ -3252,9 +3252,9 @@ module.exports = {
 
 ---
 
-### 7. React-Specific (6 guidelines)
+## 7. React-Specific (6 guidelines)
 
-#### MEMO-COMPONENT: Memoize Components
+### MEMO-COMPONENT: Memoize Components
 
 **Impact:** Medium
 
@@ -3334,7 +3334,7 @@ function Parent() {
 
 ---
 
-#### KEY-OPTIMIZATION: Use Stable Keys in Lists
+### KEY-OPTIMIZATION: Use Stable Keys in Lists
 
 **Impact:** High
 
@@ -3398,7 +3398,7 @@ const items = data.map(item => ({
 
 ---
 
-#### STATE-COLOCATION: Colocate State
+### STATE-COLOCATION: Colocate State
 
 **Impact:** Medium
 
@@ -3477,7 +3477,7 @@ function UserEditor({ user }) {
 
 ---
 
-#### CONTEXT-SPLIT: Split Contexts
+### CONTEXT-SPLIT: Split Contexts
 
 **Impact:** High
 
@@ -3602,7 +3602,7 @@ function createSelectableContext() {
 
 ---
 
-#### VIRTUALIZE-LISTS: Virtualize Long Lists
+### VIRTUALIZE-LISTS: Virtualize Long Lists
 
 **Impact:** Critical
 
@@ -3610,7 +3610,7 @@ function createSelectableContext() {
 
 ---
 
-#### LAZY-COMPONENT: Lazy Load Components
+### LAZY-COMPONENT: Lazy Load Components
 
 **Impact:** High
 
@@ -3618,9 +3618,9 @@ function createSelectableContext() {
 
 ---
 
-### 8. Profiling & Measurement (5 guidelines)
+## 8. Profiling & Measurement (5 guidelines)
 
-#### PROFILE-FIRST: Profile Before Optimizing
+### PROFILE-FIRST: Profile Before Optimizing
 
 **Impact:** Critical (measurement, not optimization)
 
@@ -3687,7 +3687,7 @@ getTTFB(console.log); // Time to First Byte
 
 ---
 
-#### MEASURE-IMPACT: Measure Optimization Impact
+### MEASURE-IMPACT: Measure Optimization Impact
 
 **Impact:** Low (measurement)
 
@@ -3767,7 +3767,7 @@ compare({
 
 ---
 
-#### REAL-USER-MONITORING: Monitor Production Performance
+### REAL-USER-MONITORING: Monitor Production Performance
 
 **Impact:** Low (monitoring)
 
@@ -3839,7 +3839,7 @@ longTaskObserver.observe({ entryTypes: ['longtask'] });
 
 ---
 
-#### PERFORMANCE-BUDGET: Set Performance Budgets
+### PERFORMANCE-BUDGET: Set Performance Budgets
 
 **Impact:** Low (process, not optimization)
 
@@ -3917,7 +3917,7 @@ module.exports = {
 
 ---
 
-#### LIGHTHOUSE-CI: Automate Performance Testing
+### LIGHTHOUSE-CI: Automate Performance Testing
 
 **Impact:** Low (automation)
 
@@ -3957,7 +3957,7 @@ jobs:
 
 This section identifies the **absence of good patterns** (not just presence of anti-patterns). Use `MISSING-*` IDs for tracking.
 
-### 1. Profiling & Measurement Patterns
+## 1. Profiling & Measurement Patterns
 
 **Mnemonic:** **"MEASURE-BEFORE-OPTIMIZE"**
 
@@ -3995,7 +3995,7 @@ function processData(items) {
 }
 ```
 
-### 2. V8 Engine Optimization Patterns
+## 2. V8 Engine Optimization Patterns
 
 **Mnemonic:** **"HIDDEN-CLASSES-MATTER"** (Initialize consistent object shapes)
 
@@ -4044,7 +4044,7 @@ delete user.role;  // BAD: Forces dictionary mode
 user.role = null;  // GOOD: Preserves hidden class
 ```
 
-### 3. Event Loop Protection (Node.js)
+## 3. Event Loop Protection (Node.js)
 
 **Mnemonic:** **"NEVER-BLOCK-THE-LOOP"**
 
@@ -4120,7 +4120,7 @@ const VULNERABLE_REGEX = /(\w+)+$/;  // Nested quantifiers!
 // Input: "aaaaaaaaaaaaaaaaaaaaaaaaaaaa!" takes SECONDS
 ```
 
-### 4. React Memoization Patterns
+## 4. React Memoization Patterns
 
 **Mnemonic:** **"MEMO-WHERE-MEASURED"** (Not premature, but where profiled)
 
@@ -4194,7 +4194,7 @@ function Parent() {
 }
 ```
 
-### 5. Async & Promise Patterns
+## 5. Async & Promise Patterns
 
 **Mnemonic:** **"PARALLEL-NOT-SERIAL"**
 
@@ -4256,7 +4256,7 @@ async function loadDashboardSlow(userId) {
 // Total time: 200 + 300 + 150 = 650ms (should be 300ms!)
 ```
 
-### 6. DOM & Rendering Patterns
+## 6. DOM & Rendering Patterns
 
 **Mnemonic:** **"BATCH-READS-WRITES"**
 
@@ -4332,7 +4332,7 @@ function thrashingUpdate(elements) {
 }
 ```
 
-### 7. Bundle & Loading Patterns
+## 7. Bundle & Loading Patterns
 
 **Mnemonic:** **"SPLIT-LAZY-COMPRESS"**
 
@@ -4390,7 +4390,7 @@ import MassiveDataGrid from 'massive-data-grid';
 // Everything loaded upfront, even if user never uses it!
 ```
 
-### 8. Data Structure Selection
+## 8. Data Structure Selection
 
 **Mnemonic:** **"RIGHT-STRUCTURE-FOR-JOB"**
 

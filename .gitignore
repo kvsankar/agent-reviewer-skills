@@ -67,3 +67,5 @@ Thumbs.db
 reports/
 .env
 *.md.backup
+session-history/
+project-history.md
