@@ -486,7 +486,7 @@ def hash_data(data):
 
 ### SESSION-SECURE: Secure Session Management
 
-**Risk:** Session hijacking, fixation, cookie-based privilege escalation.
+**Risk:** Session hijacking, fixation attacks.
 
 **Vulnerable:**
 ```python
@@ -500,26 +500,10 @@ def login():
     session['user'] = request.form['username']
 ```
 
-**Also vulnerable — unsigned cookie auth:**
-```python
-def login(request):
-    user = authenticate(request.POST['username'], request.POST['password'])
-    if user:
-        response = redirect('/dashboard')
-        # Cookie can be freely modified by client!
-        response.set_cookie('userid', str(user.id))
-        response.set_cookie('role', 'user')
-        return response
-
-def dashboard(request):
-    # Trusting unsigned cookie for identity
-    userid = request.COOKIES.get('userid')
-    user = User.objects.get(id=userid)
-```
-
 **Secure:**
 ```python
 from flask import Flask, session
+import secrets
 import os
 
 app = Flask(__name__)
@@ -536,89 +520,44 @@ def login():
     session['user'] = request.form['username']
 ```
 
-**Secure — Django session-based auth:**
-```python
-from django.contrib.auth import login, authenticate
-
-def login_view(request):
-    user = authenticate(request, username=request.POST['username'],
-                        password=request.POST['password'])
-    if user:
-        login(request, user)  # Server-side session, signed cookie
-        return redirect('/dashboard')
-
-def dashboard(request):
-    # Identity from server-side session, not raw cookie
-    user = request.user  # Set by auth middleware
-```
-
 **Why:**
-- Use server-side sessions or signed/encrypted cookies for identity
-- Never store user ID or role in an unsigned cookie
+- Use strong random session keys
+- Set secure cookie flags
 - Regenerate session ID on privilege change
-- OWASP A2, CWE-384
+- OWASP A2
 
 ---
 
 ### AUTHZ-CHECK: Always Check Authorization
 
-**Risk:** Unauthorized access to resources, privilege escalation, IDOR.
+**Risk:** Unauthorized access to resources.
 
 **Vulnerable:**
 ```python
-@app.route('/user/<user_id>/profile', methods=['GET', 'POST'])
-def edit_profile(user_id):
-    # IDOR: any authenticated user can edit any profile
-    user = db.get_user(user_id)
-    if request.method == 'POST':
-        user.email = request.form['email']
-        db.session.commit()
-    return render_template('profile.html', user=user)
+@app.route('/user/<user_id>/profile')
+def get_profile(user_id):
+    # Missing authorization check!
+    return db.get_user(user_id)
 ```
 
 **Secure:**
 ```python
-@app.route('/user/<user_id>/profile', methods=['GET', 'POST'])
-@login_required
-def edit_profile(user_id):
-    user = db.get_user(user_id)
+@app.route('/user/<user_id>/profile')
+def get_profile(user_id):
+    current_user = get_current_user()
 
-    # Ownership check: user can only edit their own profile
-    if current_user.id != int(user_id) and not current_user.is_admin:
+    # Check authorization
+    if current_user.id != user_id and not current_user.is_admin:
         abort(403)
 
-    if request.method == 'POST':
-        user.email = request.form['email']
-        db.session.commit()
-    return render_template('profile.html', user=user)
-```
-
-**Also watch for client-side trust:**
-
-**Vulnerable:**
-```python
-def admin_panel(request):
-    # Trusting a client cookie for authorization!
-    admin = request.COOKIES.get('admin')
-    if admin == '1':
-        return render(request, 'admin.html', {'users': User.objects.all()})
-    return HttpResponse("Access denied")
-```
-
-**Secure:**
-```python
-def admin_panel(request):
-    # Check server-side role, never trust client cookies
-    if not request.user.is_staff:
-        return HttpResponseForbidden("Access denied")
-    return render(request, 'admin.html', {'users': User.objects.all()})
+    return db.get_user(user_id)
 ```
 
 **Why:**
-- Check ownership on every CRUD operation (IDOR prevention)
-- Never trust client-side cookies, hidden fields, or URL params for authorization
-- Server-side role checks for all privilege-gated features
-- OWASP A1, CWE-862, CWE-639
+- Check authorization on every request
+- Don't rely on client-side checks
+- Implement role-based access control (RBAC)
+- OWASP A1, CWE-862
 
 ---
 
@@ -657,33 +596,19 @@ def login(username, password, totp_code):
 
 ---
 
-### TOKEN-EXPIRE: Token Expiration and Unpredictability
+### TOKEN-EXPIRE: Token Expiration
 
-**Risk:** Long-lived or predictable tokens enable account takeover.
+**Risk:** Long-lived tokens enable prolonged attacks.
 
-**Vulnerable — no expiration:**
+**Vulnerable:**
 ```python
 def create_token(user_id):
     return jwt.encode({'user_id': user_id}, SECRET_KEY)
 ```
 
-**Vulnerable — predictable reset token:**
-```python
-from hashlib import md5
-
-def generate_reset_token(username):
-    # Token is MD5 of username — attacker can compute it!
-    return md5(username.encode()).hexdigest()
-
-def reset_password(request):
-    if request.GET['token'] == md5(request.GET['username'].encode()).hexdigest():
-        # Allow password reset
-```
-
 **Secure:**
 ```python
 import jwt
-import secrets
 import datetime
 
 def create_token(user_id):
@@ -701,33 +626,11 @@ def verify_token(token):
         return None
 ```
 
-**Secure — unpredictable reset token:**
-```python
-import secrets
-from datetime import datetime, timedelta
-
-def generate_reset_token(user):
-    token = secrets.token_urlsafe(32)  # Cryptographically random
-    user.reset_token = hash_token(token)
-    user.reset_expires = datetime.utcnow() + timedelta(hours=1)
-    user.save()
-    return token  # Send unhashed token to user's email
-
-def reset_password(request):
-    token = request.GET['token']
-    user = User.objects.filter(
-        reset_token=hash_token(token),
-        reset_expires__gt=datetime.utcnow()
-    ).first()
-    if not user:
-        return HttpResponse("Invalid or expired token", status=400)
-```
-
 **Why:**
-- Set expiration on all tokens
-- Use cryptographically random tokens (secrets.token_urlsafe), never derive from username/email/timestamp
-- Store hashed tokens, send unhashed to user
-- CWE-613, CWE-640
+- Set expiration on tokens
+- Use short-lived access tokens
+- Implement refresh tokens
+- CWE-613
 
 ---
 
@@ -998,67 +901,33 @@ response = requests.get('https://api.example.com', verify='/path/to/certfile')
 
 ### VALIDATE-INPUT: Validate All Inputs
 
-**Risk:** Injection, SSRF, open redirect, unexpected behavior.
+**Risk:** Unexpected behavior, injection attacks.
 
-**Vulnerable — SSRF:**
+**Vulnerable:**
 ```python
-def fetch_url(request):
-    url = request.POST['url']
-    response = requests.get(url)  # User controls destination!
-    return HttpResponse(response.content)
+def set_age(age):
+    user.age = age  # No validation!
 ```
 
-**Vulnerable — open redirect:**
+**Secure:**
 ```python
-def login_redirect(request):
-    next_url = request.GET.get('next', '/')
-    return redirect(next_url)  # Can redirect to attacker's site
-```
+def set_age(age):
+    # Type check
+    if not isinstance(age, int):
+        raise TypeError("Age must be integer")
 
-**Secure — SSRF prevention:**
-```python
-from urllib.parse import urlparse
-import ipaddress
+    # Range check
+    if not 0 <= age <= 150:
+        raise ValueError("Age must be between 0 and 150")
 
-ALLOWED_HOSTS = {'api.example.com', 'cdn.example.com'}
-
-def fetch_url(request):
-    url = request.POST['url']
-    parsed = urlparse(url)
-
-    # Allowlist scheme and host
-    if parsed.scheme not in ('http', 'https'):
-        return HttpResponseBadRequest("Invalid scheme")
-    if parsed.hostname not in ALLOWED_HOSTS:
-        # Block internal IPs
-        try:
-            ip = ipaddress.ip_address(parsed.hostname)
-            if ip.is_private or ip.is_loopback:
-                return HttpResponseBadRequest("Internal addresses blocked")
-        except ValueError:
-            pass
-        return HttpResponseBadRequest("Host not allowed")
-
-    response = requests.get(url, timeout=5, allow_redirects=False)
-    return HttpResponse(response.content)
-```
-
-**Secure — redirect validation:**
-```python
-from django.utils.http import url_has_allowed_host_and_scheme
-
-def login_redirect(request):
-    next_url = request.GET.get('next', '/')
-    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        next_url = '/'
-    return redirect(next_url)
+    user.age = age
 ```
 
 **Why:**
-- Validate type, range, format on all inputs
-- Block SSRF: allowlist hosts, reject private/loopback IPs
-- Validate redirect targets against allowlist
-- CWE-20, CWE-918, CWE-601
+- Validate type, range, format
+- Fail securely on invalid input
+- Use validation libraries (pydantic, marshmallow)
+- CWE-20
 
 ---
 

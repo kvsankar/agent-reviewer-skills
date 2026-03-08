@@ -1,0 +1,49 @@
+{
+  "output": "Looking at this Django authentication service code, I'll analyze it for security vulnerabilities and privacy risks.\n\n## Security & Privacy Review: services.py\n\n### \u2705 Strengths\n- **AUTHZ-CHECK**: Good role-based authorization checks throughout the service\n- **SQL-INJECT**: Uses Django ORM properly, which prevents SQL injection\n- **TRANS-ATOMIC**: Uses `@transaction.atomic` for data consistency in contact creation\n\n### \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### **VALIDATE-INPUT**: Missing Input Validation on Contact Values\n\n**Vulnerable code:**\n```python\n@classmethod\n@transaction.atomic\ndef create_user_contact(\n    cls,\n    user: User,\n    contact_type: str,\n    contact_value: str,  # No validation!\n    is_primary: bool = False,\n    # ...\n) -> UserContact:\n    # No validation on contact_value before storing\n    contact = UserContact.objects.create(\n        user=user,\n        contact_type=contact_type,\n        contact_value=contact_value,  # Raw value stored\n        # ...\n    )\n```\n\n**Secure implementation:**\n```python\nfrom django.core.validators import validate_email\nfrom django.core.exceptions import ValidationError\nimport re\n\n@classmethod\n@transaction.atomic\ndef create_user_contact(\n    cls,\n    user: User,\n    contact_type: str,\n    contact_value: str,\n    is_primary: bool = False,\n    # ...\n) -> UserContact:\n    # Validate input based on contact type\n    if contact_type == ContactType.EMAIL:\n        try:\n            validate_email(contact_value)\n        except ValidationError:\n            raise ValidationError(f\"Invalid email format: {contact_value}\")\n    elif contact_type == ContactType.PHONE:\n        # Validate phone number format\n        phone_pattern = re.compile(r'^\\+?1?\\d{9,15}$')\n        if not phone_pattern.match(re.sub(r'[\\s\\-\\(\\)]', '', contact_value)):\n            raise ValidationError(f\"Invalid phone number format: {contact_value}\")\n    \n    # Sanitize the value\n    contact_value = contact_value.strip()\n    \n    contact = UserContact.objects.create(\n        user=user,\n        contact_type=contact_type,\n        contact_value=contact_value,\n        # ...\n    )\n```\n\n**Security impact:**\nWithout input validation, malicious users could inject invalid data, potentially leading to data corruption or application errors. Email/phone validation prevents typos that could compromise authentication.\n\n**Compliance:**\nViolates OWASP A03:2021 (Injection) and CWE-20 (Improper Input Validation).\n\n---\n\n#### **MFA-DEFAULT**: Insecure MFA Default Policy\n\n**Vulnerable code:**\n```python\n@classmethod\ndef requires_mfa(cls, user: User) -> bool:\n    policy = cls.get_user_policy(user)\n    return policy.require_mfa if policy else False  # Defaults to False!\n```\n\n**Secure implementation:**\n```python\n@classmethod\ndef requires_mfa(cls, user: User) -> bool:\n    policy = cls.get_user_policy(user)\n    if policy:\n        return policy.require_mfa\n    \n    # Secure default: require MFA for privileged users\n    if user.user_type in [UserType.INT_USER, UserType.EXT_PARTNER_STAFF]:\n        return True\n    return False\n```\n\n**Security impact:**\nUsers without explicit policies default to no MFA requirement, creating a significant authentication weakness for privileged accounts.\n\n**Compliance:**\nViolates OWASP A07:2021 (Identification and Authentication Failures) and NIST 800-63B MFA requirements.\n\n---\n\n### \u26a0\ufe0f Warnings (Should Fix)\n\n#### **SESSION-SECURE**: Potentially Excessive Session Duration\n\n**Current code:**\n```python\n@classmethod\ndef get_session_duration(cls, user: User) -> int:\n    policy = cls.get_user_policy(user)\n    return policy.session_duration_hours if policy else 8  # 8 hours default\n```\n\n**Recommended implementation:**\n```python\n@classmethod\ndef get_session_duration(cls, user: User) -> int:\n    policy = cls.get_user_policy(user)\n    if policy:\n        return policy.session_duration_hours\n    \n    # Shorter defaults based on user type\n    if user.user_type == UserType.INT_USER:\n        return 4  # 4 hours for internal users\n    elif user.user_type == UserType.EXT_PARTNER_STAFF:\n        return 2  # 2 hours for external partners\n    return 1  # 1 hour for other users\n```\n\n**Security impact:**\n8-hour default sessions increase exposure window if session tokens are compromised.\n\n**Compliance:**\nOWASP Session Management guidelines recommend shorter sessions for sensitive applications.\n\n---\n\n#### **PII-LOG**: Risk of PII Exposure in Error Messages\n\n**Vulnerable pattern:**\n```python\nif contact_type not in allowed_methods:\n    raise ValidationError(\n        f\"Contact type '{contact_type}' is not allowed for user type '{user.user_type}'\"\n    )\n```\n\n**Secure implementation:**\n```python\nif contact_type not in allowed_methods:\n    # Log detailed error securely\n    logger.warning(\n        \"Contact type not allowed\",\n        extra={\n            \"user_id\": user.id,  # Use ID, not PII\n            \"contact_type\": contact_type,\n            \"user_type\": user.user_type\n        }\n    )\n    # Generic user message\n    raise ValidationError(\"The specified contact method is not allowed for your account type\")\n```\n\n**Security impact:**\nError messages could expose user types and contact information in logs or to end users.\n\n**Compliance:**\nGDPR Article 5(1)(f) requires appropriate security and confidentiality measures.\n\n---\n\n### \ud83d\udca1 Recommendations (Best Practices)\n\n#### **RATE-LIMIT**: Add Rate Limiting for Contact Operations\n\n**Current code lacks protection:**\n```python\n# No rate limiting on contact creation/verification\n```\n\n**Recommended implementation:**\n```python\nfrom django.core.cache import cache\nfrom django.conf import settings\n\n@classmethod\ndef create_user_contact(cls, user: User, contact_type: str, contact_value: str, **kwargs):\n    # Rate limit contact creation per user\n    cache_key = f\"contact_creation_rate_limit_{user.id}\"\n    attempts = cache.get(cache_key, 0)\n    \n    if attempts >= getattr(settings, 'MAX_CONTACT_CREATIONS_PER_HOUR', 10):\n        raise ValidationError(\"Too many contact creation attempts. Please try again later.\")\n    \n    cache.set(cache_key, attempts + 1, timeout=3600)  # 1 hour\n    # ... rest of method\n```\n\n**Security impact:**\nPrevents abuse of contact creation and verification endpoints.\n\n---\n\n#### **AUDIT-TRAIL**: Add Audit Logging for Security Events\n\n**Current implementation missing:**\n```python\n# No audit trail for authentication method changes\n```\n\n**Recommended implementation:**\n```python\nimport logging\n\naudit_logger = logging.getLogger('security.audit')\n\n@classmethod\ndef create_user_contact(cls, user: User, contact_type: str, **kwargs):\n    # ... existing logic ...\n    \n    # Audit log security-relevant events\n    audit_logger.info(\n        \"Contact created\",\n        extra={\n            \"event\": \"contact_created\",\n            \"user_id\": user.id,\n            \"contact_type\": contact_type,\n            \"is_primary\": is_primary,\n            \"can_authenticate\": kwargs.get('can_authenticate', False),\n            \"timestamp\": timezone.now().isoformat(),\n            \"ip_address\": getattr(user, '_request_ip', None)\n        }\n    )\n```\n\n**Security impact:**\nEnables detection of unauthorized authentication method changes and supports forensic analysis.\n\n**Compliance:**\nGDPR Article 25 requires appropriate logging for data protection accountability.\n\n---\n\n### \ud83d\udccb Compliance Checklist\n- [ ] **OWASP Top 10 compliance** - Missing input validation (A03), weak authentication defaults (A07)\n- [ ] **PII properly protected** - Risk of PII in error messages and logs\n- [x] **GDPR requirements met** - Basic data handling appears compliant\n- [x] **Secrets not in code** - No hardcoded secrets detected\n- [ ] **Dependencies up to date** - Cannot verify without requirements.txt\n- [ ] **Rate limiting implemented** - Missing on sensitive operations\n- [ ] **Audit trail complete** - Missing comprehensive security event logging\n\n**Priority Fixes:**\n1. Add comprehensive input validation for all contact values\n2. Implement secure MFA defaults for privileged user types\n3. Add rate limiting on contact operations\n4. Implement detailed audit logging for security events\n",
+  "duration_seconds": 55.91498041152954,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:25:12.045588",
+  "success": true,
+  "findings": [
+    {
+      "id": "VALIDATE-INPUT",
+      "title": "Missing Input Validation on Contact Values"
+    },
+    {
+      "id": "MFA-DEFAULT",
+      "title": "Insecure MFA Default Policy"
+    },
+    {
+      "id": "SESSION-SECURE",
+      "title": "Potentially Excessive Session Duration"
+    },
+    {
+      "id": "PII-LOG",
+      "title": "Risk of PII Exposure in Error Messages"
+    },
+    {
+      "id": "RATE-LIMIT",
+      "title": "Add Rate Limiting for Contact Operations"
+    },
+    {
+      "id": "AUDIT-TRAIL",
+      "title": "Add Audit Logging for Security Events"
+    },
+    {
+      "id": "AUTHZ-CHECK",
+      "title": ""
+    },
+    {
+      "id": "SQL-INJECT",
+      "title": ""
+    },
+    {
+      "id": "TRANS-ATOMIC",
+      "title": ""
+    }
+  ],
+  "findings_count": 9,
+  "condition": "ids-only",
+  "variant": "ids-only",
+  "run": 1
+}

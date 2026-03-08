@@ -1,0 +1,73 @@
+{
+  "output": "# Security & Privacy Review: views.py\n\n## \u2705 Strengths\n- **HASH-PASSWORD**: Some functions use argon2 for password hashing (good practice)\n- **AUTHZ-CHECK**: Some views check `request.user.is_authenticated` before proceeding\n\n## \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### **SQL-INJECT**: Raw SQL Query Construction with User Input\n\n**Vulnerable code:**\n```python\ndef sql_lab(request):\n    name = request.POST.get('name')\n    password = request.POST.get('pass')\n    sql_query = \"SELECT * FROM introduction_login WHERE user='\"+name+\"' AND password='\"+password+\"'\"\n    val = login.objects.raw(sql_query)\n```\n\n**Secure implementation:**\n```python\ndef sql_lab(request):\n    name = request.POST.get('name')\n    password = request.POST.get('pass')\n    # Use Django ORM or parameterized queries\n    try:\n        user = login.objects.filter(user=name, password=password).first()\n        if user:\n            return render(request, 'Lab/SQL/sql_lab.html', {\"user1\": user.user})\n    except Exception:\n        return render(request, 'Lab/SQL/sql_lab.html', {\"error\": \"Invalid credentials\"})\n```\n\n**Security impact:**\nAttackers can execute arbitrary SQL commands, potentially accessing, modifying, or deleting sensitive data.\n\n**Compliance:**\nOWASP A3 (Injection), CWE-89\n\n---\n\n#### **CODE-INJECT**: Use of eval() on User Input\n\n**Vulnerable code:**\n```python\ndef cmd_lab2(request):\n    val = request.POST.get('val')\n    try:\n        output = eval(val)  # EXTREMELY DANGEROUS!\n```\n\n**Secure implementation:**\n```python\nimport ast\nimport operator\n\nSAFE_OPS = {\n    ast.Add: operator.add,\n    ast.Sub: operator.sub,\n    ast.Mult: operator.mul,\n    ast.Div: operator.truediv,\n}\n\ndef safe_eval(expression):\n    try:\n        node = ast.parse(expression, mode='eval')\n        # Implement safe AST evaluation or use a safe expression library\n        # Never use eval() on user input\n        return \"Safe evaluation result\"\n    except:\n        return \"Invalid expression\"\n```\n\n**Security impact:**\nRemote code execution - attackers can execute arbitrary Python code on the server.\n\n**Compliance:**\nCWE-94, OWASP A3\n\n---\n\n#### **CMD-INJECT**: Command Injection via shell=True\n\n**Vulnerable code:**\n```python\ndef cmd_lab(request):\n    domain = request.POST.get('domain')\n    command = \"dig {}\".format(domain)\n    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)\n```\n\n**Secure implementation:**\n```python\nimport subprocess\nimport re\n\ndef cmd_lab(request):\n    domain = request.POST.get('domain')\n    # Validate domain format\n    if not re.match(r'^[a-zA-Z0-9.-]+$', domain):\n        return render(request, 'Lab/CMD/cmd_lab.html', {\"output\": \"Invalid domain format\"})\n    \n    try:\n        # Use argument list instead of shell=True\n        result = subprocess.run(['dig', domain], capture_output=True, text=True, timeout=10)\n        output = result.stdout + result.stderr\n    except subprocess.TimeoutExpired:\n        output = \"Command timed out\"\n    except Exception:\n        output = \"Command execution failed\"\n```\n\n**Security impact:**\nCommand injection allows attackers to execute arbitrary system commands.\n\n**Compliance:**\nCWE-78, OWASP A1\n\n---\n\n#### **INSEC-DESERIALIZE**: Unsafe Pickle Deserialization\n\n**Vulnerable code:**\n```python\ndef insec_des_lab(request):\n    token = request.COOKIES.get('token')\n    token = base64.b64decode(token)\n    admin = pickle.loads(token)  # DANGEROUS!\n```\n\n**Secure implementation:**\n```python\nimport json\nimport jwt\nfrom django.conf import settings\n\ndef secure_des_lab(request):\n    token = request.COOKIES.get('token')\n    try:\n        # Use JWT instead of pickle\n        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])\n        admin_status = payload.get('admin', 0)\n    except jwt.InvalidTokenError:\n        admin_status = 0\n    \n    if admin_status == 1:\n        return render(request, 'template.html', {\"message\": \"Welcome Admin\"})\n```\n\n**Security impact:**\nArbitrary code execution through malicious serialized objects.\n\n**Compliance:**\nCWE-502, OWASP A8\n\n---\n\n#### **XXE-INJECT**: XML External Entity Processing Enabled\n\n**Vulnerable code:**\n```python\ndef xxe_parse(request):\n    parser = make_parser()\n    parser.setFeature(feature_external_ges, True)  # DANGEROUS!\n    doc = parseString(request.body.decode('utf-8'), parser=parser)\n```\n\n**Secure implementation:**\n```python\nimport defusedxml.pulldom as safe_pulldom\n\ndef xxe_parse(request):\n    try:\n        # Use defusedxml to prevent XXE attacks\n        doc = safe_pulldom.parseString(request.body.decode('utf-8'))\n        # Process XML safely\n    except Exception:\n        return render(request, 'Lab/XXE/xxe_lab.html', {\"error\": \"Invalid XML\"})\n```\n\n**Security impact:**\nFile disclosure, SSRF, denial of service through XML external entity attacks.\n\n**Compliance:**\nCWE-611, OWASP A4\n\n---\n\n#### **WEAK-HASH**: MD5 Used for Password Hashing\n\n**Vulnerable code:**\n```python\ndef crypto_failure_lab(request):\n    password = md5(password.encode()).hexdigest()\n    user = CF_user.objects.filter(username=username, password=password).first()\n```\n\n**Secure implementation:**\n```python\nimport bcrypt\n\ndef secure_login(request):\n    username = request.POST[\"username\"]\n    password = request.POST[\"password\"]\n    \n    try:\n        user = CF_user.objects.get(username=username)\n        if bcrypt.checkpw(password.encode(), user.password_hash.encode()):\n            return render(request, 'success.html', {\"user\": user})\n    except CF_user.DoesNotExist:\n        pass\n    \n    return render(request, 'failure.html', {\"error\": \"Invalid credentials\"})\n```\n\n**Security impact:**\nMD5 is cryptographically broken and vulnerable to rainbow table attacks.\n\n**Compliance:**\nCWE-327, OWASP A2\n\n---\n\n## \u26a0\ufe0f Warnings (Should Fix)\n\n#### **RANDOM-SECURE**: Insecure Random Number Generation\n\n**Vulnerable code:**\n```python\ndef Otp(request):\n    otpN = randint(100, 999)\n```\n\n**Secure implementation:**\n```python\nimport secrets\n\ndef Otp(request):\n    otpN = secrets.randbelow(900) + 100  # Secure random for OTP\n```\n\n**Security impact:**\nPredictable OTP generation allows brute force attacks.\n\n**Compliance:**\nCWE-330\n\n---\n\n#### **CSRF-PROTECT**: Missing CSRF Protection\n\n**Vulnerable code:**\n```python\n@csrf_exempt\ndef xxe_parse(request):  # CSRF protection disabled\n```\n\n**Secure implementation:**\n```python\nfrom django.views.decorators.csrf import csrf_protect\n\n@csrf_protect\ndef xxe_parse(request):\n    # Handle CSRF token validation properly\n```\n\n**Security impact:**\nCross-Site Request Forgery attacks possible.\n\n**Compliance:**\nCWE-352, OWASP A1\n\n---\n\n#### **PII-LOG**: Logging Sensitive Information\n\n**Vulnerable code:**\n```python\ndef a10_lab2(request):\n    user = request.POST.get(\"name\")\n    logging.info(f\"{now}:{ip}:{user}\")  # Logs username\n```\n\n**Secure implementation:**\n```python\ndef secure_login_log(request):\n    user = request.POST.get(\"name\")\n    # Hash or pseudonymize username for logging\n    user_hash = hashlib.sha256(user.encode()).hexdigest()[:8]\n    logging.info(f\"{now}:{ip}:user_{user_hash}\")\n```\n\n**Security impact:**\nPII exposure in log files violates privacy regulations.\n\n**Compliance:**\nGDPR Article 5, CCPA\n\n---\n\n#### **SESSION-SECURE**: Insecure Session Management\n\n**Vulnerable code:**\n```python\nresponse.set_cookie('userid', obj.userid, max_age=31449600, samesite=None, secure=False)\n```\n\n**Secure implementation:**\n```python\nresponse.set_cookie(\n    'userid', \n    obj.userid, \n    max_age=3600,  # Shorter session\n    samesite='Lax', \n    secure=True,   # HTTPS only\n    httponly=True  # Prevent XSS access\n)\n```\n\n**Security impact:**\nSession hijacking and fixation attacks.\n\n**Compliance:**\nOWASP A2\n\n---\n\n## \ud83d\udca1 Recommendations (Best Practices)\n\n#### **ERROR-SAFE**: Information Disclosure in Error Messages\n\n**Vulnerable code:**\n```python\nexcept:\n    return render(request, 'template.html', {\"sql_error\": sql_query})\n```\n\n**Secure implementation:**\n```python\nexcept Exception as e:\n    logger.error(f\"Database error: {str(e)}\")\n    return render(request, 'template.html', {\"error\": \"An error occurred\"})\n```\n\n**Security impact:**\nDetailed error messages reveal system information to attackers.\n\n---\n\n#### **VALIDATE-INPUT**: Missing Input Validation\n\n**Vulnerable code:**\n```python\ndef xss_lab(request):\n    q = request.GET.get('q', '')  # No validation\n```\n\n**Secure implementation:**\n```python\nimport re\nfrom django.utils.html import escape\n\ndef xss_lab(request):\n    q = request.GET.get('q', '')\n    # Validate and sanitize input\n    if not re.match(r'^[a-zA-Z0-9\\s]+$', q):\n        q = ''\n    q = escape(q)  # HTML escape for output\n```\n\n---\n\n#### **DEPS-UPDATE**: Insecure YAML Loading\n\n**Vulnerable code:**\n```python\ndata = yaml.load(file, yaml.Loader)  # Unsafe loader\n```\n\n**Secure implementation:**\n```python\ndata = yaml.safe_load(file)  # Use safe_load\n```\n\n---\n\n## \ud83d\udccb Compliance Checklist\n- [ ] OWASP Top 10 compliance (Multiple violations found)\n- [ ] PII properly protected (Username logging violations)\n- [ ] GDPR requirements met (Missing privacy controls)\n- [ ] Secrets not in code (Some hardcoded credentials found)\n- [ ] Dependencies up to date (Unsafe YAML/XML libraries)\n\n**Critical Priority**: Fix SQL injection, command injection, code injection, and unsafe deserialization immediately. These allow complete system compromise.\n",
+  "duration_seconds": 59.20733642578125,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:16:54.456829",
+  "success": true,
+  "findings": [
+    {
+      "id": "SQL-INJECT",
+      "title": "Raw SQL Query Construction with User Input"
+    },
+    {
+      "id": "CODE-INJECT",
+      "title": "Use of eval() on User Input"
+    },
+    {
+      "id": "CMD-INJECT",
+      "title": "Command Injection via shell=True"
+    },
+    {
+      "id": "INSEC-DESERIALIZE",
+      "title": "Unsafe Pickle Deserialization"
+    },
+    {
+      "id": "XXE-INJECT",
+      "title": "XML External Entity Processing Enabled"
+    },
+    {
+      "id": "WEAK-HASH",
+      "title": "MD5 Used for Password Hashing"
+    },
+    {
+      "id": "RANDOM-SECURE",
+      "title": "Insecure Random Number Generation"
+    },
+    {
+      "id": "CSRF-PROTECT",
+      "title": "Missing CSRF Protection"
+    },
+    {
+      "id": "PII-LOG",
+      "title": "Logging Sensitive Information"
+    },
+    {
+      "id": "SESSION-SECURE",
+      "title": "Insecure Session Management"
+    },
+    {
+      "id": "ERROR-SAFE",
+      "title": "Information Disclosure in Error Messages"
+    },
+    {
+      "id": "VALIDATE-INPUT",
+      "title": "Missing Input Validation"
+    },
+    {
+      "id": "DEPS-UPDATE",
+      "title": "Insecure YAML Loading"
+    },
+    {
+      "id": "HASH-PASSWORD",
+      "title": ""
+    },
+    {
+      "id": "AUTHZ-CHECK",
+      "title": ""
+    }
+  ],
+  "findings_count": 15,
+  "condition": "trimmed-20",
+  "variant": "trimmed-20",
+  "run": 1
+}

@@ -1,0 +1,162 @@
+# Ground truth for pygoat - deliberately vulnerable Django app
+# Source: https://github.com/adeyosemanputra/pygoat
+# File: introduction/views.py (primary target)
+
+repository: https://github.com/adeyosemanputra/pygoat
+skill: python-security-privacy-reviewer
+files:
+  - path: introduction/views.py
+    issues:
+      - id: GT-PG-01
+        type: SQL-INJECT
+        line_range: [147, 189]
+        severity: CRITICAL
+        description: "SQL injection via string concatenation in sql_lab()"
+        cwe: CWE-89
+        function: sql_lab
+
+      - id: GT-PG-02
+        type: SQL-INJECT
+        line_range: [854, 904]
+        severity: CRITICAL
+        description: "SQL injection in injection_sql_lab()"
+        cwe: CWE-89
+        function: injection_sql_lab
+
+      - id: GT-PG-03
+        type: CMD-INJECT
+        line_range: [415, 450]
+        severity: CRITICAL
+        description: "Command injection via subprocess shell=True in cmd_lab()"
+        cwe: CWE-78
+        function: cmd_lab
+
+      - id: GT-PG-04
+        type: CODE-INJECT
+        line_range: [453, 469]
+        severity: CRITICAL
+        description: "eval() on user input in cmd_lab2()"
+        cwe: CWE-94
+        function: cmd_lab2
+
+      - id: GT-PG-05
+        type: XML-INJECT
+        line_range: [256, 270]
+        severity: HIGH
+        description: "XXE via unsafe XML parsing with external entities enabled"
+        cwe: CWE-611
+        function: xxe_parse
+
+      - id: GT-PG-06
+        type: CODE-INJECT
+        line_range: [205, 217]
+        severity: CRITICAL
+        description: "Insecure pickle deserialization from user cookies"
+        cwe: CWE-502
+        function: insec_des_lab
+
+      - id: GT-PG-07
+        type: CODE-INJECT
+        line_range: [550, 569]
+        severity: CRITICAL
+        description: "Unsafe YAML loading with yaml.Loader"
+        cwe: CWE-502
+        function: a9_lab
+
+      - id: GT-PG-08
+        type: CODE-INJECT
+        line_range: [574, 605]
+        severity: HIGH
+        description: "ImageMath.eval() with user-controlled expression"
+        cwe: CWE-94
+        function: a9_lab2
+
+      - id: GT-PG-09
+        type: XSS-PREVENT
+        line_range: [93, 120]
+        severity: HIGH
+        description: "Reflected XSS - user input rendered without escaping"
+        cwe: CWE-79
+        function: xss_lab
+
+      - id: GT-PG-10
+        type: XSS-PREVENT
+        line_range: [106, 136]
+        severity: HIGH
+        description: "XSS with ineffective filter bypass"
+        cwe: CWE-79
+        function: xss_lab2
+
+      - id: GT-PG-11
+        type: AUTHZ-CHECK
+        line_range: [335, 381]
+        severity: HIGH
+        description: "Admin access via client-side cookie manipulation"
+        cwe: CWE-639
+        function: ba_lab
+
+      - id: GT-PG-12
+        type: WEAK-HASH
+        line_range: [1018, 1046]
+        severity: HIGH
+        description: "MD5 password hashing without salt"
+        cwe: CWE-328
+        function: crypto_failure_lab
+
+      - id: GT-PG-13
+        type: PATH-TRAVERSE
+        line_range: [918, 933]
+        severity: HIGH
+        description: "Path traversal via unvalidated file parameter"
+        cwe: CWE-22
+        function: ssrf_lab
+
+      - id: GT-PG-14
+        type: VALIDATE-INPUT
+        line_range: [960, 966]
+        severity: HIGH
+        description: "SSRF via unvalidated URL parameter"
+        cwe: CWE-918
+        function: ssrf_lab2
+
+      - id: GT-PG-15
+        type: CODE-INJECT
+        line_range: [975, 1006]
+        severity: CRITICAL
+        description: "Server-side template injection - user content written to template"
+        cwe: CWE-94
+        function: ssti_lab
+
+      - id: GT-PG-16
+        type: CSRF-PROTECT
+        line_range: [1177, 1210]
+        severity: HIGH
+        description: "CSRF-exempt decorator on state-changing endpoint"
+        cwe: CWE-352
+        function: auth_failure_lab3
+
+      - id: GT-PG-17
+        type: NO-HARDCODE
+        line_range: [1087, 1110]
+        severity: HIGH
+        description: "Hardcoded JWT secret key"
+        cwe: CWE-798
+        function: sec_misconfig_lab3
+
+      - id: GT-PG-18
+        type: SESSION-SECURE
+        line_range: [299, 327]
+        severity: HIGH
+        description: "Cookie-based auth without signature verification"
+        cwe: CWE-384
+        function: auth_lab_login
+
+      - id: GT-PG-19
+        type: PII-LOG
+        line_range: [646, 688]
+        severity: MEDIUM
+        description: "Unsanitized user input in log entries"
+        cwe: CWE-117
+        function: a10_lab2
+
+    total_issues: 19

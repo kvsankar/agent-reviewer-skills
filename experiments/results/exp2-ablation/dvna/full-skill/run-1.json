@@ -1,0 +1,65 @@
+{
+  "output": "## Security & Privacy Review: Node.js Application\n\n### \u2705 Strengths\n- **PASSWORD-HASH**: bcrypt is used correctly for password hashing with salt rounds (authHandler.js:67)\n\n### \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### **SQL-INJECT**: SQL Injection in User Search\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:8-10\nvar query = \"SELECT name,id FROM Users WHERE login='\" + req.body.login + \"'\";\ndb.sequelize.query(query, {\n    model: db.User\n}).then(user => {\n```\n\n**Secure implementation:**\n```javascript\n// Use parameterized queries\ndb.User.findOne({\n    where: { login: req.body.login },\n    attributes: ['name', 'id']\n}).then(user => {\n    // Handle result\n});\n\n// Or with raw query using bind parameters\nvar query = \"SELECT name,id FROM Users WHERE login = ?\";\ndb.sequelize.query(query, {\n    replacements: [req.body.login],\n    model: db.User\n});\n```\n\n**Security impact:**\nAttackers can execute arbitrary SQL commands, potentially accessing all user data, modifying databases, or gaining admin privileges.\n\n**Compliance:** OWASP A03:2021 - Injection, CWE-89\n\n---\n\n#### **CMD-INJECT**: Command Injection in Ping Function\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:32-37\nexec('ping -c 2 ' + req.body.address, function (err, stdout, stderr) {\n    output = stdout + stderr\n    res.render('app/ping', {\n        output: output\n    })\n})\n```\n\n**Secure implementation:**\n```javascript\nconst { execFile } = require('child_process');\n\n// Use execFile with array arguments (no shell interpretation)\nexecFile('ping', ['-c', '2', req.body.address], (err, stdout, stderr) => {\n    // Validate address format first\n    const ipRegex = /^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$/;\n    const hostnameRegex = /^[a-zA-Z0-9.-]+$/;\n    \n    if (!ipRegex.test(req.body.address) && !hostnameRegex.test(req.body.address)) {\n        return res.status(400).send('Invalid address format');\n    }\n    \n    output = stdout + stderr;\n    res.render('app/ping', { output: output });\n});\n```\n\n**Security impact:**\nAttackers can execute arbitrary system commands, leading to complete server compromise.\n\n**Compliance:** OWASP A03:2021 - Injection, CWE-78\n\n---\n\n#### **DESERIALIZATION**: Unsafe Deserialization\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:198-199\nvar products = serialize.unserialize(req.files.products.data.toString('utf8'))\n```\n\n**Secure implementation:**\n```javascript\n// Use JSON instead of node-serialize\ntry {\n    var products = JSON.parse(req.files.products.data.toString('utf8'));\n    \n    // Validate structure\n    if (!Array.isArray(products)) {\n        throw new Error('Expected array of products');\n    }\n    \n    products.forEach(product => {\n        if (!product.name || !product.code) {\n            throw new Error('Invalid product structure');\n        }\n    });\n} catch (err) {\n    return res.render('app/bulkproducts', {\n        messages: { danger: 'Invalid file format' },\n        legacy: true\n    });\n}\n```\n\n**Security impact:**\nUnsafe deserialization allows remote code execution when malicious serialized objects are processed.\n\n**Compliance:** OWASP A08:2021 - Software and Data Integrity Failures, CWE-502\n\n---\n\n#### **CRED-STORE**: Hardcoded Session Secret\n\n**Vulnerable code:**\n```javascript\n// server.js:20-25\napp.use(session({\n  secret: 'keyboard cat',\n  resave: true,\n  saveUninitialized: true,\n  cookie: { secure: false }\n}))\n```\n\n**Secure implementation:**\n```javascript\nrequire('dotenv').config();\n\napp.use(session({\n    secret: process.env.SESSION_SECRET, // Strong random secret from environment\n    resave: false,\n    saveUninitialized: false,\n    name: 'sessionId', // Custom name\n    cookie: {\n        secure: process.env.NODE_ENV === 'production', // HTTPS only in production\n        httpOnly: true, // Prevent JavaScript access\n        maxAge: 24 * 60 * 60 * 1000, // 24 hours\n        sameSite: 'strict' // CSRF protection\n    }\n}));\n```\n\n**Security impact:**\nHardcoded weak secrets allow session forgery and session hijacking attacks.\n\n**Compliance:** OWASP A07:2021 - Identification and Authentication Failures, CWE-798\n\n---\n\n### \u26a0\ufe0f Warnings (Should Fix)\n\n#### **XPATH-INJECT**: XXE Vulnerability in XML Parsing\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:213\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})\n```\n\n**Secure implementation:**\n```javascript\n// Disable entity resolution to prevent XXE\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {\n    noent: false,  // Disable entity resolution\n    noblanks: true,\n    nonet: true    // Disable network access\n});\n```\n\n**Security impact:**\nXXE attacks can read local files, perform SSRF attacks, or cause denial of service.\n\n**Compliance:** OWASP A05:2021 - Security Misconfiguration, CWE-611\n\n---\n\n#### **CRYPTO-DEPRECATE**: Weak Token Generation with MD5\n\n**Vulnerable code:**\n```javascript\n// authHandler.js:37-38\nif (req.query.token == md5(req.query.login)) {\n```\n\n**Secure implementation:**\n```javascript\nconst crypto = require('crypto');\n\n// Generate secure random token\nfunction generateResetToken() {\n    return crypto.randomBytes(32).toString('hex');\n}\n\n// Store token with expiration in database\nconst resetToken = generateResetToken();\nconst expiresAt = new Date(Date.now() + 3600000); // 1 hour\n\nawait db.ResetToken.create({\n    userId: user.id,\n    token: crypto.createHash('sha256').update(resetToken).digest('hex'),\n    expiresAt: expiresAt\n});\n\n// Send unhashed token to user, verify hashed version\n```\n\n**Security impact:**\nPredictable MD5 tokens allow attackers to forge password reset links.\n\n**Compliance:** OWASP A02:2021 - Cryptographic Failures, CWE-327\n\n---\n\n#### **OPEN-REDIRECT**: Unvalidated Redirect\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:160-165\nif (req.query.url) {\n    res.redirect(req.query.url)\n} else {\n    res.send('invalid redirect url')\n}\n```\n\n**Secure implementation:**\n```javascript\n// Whitelist allowed redirect URLs\nconst allowedHosts = ['example.com', 'app.example.com'];\n\nif (req.query.url) {\n    try {\n        const url = new URL(req.query.url);\n        \n        // Only allow relative URLs or whitelisted hosts\n        if (url.protocol === ':' || allowedHosts.includes(url.hostname)) {\n            res.redirect(req.query.url);\n        } else {\n            res.status(400).send('Invalid redirect destination');\n        }\n    } catch (err) {\n        res.status(400).send('Invalid URL format');\n    }\n} else {\n    res.status(400).send('Invalid redirect url');\n}\n```\n\n**Security impact:**\nOpen redirects can be used for phishing attacks to redirect users to malicious sites.\n\n**Compliance:** OWASP A01:2021 - Broken Access Control, CWE-601\n\n---\n\n#### **TIMING-ATTACK**: Username Enumeration\n\n**Vulnerable code:**\n```javascript\n// authHandler.js:15-25\nif (user) {\n    // Send reset link via email happens here\n    req.flash('info', 'Check email for reset link')\n    res.redirect('/login')\n} else {\n    req.flash('danger', \"Invalid login username\")\n    res.redirect('/forgotpw')\n}\n```\n\n**Secure implementation:**\n```javascript\n// Always show success message regardless of user existence\nif (req.body.login) {\n    const user = await db.User.findOne({ where: { login: req.body.login }});\n    \n    if (user) {\n        // Send actual reset email\n        await sendPasswordResetEmail(user);\n    }\n    // Always show same message\n    req.flash('info', 'If an account with that username exists, a reset link has been sent');\n    res.redirect('/login');\n} else {\n    req.flash('danger', \"Please enter a username\");\n    res.redirect('/forgotpw');\n}\n```\n\n**Security impact:**\nDifferent responses allow attackers to enumerate valid usernames.\n\n**Compliance:** CWE-208\n\n---\n\n### \ud83d\udca1 Recommendations (Best Practices)\n\n#### **MISSING-HELMET**: Security Headers Not Present\n\n**Current state:**\n```javascript\n// server.js - No security headers middleware\n```\n\n**Secure implementation:**\n```javascript\nconst helmet = require('helmet');\n\napp.use(helmet({\n    contentSecurityPolicy: {\n        directives: {\n            defaultSrc: [\"'self'\"],\n            scriptSrc: [\"'self'\"],\n            styleSrc: [\"'self'\", \"'unsafe-inline'\"],\n            imgSrc: [\"'self'\", \"data:\", \"https:\"]\n        }\n    },\n    hsts: {\n        maxAge: 31536000,\n        includeSubDomains: true\n    }\n}));\n```\n\n**Security impact:**\nMissing security headers leave the application vulnerable to clickjacking, XSS, and other attacks.\n\n**Compliance:** OWASP A05:2021 - Security Misconfiguration\n\n---\n\n#### **MISSING-CSRF-TOKEN**: No CSRF Protection\n\n**Current state:**\n```javascript\n// No CSRF token validation on state-changing requests\n```\n\n**Secure implementation:**\n```javascript\nconst csrf = require('csurf');\nconst csrfProtection = csrf({ cookie: true });\n\napp.use(csrfProtection);\n\n// In forms, include CSRF token\napp.get('/form', (req, res) => {\n    res.render('form', { csrfToken: req.csrfToken() });\n});\n```\n\n**Security impact:**\nWithout CSRF protection, attackers can perform unauthorized actions on behalf of authenticated users.\n\n**Compliance:** OWASP A01:2021 - Broken Access Control, CWE-352\n\n---\n\n#### **MISSING-VALIDATION-LIB**: No Input Validation\n\n**Current state:**\n```javascript\n// Direct use of req.body without validation\n```\n\n**Secure implementation:**\n```javascript\nconst { body, validationResult } = require('express-validator');\n\napp.post('/app/ping',\n    body('address').matches(/^[a-zA-Z0-9.-]+$/).withMessage('Invalid address format'),\n    (req, res) => {\n        const errors = validationResult(req);\n        if (!errors.isEmpty()) {\n            return res.status(400).json({ errors: errors.array() });\n        }\n        // Proceed with validated input\n    }\n);\n```\n\n**Security impact:**\nLack of input validation increases attack surface for injection and other attacks.\n\n**Compliance:** OWASP A03:2021 - Injection\n\n---\n\n#### **MISSING-RATE-LIMIT**: No Rate Limiting\n\n**Current state:**\n```javascript\n// No rate limiting on any endpoints\n```\n\n**Secure implementation:**\n```javascript\nconst rateLimit = require('express-rate-limit');\n\nconst authLimiter = rateLimit({\n    windowMs: 15 * 60 * 1000, // 15 minutes\n    max: 5, // 5 attempts\n    message: 'Too many login attempts'\n});\n\napp.post('/login', authLimiter, /* handler */);\n```\n\n**Security impact:**\nNo rate limiting allows brute force attacks and DoS.\n\n**Compliance:** OWASP A07:2021 - Identification and Authentication Failures\n\n---\n\n### \ud83d\udccb Compliance Checklist\n- [ ] OWASP Top 10 compliance - **Multiple critical issues present**\n- [ ] PII properly protected - **No PII encryption or handling policies**\n- [ ] GDPR requirements met - **No consent management or data protection**\n- [ ] Secrets not in code - **\u274c Hardcoded session secret**\n- [ ] Dependencies up to date - **Unable to verify without package.json**\n\n---\n\n**Critical Priority:** Fix SQL injection, command injection, and unsafe deserialization immediately. These provide direct paths to complete system compromise.\n",
+  "duration_seconds": 63.653055906295776,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:17:56.667834",
+  "success": true,
+  "findings": [
+    {
+      "id": "SQL-INJECT",
+      "title": "SQL Injection in User Search"
+    },
+    {
+      "id": "CMD-INJECT",
+      "title": "Command Injection in Ping Function"
+    },
+    {
+      "id": "DESERIALIZATION",
+      "title": "Unsafe Deserialization"
+    },
+    {
+      "id": "CRED-STORE",
+      "title": "Hardcoded Session Secret"
+    },
+    {
+      "id": "XPATH-INJECT",
+      "title": "XXE Vulnerability in XML Parsing"
+    },
+    {
+      "id": "CRYPTO-DEPRECATE",
+      "title": "Weak Token Generation with MD5"
+    },
+    {
+      "id": "OPEN-REDIRECT",
+      "title": "Unvalidated Redirect"
+    },
+    {
+      "id": "TIMING-ATTACK",
+      "title": "Username Enumeration"
+    },
+    {
+      "id": "MISSING-HELMET",
+      "title": "Security Headers Not Present"
+    },
+    {
+      "id": "MISSING-CSRF-TOKEN",
+      "title": "No CSRF Protection"
+    },
+    {
+      "id": "MISSING-VALIDATION-LIB",
+      "title": "No Input Validation"
+    },
+    {
+      "id": "MISSING-RATE-LIMIT",
+      "title": "No Rate Limiting"
+    },
+    {
+      "id": "PASSWORD-HASH",
+      "title": ""
+    }
+  ],
+  "findings_count": 13,
+  "condition": "full-skill",
+  "variant": "full",
+  "run": 1
+}

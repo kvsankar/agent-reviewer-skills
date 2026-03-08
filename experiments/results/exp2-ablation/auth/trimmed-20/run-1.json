@@ -1,0 +1,65 @@
+{
+  "output": "Looking at this Django authentication service code, I need to run a comprehensive security and privacy review. Let me analyze the code systematically.\n\n<sub_task>\n<Task subagent_type=\"Explore\" prompt=\"Review the Django authentication service code in services.py for security vulnerabilities and privacy issues. Focus on input validation, PII handling, authorization checks, and data protection. Write a detailed security review report to services-security-review.md\">\n\n## Security & Privacy Review: services.py\n\n### \u2705 Strengths\n- **SQL-INJECT**: Proper use of Django ORM prevents SQL injection vulnerabilities\n- **ATOMIC-TRANS**: Uses `@transaction.atomic` decorator for data consistency in `create_user_contact`\n- **ROLE-VALIDATE**: Good role validation checks in setup methods (`setup_technician_contacts`, `setup_partner_staff_contacts`)\n- **SESSION-SECURE**: Implements session duration and inactivity timeout controls\n- **MFA-SUPPORT**: Proper MFA requirement checking and method intersection logic\n\n### \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### **INPUT-VALIDATE**: Missing Input Validation for Contact Values\n\n**Vulnerable code:**\n```python\ndef create_user_contact(\n    cls,\n    user: User,\n    contact_type: str,\n    contact_value: str,  # No validation!\n    is_primary: bool = False,\n    is_verified: bool = False,\n    can_receive_otp: bool = False,\n    **kwargs,\n) -> UserContact:\n```\n\n**Secure implementation:**\n```python\nimport re\nfrom django.core.validators import validate_email\nfrom django.core.exceptions import ValidationError\n\ndef create_user_contact(\n    cls,\n    user: User,\n    contact_type: str,\n    contact_value: str,\n    is_primary: bool = False,\n    is_verified: bool = False,\n    can_receive_otp: bool = False,\n    **kwargs,\n) -> UserContact:\n    # Validate contact value based on type\n    if contact_type == ContactType.EMAIL:\n        try:\n            validate_email(contact_value)\n        except ValidationError:\n            raise ValidationError(\"Invalid email address format\")\n    elif contact_type == ContactType.PHONE:\n        if not re.match(r'^\\+?1?[0-9]{10,15}$', contact_value):\n            raise ValidationError(\"Invalid phone number format\")\n    \n    # Limit contact_value length\n    if len(contact_value) > 255:\n        raise ValidationError(\"Contact value too long\")\n```\n\n**Security impact:**\nAttackers could inject malformed data, potentially causing application errors or database corruption. Invalid email/phone formats could break downstream systems.\n\n**Compliance:**\nOWASP A3 (Injection), CWE-20 (Input Validation)\n\n---\n\n#### **PII-ENCRYPT**: Contact Information Not Encrypted at Rest\n\n**Vulnerable code:**\n```python\ncontact = UserContact.objects.create(\n    user=user,\n    contact_type=contact_type,\n    contact_value=contact_value,  # Stored in plaintext!\n    # ...\n)\n```\n\n**Secure implementation:**\n```python\nfrom cryptography.fernet import Fernet\nimport os\n\nclass AuthenticationService:\n    ENCRYPTION_KEY = os.environ['CONTACT_ENCRYPTION_KEY'].encode()\n    \n    @classmethod\n    def _encrypt_contact_value(cls, value: str) -> bytes:\n        f = Fernet(cls.ENCRYPTION_KEY)\n        return f.encrypt(value.encode())\n    \n    @classmethod\n    def _decrypt_contact_value(cls, encrypted_value: bytes) -> str:\n        f = Fernet(cls.ENCRYPTION_KEY)\n        return f.decrypt(encrypted_value).decode()\n    \n    def create_user_contact(cls, ...):\n        encrypted_value = cls._encrypt_contact_value(contact_value)\n        contact = UserContact.objects.create(\n            contact_value=encrypted_value,\n            # ...\n        )\n```\n\n**Security impact:**\nDatabase breach exposes all user contact information (emails, phone numbers) in plaintext, violating privacy regulations.\n\n**Compliance:**\nGDPR Article 32 (Security of Processing), PCI DSS if handling payment-related contacts\n\n---\n\n#### **AUTHZ-CHECK**: Missing Authorization Checks on Sensitive Methods\n\n**Vulnerable code:**\n```python\n@classmethod\ndef get_user_policy(cls, user: User) -> AuthMethodPolicy | None:\n    # No check if caller is authorized to access this user's policy!\n    role_assignment = UserRole.objects.filter(user=user, is_deleted=False).first()\n```\n\n**Secure implementation:**\n```python\n@classmethod\ndef get_user_policy(cls, user: User, requesting_user: User) -> AuthMethodPolicy | None:\n    # Check authorization\n    if requesting_user != user and not requesting_user.has_perm('users.view_user_policy'):\n        raise PermissionDenied(\"Not authorized to access user policy\")\n    \n    role_assignment = UserRole.objects.filter(user=user, is_deleted=False).first()\n    # ...\n```\n\n**Security impact:**\nUnauthorized users could access authentication policies and capabilities of other users, leading to information disclosure and potential privilege escalation.\n\n**Compliance:**\nOWASP A1 (Broken Access Control), CWE-862 (Missing Authorization)\n\n---\n\n### \u26a0\ufe0f Warnings (Should Fix)\n\n#### **ERROR-SAFE**: Information Disclosure in Error Messages\n\n**Vulnerable code:**\n```python\nif contact_type not in allowed_methods:\n    raise ValidationError(\n        f\"Contact type '{contact_type}' is not allowed for user type '{user.user_type}'\"\n    )\n```\n\n**Secure implementation:**\n```python\nif contact_type not in allowed_methods:\n    raise ValidationError(\"Contact type not allowed for this user\")\n```\n\n**Security impact:**\nError messages reveal internal user types and allowed methods, providing attackers with system reconnaissance information.\n\n**Compliance:**\nCWE-209 (Information Exposure Through Error Messages)\n\n---\n\n#### **PII-LOG**: No Safeguards Against PII Logging\n\n**Vulnerable code:**\n```python\ndef verify_contact(cls, contact: UserContact, verified_by: User | None = None) -> None:\n    # Contact value (PII) could be logged by Django/audit systems\n    contact.save(update_fields=[\"is_verified\", \"verified_at\", \"verified_by\"])\n```\n\n**Secure implementation:**\n```python\ndef verify_contact(cls, contact: UserContact, verified_by: User | None = None) -> None:\n    # Ensure PII is not logged\n    with override_settings(LOGGING_CONFIG=None):  # or use custom logger\n        contact.is_verified = True\n        contact.verified_at = timezone.now()\n        if verified_by:\n            contact.verified_by = verified_by\n        contact.save(update_fields=[\"is_verified\", \"verified_at\", \"verified_by\"])\n    \n    # Log non-PII audit trail\n    audit_logger.info(f\"Contact verified for user {contact.user.id} by {verified_by.id if verified_by else 'system'}\")\n```\n\n**Security impact:**\nContact values (emails, phone numbers) could be logged by Django's logging system, creating additional PII exposure points.\n\n**Compliance:**\nGDPR Article 25 (Data Protection by Design), PCI DSS logging requirements\n\n---\n\n### \ud83d\udca1 Recommendations (Best Practices)\n\n#### **AUDIT-TRAIL**: Add Audit Logging for Contact Changes\n\n**Current code:**\n```python\ndef create_user_contact(cls, ...):\n    contact = UserContact.objects.create(...)\n    return contact\n```\n\n**Recommended implementation:**\n```python\nimport logging\n\naudit_logger = logging.getLogger('security.audit')\n\ndef create_user_contact(cls, ..., created_by: User):\n    contact = UserContact.objects.create(...)\n    \n    # Audit log without PII\n    audit_logger.info(\n        f\"Contact created: user={user.id}, type={contact_type}, \"\n        f\"by={created_by.id}, primary={is_primary}\"\n    )\n    return contact\n```\n\n**Security impact:**\nEnables detection of unauthorized contact modifications and compliance with audit requirements.\n\n**Compliance:**\nGDPR Article 30 (Records of Processing Activities)\n\n---\n\n#### **CONSENT-EXPLICIT**: Add Consent Tracking for Contact Storage\n\n**Recommended implementation:**\n```python\ndef create_user_contact(cls, ..., consent_given: bool = False, consent_purpose: str = None):\n    if not consent_given:\n        raise ValidationError(\"Explicit consent required for storing contact information\")\n    \n    contact = UserContact.objects.create(\n        consent_given=consent_given,\n        consent_purpose=consent_purpose,\n        consent_timestamp=timezone.now(),\n        ...\n    )\n```\n\n**Security impact:**\nEnsures GDPR compliance for lawful processing of personal data.\n\n**Compliance:**\nGDPR Article 6 (Lawfulness of Processing), Article 7 (Conditions for Consent)\n\n---\n\n#### **DATA-RETENTION**: Implement Data Retention Policies\n\n**Recommended implementation:**\n```python\nfrom datetime import timedelta\n\ndef cleanup_expired_contacts(cls, retention_days: int = 365):\n    \"\"\"Remove unverified contacts older than retention period.\"\"\"\n    cutoff_date = timezone.now() - timedelta(days=retention_days)\n    \n    expired_contacts = UserContact.objects.filter(\n        is_verified=False,\n        created_at__lt=cutoff_date\n    )\n    \n    count = expired_contacts.count()\n    expired_contacts.delete()\n    \n    audit_logger.info(f\"Cleaned up {count} expired unverified contacts\")\n```\n\n**Security impact:**\nReduces data exposure by removing unnecessary personal data, meeting GDPR data minimization requirements.\n\n**Compliance:**\nGDPR Article 5 (Principles of Processing), Article 17 (Right to Erasure)\n\n---\n\n### \ud83d\udccb Compliance Checklist\n- [ ] OWASP Top 10 compliance (missing input validation, authorization checks)\n- [ ] PII properly protected (needs encryption at rest)\n- [x] GDPR requirements met (partial - needs consent tracking, retention policies)\n- [ ] Secrets not in code (encryption keys need proper management)\n- [ ] Dependencies up to date (review Django version for security updates)\n- [ ] Audit logging implemented (needs enhancement)\n- [x] MFA support implemented\n- [ ] Error handling secure (reduce information disclosure)\n\n**Priority Actions:**\n1. Implement input validation for contact values\n2. Add encryption for contact information at rest\n3. Add authorization checks to all methods accessing user data\n4. Reduce information disclosure in error messages\n5. Implement audit logging and consent tracking\n</Task>\n</sub_task>\n\nI've completed a comprehensive security and privacy review of the Django authentication service code. The analysis identified several critical security vulnerabilities that should be addressed immediately:\n\n## Key Critical Issues Found:\n\n1. **INPUT-VALIDATE**: No validation of contact values (emails, phone numbers)\n2. **PII-ENCRYPT**: Contact information stored without encryption at rest  \n3. **AUTHZ-CHECK**: Missing authorization checks on sensitive methods\n\n## Priority Recommendations:\n\n**Immediate fixes needed:**\n- Add input validation for email and phone formats\n- Implement encryption for contact values in the database\n- Add authorization checks to prevent unauthorized access to user policies\n\n**Should implement:**\n- Reduce information disclosure in error messages\n- Add safeguards against PII logging\n- Implement audit trails for contact changes\n\nThe code shows good practices in some areas (proper ORM usage, MFA support, role validation) but needs security hardening around input validation, data protection, and access controls to meet enterprise security standards and privacy regulations like GDPR.\n",
+  "duration_seconds": 74.66222143173218,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:26:10.963431",
+  "success": true,
+  "findings": [
+    {
+      "id": "INPUT-VALIDATE",
+      "title": "Missing Input Validation for Contact Values"
+    },
+    {
+      "id": "PII-ENCRYPT",
+      "title": "Contact Information Not Encrypted at Rest"
+    },
+    {
+      "id": "AUTHZ-CHECK",
+      "title": "Missing Authorization Checks on Sensitive Methods"
+    },
+    {
+      "id": "ERROR-SAFE",
+      "title": "Information Disclosure in Error Messages"
+    },
+    {
+      "id": "PII-LOG",
+      "title": "No Safeguards Against PII Logging"
+    },
+    {
+      "id": "AUDIT-TRAIL",
+      "title": "Add Audit Logging for Contact Changes"
+    },
+    {
+      "id": "CONSENT-EXPLICIT",
+      "title": "Add Consent Tracking for Contact Storage"
+    },
+    {
+      "id": "DATA-RETENTION",
+      "title": "Implement Data Retention Policies"
+    },
+    {
+      "id": "SQL-INJECT",
+      "title": ""
+    },
+    {
+      "id": "ATOMIC-TRANS",
+      "title": ""
+    },
+    {
+      "id": "ROLE-VALIDATE",
+      "title": ""
+    },
+    {
+      "id": "SESSION-SECURE",
+      "title": ""
+    },
+    {
+      "id": "MFA-SUPPORT",
+      "title": ""
+    }
+  ],
+  "findings_count": 13,
+  "condition": "trimmed-20",
+  "variant": "trimmed-20",
+  "run": 1
+}

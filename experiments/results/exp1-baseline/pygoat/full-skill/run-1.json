@@ -1,0 +1,69 @@
+{
+  "output": "## Security & Privacy Review: views.py\n\n### \u2705 Strengths\n- **FRAMEWORK-CHOICE**: Using Django framework with built-in security features\n- **AUTH-DECORATOR**: Some views use authentication decorators for basic access control\n\n### \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### SQL-INJECT: SQL Injection Vulnerability\n\n**Vulnerable code:**\n```python\ndef sql_lab(request):\n    name=request.POST.get('name')\n    password=request.POST.get('pass')\n    if name:\n        sql_query = \"SELECT * FROM introduction_login WHERE user='\"+name+\"' AND password='\"+password+\"'\"\n        val=login.objects.raw(sql_query)\n```\n\n**Secure implementation:**\n```python\ndef sql_lab(request):\n    name=request.POST.get('name')\n    password=request.POST.get('pass')\n    if name:\n        # Use parameterized queries\n        val = login.objects.filter(user=name, password=password)\n        # Or with raw SQL: \n        # val = login.objects.raw(\"SELECT * FROM introduction_login WHERE user=%s AND password=%s\", [name, password])\n```\n\n**Security impact:**\nAttackers can execute arbitrary SQL commands, potentially accessing all database data, modifying records, or escalating privileges.\n\n**Compliance:**\nOWASP #1 (Injection), CWE-89\n\n---\n\n#### CMD-INJECT: Command Injection Vulnerabilities\n\n**Vulnerable code:**\n```python\ndef cmd_lab(request):\n    domain=request.POST.get('domain')\n    domain = re.sub(r'^(?:(https?|ftp)://)?(?:www\\.)?', '', domain, flags=re.IGNORECASE)\n    if(os=='win'):\n        command=\"nslookup {}\".format(domain)\n    else:\n        command = \"dig {}\".format(domain)\n    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n```\n\n**Secure implementation:**\n```python\ndef cmd_lab(request):\n    domain = request.POST.get('domain')\n    # Validate domain format\n    if not re.match(r'^[a-zA-Z0-9.-]+$', domain):\n        return render(request, 'Lab/CMD/cmd_lab.html', {\"output\": \"Invalid domain format\"})\n    \n    if os_type == 'win':\n        # Pass arguments as list, never use shell=True\n        process = subprocess.Popen(['nslookup', domain], stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n    else:\n        process = subprocess.Popen(['dig', domain], stdout=subprocess.PIPE, stderr=subprocess.PIPE)\n```\n\n**Security impact:**\nAttackers can execute arbitrary system commands, potentially gaining full server access.\n\n**Compliance:**\nOWASP A1, CWE-78\n\n---\n\n#### CODE-INJECT: Code Injection via eval()\n\n**Vulnerable code:**\n```python\ndef cmd_lab2(request):\n    val=request.POST.get('val')\n    try:\n        output = eval(val)  # DANGEROUS!\n```\n\n**Secure implementation:**\n```python\nimport ast\nimport operator\n\nSAFE_OPS = {\n    ast.Add: operator.add,\n    ast.Sub: operator.sub,\n    ast.Mult: operator.mul,\n    ast.Div: operator.truediv,\n}\n\ndef cmd_lab2(request):\n    val = request.POST.get('val')\n    try:\n        # Use safe AST evaluation or reject eval entirely\n        tree = ast.parse(val, mode='eval')\n        # Implement safe AST evaluation\n        output = \"Evaluation disabled for security\"\n```\n\n**Security impact:**\nArbitrary code execution allowing complete system compromise.\n\n**Compliance:**\nCWE-94\n\n---\n\n#### INSEC-DES: Insecure Deserialization with pickle\n\n**Vulnerable code:**\n```python\ndef insec_des_lab(request):\n    token = request.COOKIES.get('token')\n    token = base64.b64decode(token)\n    admin = pickle.loads(token)  # DANGEROUS!\n```\n\n**Secure implementation:**\n```python\nimport json\n\ndef insec_des_lab(request):\n    token = request.COOKIES.get('token')\n    if token:\n        try:\n            # Use JSON instead of pickle\n            decoded = base64.b64decode(token)\n            data = json.loads(decoded.decode('utf-8'))\n            admin_status = data.get('admin', 0)\n        except (json.JSONDecodeError, ValueError):\n            admin_status = 0\n```\n\n**Security impact:**\nPickle deserialization can lead to arbitrary code execution.\n\n**Compliance:**\nCWE-502\n\n---\n\n#### XML-INJECT: XXE (XML External Entity) Attack\n\n**Vulnerable code:**\n```python\ndef xxe_parse(request):\n    parser = make_parser()\n    parser.setFeature(feature_external_ges, True)  # Enables XXE!\n    doc = parseString(request.body.decode('utf-8'), parser=parser)\n```\n\n**Secure implementation:**\n```python\nimport defusedxml.dom.minidom as safe_minidom\n\ndef xxe_parse(request):\n    try:\n        # Use defusedxml to prevent XXE\n        doc = safe_minidom.parseString(request.body.decode('utf-8'))\n        # Process safely\n    except Exception:\n        return render(request, 'Lab/XXE/xxe_lab.html', {\"error\": \"Invalid XML\"})\n```\n\n**Security impact:**\nXXE attacks can read local files, perform SSRF attacks, or cause denial of service.\n\n**Compliance:**\nCWE-611, OWASP A4\n\n---\n\n### \u26a0\ufe0f Warnings (Should Fix)\n\n#### XSS-PREVENT: Cross-Site Scripting Vulnerabilities\n\n**Vulnerable code:**\n```python\ndef xss_lab(request):\n    q=request.GET.get('q','')\n    return render(request,'Lab/XSS/xss_lab.html', {'query': q})\n\ndef xss_lab2(request):\n    username = request.POST.get('username', '')\n    username = username.replace(\"<script>\", \"\").replace(\"</script>\", \"\")  # Insufficient filtering\n```\n\n**Secure implementation:**\n```python\nfrom django.utils.html import escape\n\ndef xss_lab(request):\n    q = request.GET.get('q', '')\n    # Django templates auto-escape, but ensure context is safe\n    return render(request, 'Lab/XSS/xss_lab.html', {'query': escape(q)})\n\ndef xss_lab2(request):\n    username = request.POST.get('username', '')\n    # Use proper escaping, not string replacement\n    context = {'username': escape(username)}\n    return render(request, 'Lab/XSS/xss_lab_2.html', context)\n```\n\n**Security impact:**\nXSS can lead to session hijacking, defacement, or malicious script execution.\n\n**Compliance:**\nOWASP A3, CWE-79\n\n---\n\n#### WEAK-HASH: Weak Hash Algorithm (MD5)\n\n**Vulnerable code:**\n```python\nfrom hashlib import md5\n\ndef crypto_failure_lab(request):\n    password = md5(password.encode()).hexdigest()\n```\n\n**Secure implementation:**\n```python\nimport bcrypt\n\ndef crypto_failure_lab(request):\n    # Use bcrypt for password hashing\n    salt = bcrypt.gensalt()\n    password_hash = bcrypt.hashpw(password.encode(), salt)\n```\n\n**Security impact:**\nMD5 is cryptographically broken and vulnerable to collision attacks.\n\n**Compliance:**\nCWE-327\n\n---\n\n#### MISSING-CSRF: CSRF Protection Disabled\n\n**Vulnerable code:**\n```python\n@csrf_exempt\ndef xxe_parse(request):\n    # CSRF protection disabled\n```\n\n**Secure implementation:**\n```python\n# Remove @csrf_exempt decorator\ndef xxe_parse(request):\n    # CSRF protection will be enforced by Django middleware\n```\n\n**Security impact:**\nCSRF attacks can perform unauthorized actions on behalf of authenticated users.\n\n**Compliance:**\nOWASP A8, CWE-352\n\n---\n\n#### COOKIE-SECURE: Insecure Cookie Configuration\n\n**Vulnerable code:**\n```python\nresponse.set_cookie('userid', obj.userid, max_age=31449600, samesite=None, secure=False)\nresponse.set_cookie(\"admin\", \"1\", max_age=200)\n```\n\n**Secure implementation:**\n```python\nresponse.set_cookie(\n    'userid', \n    obj.userid, \n    max_age=31449600,\n    secure=True,      # HTTPS only\n    httponly=True,    # No JavaScript access\n    samesite='Lax'    # CSRF protection\n)\n```\n\n**Security impact:**\nInsecure cookies can be intercepted or manipulated by attackers.\n\n**Compliance:**\nCWE-614, CWE-1004\n\n---\n\n#### PII-LOG: PII Exposure in Logs\n\n**Vulnerable code:**\n```python\ndef a10_lab2(request):\n    if login.objects.filter(user=user,password=password):\n        logging.info(f\"{now}:{ip}:{user}\")  # Logging username (PII)\n```\n\n**Secure implementation:**\n```python\nimport hashlib\n\ndef hash_pii(value):\n    return hashlib.sha256(value.encode()).hexdigest()[:8]\n\ndef a10_lab2(request):\n    if login.objects.filter(user=user, password=password):\n        # Log hashed identifier instead\n        user_hash = hash_pii(user)\n        logging.info(f\"{now}:{ip}:{user_hash}\")\n```\n\n**Security impact:**\nPII in logs can be exposed through log analysis or breaches.\n\n**Compliance:**\nGDPR Article 32\n\n---\n\n### \ud83d\udca1 Recommendations (Best Practices)\n\n#### MISSING-VALIDATION-LAYER: Centralized Input Validation\n\n**Current code:**\n```python\ndef process_payment(user_email, card_number):\n    # No validation framework\n```\n\n**Recommended implementation:**\n```python\nfrom django.core.validators import validate_email\nfrom django import forms\n\nclass PaymentForm(forms.Form):\n    user_email = forms.EmailField(validators=[validate_email])\n    card_number = forms.CharField(max_length=19, min_length=13)\n    \n    def clean_card_number(self):\n        card = self.cleaned_data['card_number']\n        if not card.replace(' ', '').isdigit():\n            raise forms.ValidationError(\"Invalid card number\")\n        return card\n```\n\n**Security impact:**\nCentralized validation ensures consistent input handling across the application.\n\n---\n\n#### MISSING-SECURITY-HEADERS: Security Headers Configuration\n\n**Current code:**\n```python\n# No security headers configured\n```\n\n**Recommended implementation:**\n```python\n# In Django settings.py\nSECURE_CONTENT_TYPE_NOSNIFF = True\nSECURE_BROWSER_XSS_FILTER = True\nSECURE_SSL_REDIRECT = True\nSECURE_HSTS_SECONDS = 31536000\nX_FRAME_OPTIONS = 'DENY'\nSECURE_HSTS_INCLUDE_SUBDOMAINS = True\n\n# Or use django-security middleware\n```\n\n**Security impact:**\nSecurity headers provide defense-in-depth against various attacks.\n\n---\n\n### \ud83d\udccb Compliance Checklist\n\n- [ ] **OWASP Top 10 compliance** - Multiple violations found\n- [ ] **PII properly protected** - PII logged in plaintext\n- [ ] **GDPR requirements met** - No data protection measures\n- [ ] **Secrets not in code** - Hardcoded passwords found\n- [ ] **Dependencies up to date** - Manual review needed\n\n### Summary\n\nThis application contains **18 critical security vulnerabilities** that require immediate attention. While this appears to be a training application designed to demonstrate vulnerabilities, the code patterns shown should never be used in production environments. The most severe issues include SQL injection, command injection, code injection via eval(), and insecure deserialization - all of which can lead to complete system compromise.\n",
+  "duration_seconds": 66.63143515586853,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:05:22.987591",
+  "success": true,
+  "findings": [
+    {
+      "id": "SQL-INJECT",
+      "title": "SQL Injection Vulnerability"
+    },
+    {
+      "id": "CMD-INJECT",
+      "title": "Command Injection Vulnerabilities"
+    },
+    {
+      "id": "CODE-INJECT",
+      "title": "Code Injection via eval()"
+    },
+    {
+      "id": "INSEC-DES",
+      "title": "Insecure Deserialization with pickle"
+    },
+    {
+      "id": "XML-INJECT",
+      "title": "XXE (XML External Entity) Attack"
+    },
+    {
+      "id": "XSS-PREVENT",
+      "title": "Cross-Site Scripting Vulnerabilities"
+    },
+    {
+      "id": "WEAK-HASH",
+      "title": "Weak Hash Algorithm (MD5)"
+    },
+    {
+      "id": "MISSING-CSRF",
+      "title": "CSRF Protection Disabled"
+    },
+    {
+      "id": "COOKIE-SECURE",
+      "title": "Insecure Cookie Configuration"
+    },
+    {
+      "id": "PII-LOG",
+      "title": "PII Exposure in Logs"
+    },
+    {
+      "id": "MISSING-VALIDATION-LAYER",
+      "title": "Centralized Input Validation"
+    },
+    {
+      "id": "MISSING-SECURITY-HEADERS",
+      "title": "Security Headers Configuration"
+    },
+    {
+      "id": "FRAMEWORK-CHOICE",
+      "title": ""
+    },
+    {
+      "id": "AUTH-DECORATOR",
+      "title": ""
+    }
+  ],
+  "findings_count": 14,
+  "condition": "full-skill",
+  "variant": "full",
+  "run": 1
+}

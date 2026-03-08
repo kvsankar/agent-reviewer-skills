@@ -1,0 +1,127 @@
+# Ground truth for rhodes-synthetic - intentionally anti-Rhodesian Python code
+# Synthetic file with 15 planted violations of Brandon Rhodes' coding principles
+
+repository: synthetic
+skill: python-rhodes-reviewer
+files:
+  - path: order_processor.py
+    issues:
+      - id: GT-RH-01
+        type: HOIST-IO
+        line_range: [72, 104]
+        severity: HIGH
+        description: "I/O (file read, DB queries, DB write, notifications) mixed inside OrderProcessor.process() business logic"
+        guideline: "Hoisting I/O - Keep Side Effects at Top Level"
+        function: process
+
+      - id: GT-RH-02
+        type: FUNC-SHELL
+        line_range: [218, 252]
+        severity: HIGH
+        description: "fulfill_order() tangles pure logic (signature/insurance calc) with I/O (DB, HTTP, DB update)"
+        guideline: "Functional Core, Imperative Shell"
+        function: fulfill_order
+
+      - id: GT-RH-03
+        type: NO-MOCK
+        line_range: [187, 208]
+        severity: MEDIUM
+        description: "get_daily_report() requires mocking DB, SMTP to test - signals architectural coupling"
+        guideline: "Avoid Mocking in Tests"
+        function: get_daily_report
+
+      - id: GT-RH-04
+        type: COMP-INHERIT
+        line_range: [50, 67]
+        severity: MEDIUM
+        description: "OrderProcessor uses multiple inheritance (BaseProcessor, PricingMixin, DiscountMixin) instead of composition"
+        guideline: "Composition Over Inheritance"
+        function: OrderProcessor
+
+      - id: GT-RH-05
+        type: NO-MUTSTATE
+        line_range: [106, 114]
+        severity: MEDIUM
+        description: "get_order_summary() clears self.orders as side effect - surprising mutation in a getter"
+        guideline: "Avoid Mutable State"
+        function: get_order_summary
+
+      - id: GT-RH-06
+        type: EXPLICIT-NAME
+        line_range: [118, 132]
+        severity: LOW
+        description: "ReportService uses vague names: run(), _do() - unclear what operations perform"
+        guideline: "Use Explicit Method Names"
+        function: run
+
+      - id: GT-RH-07
+        type: NAMED-TUPLE
+        line_range: [135, 151]
+        severity: LOW
+        description: "create_shipping_label() builds dict with fixed keys instead of using a named tuple or dataclass"
+        guideline: "Named Tuples for Type Safety"
+        function: create_shipping_label
+
+      - id: GT-RH-08
+        type: LIST-FRONT
+        line_range: [154, 167]
+        severity: MEDIUM
+        description: "PriorityQueue uses list.insert(0, x) for O(n) front insertion; add_batch is O(n^2)"
+        guideline: "Avoid O(n) at Front"
+        function: add_urgent
+
+      - id: GT-RH-09
+        type: NAME-COMMENT
+        line_range: [170, 175]
+        severity: LOW
+        description: "calc() uses single-letter variables (d, r, t, p, f) with comments explaining what they mean"
+        guideline: "Naming Over Comments"
+        function: calc
+
+      - id: GT-RH-10
+        type: INDENT-LIMIT
+        line_range: [178, 199]
+        severity: MEDIUM
+        description: "validate_order_batch() has 7 levels of nesting with nested if/for/if/if/if/if"
+        guideline: "Indentation Discipline"
+        function: validate_order_batch
+
+      - id: GT-RH-11
+        type: NO-EVAL
+        line_range: [202, 207]
+        severity: HIGH
+        description: "apply_dynamic_rule() uses eval() on a rule string"
+        guideline: "Avoid eval() in Application Code"
+        function: apply_dynamic_rule
+
+      - id: GT-RH-12
+        type: TOP-DOWN
+        line_range: [210, 216]
+        severity: LOW
+        description: "process_refund() calls helpers (_calculate_refund_amount, etc.) defined 20+ lines below"
+        guideline: "Code Should Read Top-Down"
+        function: process_refund
+
+      - id: GT-RH-13
+        type: NO-GLOBAL-MUT
+        line_range: [20, 21]
+        severity: MEDIUM
+        description: "Module-level mutable globals REGISTERED_HANDLERS and ORDER_CACHE modified at runtime"
+        guideline: "Global Mutable State Anti-Pattern"
+        function: register_handler
+
+      - id: GT-RH-14
+        type: NO-IMPORT-FX
+        line_range: [12, 15]
+        severity: HIGH
+        description: "Module performs I/O at import time: logging.basicConfig, sqlite3.connect, CREATE TABLE"
+        guideline: "Avoid Import-Time Side Effects"
+        function: module_level
+
+      - id: GT-RH-15
+        type: NO-CALL
+        line_range: [27, 35]
+        severity: LOW
+        description: "OrderValidator uses __call__() making validator(order) ambiguous - is it constructing or validating?"
+        guideline: "Avoid __call__() for Readability"
+        function: OrderValidator.__call__

@@ -1,0 +1,13 @@
+# Cloned repos (large, can be re-cloned)
+repos/pygoat/
+repos/dvna/
+repos/doit-repo/
+repos/gtts-repo/
+repos/auditlog-repo/
+
+# Python cache
+__pycache__/
+
+# Raw review outputs (large, regenerable)
+results/exp*/*/run-*.json
+results/exp*/*/prompt.md

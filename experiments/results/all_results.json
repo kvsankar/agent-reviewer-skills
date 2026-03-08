@@ -1,0 +1,388 @@
+{
+  "timestamp": "2026-03-05T17:27:28.627432",
+  "experiment_1_baseline": {
+    "pygoat/zero-shot": {
+      "findings": 14,
+      "duration": 65.1209282875061,
+      "finding_ids": [
+        "SQL-INJECT-1",
+        "CMD-INJECT-1",
+        "CODE-INJECT-1",
+        "PICKLE-INJECT-1",
+        "XXE-1",
+        "SSRF-1",
+        "PATH-TRAVERSAL-1",
+        "YAML-INJECT-1",
+        "SSTI-1",
+        "XSS-REFLECT-1",
+        "WEAK-CRYPTO-1",
+        "JWT-WEAK-1",
+        "INFO-DISCLOSURE-1",
+        "HARDCODE-CREDS-1"
+      ],
+      "ground_truth": 19
+    },
+    "pygoat/generic-prompt": {
+      "findings": 0,
+      "duration": 58.806843757629395,
+      "finding_ids": [],
+      "ground_truth": 19
+    },
+    "pygoat/full-skill": {
+      "findings": 14,
+      "duration": 66.63143515586853,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "CODE-INJECT",
+        "INSEC-DES",
+        "XML-INJECT",
+        "XSS-PREVENT",
+        "WEAK-HASH",
+        "MISSING-CSRF",
+        "COOKIE-SECURE",
+        "PII-LOG",
+        "MISSING-VALIDATION-LAYER",
+        "MISSING-SECURITY-HEADERS",
+        "FRAMEWORK-CHOICE",
+        "AUTH-DECORATOR"
+      ],
+      "ground_truth": 19
+    },
+    "dvna/zero-shot": {
+      "findings": 11,
+      "duration": 49.97917032241821,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "UNSAFE-DESERIAL",
+        "XXE-ATTACK",
+        "OPEN-REDIRECT",
+        "CODE-INJECT",
+        "WEAK-RESET-TOKEN",
+        "HARDCODED-SECRET",
+        "INFO-DISCLOSURE",
+        "MISSING-VALIDATION",
+        "DEPRECATED-FIND"
+      ],
+      "ground_truth": 13
+    },
+    "dvna/generic-prompt": {
+      "findings": 0,
+      "duration": 55.258100271224976,
+      "finding_ids": [],
+      "ground_truth": 13
+    },
+    "dvna/full-skill": {
+      "findings": 14,
+      "duration": 66.60313367843628,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "DESERIALIZATION",
+        "CODE-INJECT",
+        "CRED-STORE",
+        "CRYPTO-STRONG",
+        "TIMING-ATTACK",
+        "SESSION-SECURE",
+        "XXE-ATTACK",
+        "MISSING-HELMET",
+        "MISSING-RATE-LIMIT",
+        "MISSING-VALIDATION",
+        "PASSWORD-HASH",
+        "AUTHZ-CHECK"
+      ],
+      "ground_truth": 13
+    },
+    "auth/zero-shot": {
+      "findings": 8,
+      "duration": 47.57459497451782,
+      "finding_ids": [
+        "AUTH-BYPASS-DEFAULT",
+        "FIELD-INJECTION",
+        "RACE-CONDITION-PRIMARY",
+        "NO-INPUT-VALIDATION",
+        "QUERY-TIMING-ATTACK",
+        "CIRCULAR-IMPORTS",
+        "QUERY-ORDERING",
+        "HARDCODED-CONSTANTS"
+      ],
+      "ground_truth": null
+    },
+    "auth/generic-prompt": {
+      "findings": 7,
+      "duration": 47.52489233016968,
+      "finding_ids": [
+        "UNVAL-INPUT",
+        "BROKEN-AUTHZ",
+        "INFO-LEAK",
+        "RACE-CONDITION",
+        "WEAK-DEFAULT",
+        "UNSAFE-KWARGS",
+        "VERBOSE-ERROR"
+      ],
+      "ground_truth": null
+    },
+    "auth/full-skill": {
+      "findings": 12,
+      "duration": 67.45060396194458,
+      "finding_ids": [
+        "PII-ENCRYPT",
+        "VALIDATE-INPUT",
+        "AUTHZ-CHECK",
+        "AUDIT-TRAIL",
+        "SIZE-LIMIT",
+        "TIMING-ATTACK",
+        "PII-IDENTIFY",
+        "DATA-RETENTION",
+        "RATE-LIMIT",
+        "USE-TRANSACTION",
+        "ORM-SAFE",
+        "ROLE-SEPARATION"
+      ],
+      "ground_truth": null
+    }
+  },
+  "experiment_2_ablation": {
+    "pygoat/full-skill": {
+      "findings": 19,
+      "duration": 124.35230731964111,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "CODE-INJECT",
+        "PICKLE-DESERIAL",
+        "XXE-INJECT",
+        "XSS-PREVENT",
+        "SSRF-PREVENT",
+        "WEAK-HASH",
+        "COOKIE-SECURE",
+        "PATH-TRAVERSE",
+        "NO-HARDCODE",
+        "MISSING-CSRF",
+        "RANDOM-SECURE",
+        "PII-LOG",
+        "OWASP",
+        "AUTHENTICATION-PRESENT",
+        "ARGON2-USAGE",
+        "STRUCTURED-VIEWS",
+        "AUTHZ-CHECK"
+      ],
+      "ground_truth": 19
+    },
+    "pygoat/principles-only": {
+      "findings": 16,
+      "duration": 66.19996500015259,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "CODE-INJECT",
+        "PICKLE-INJECT",
+        "XXE-INJECT",
+        "NO-HARDCODE",
+        "WEAK-HASH",
+        "PATH-TRAVERSE",
+        "MISSING-CSRF",
+        "MISSING-AUTHZ-CHECK",
+        "COOKIE-SECURE",
+        "LOG-SANITIZE",
+        "SSRF-PREVENT",
+        "MISSING-RATE-LIMIT",
+        "MISSING-SECURITY-HEADERS",
+        "MISSING-INPUT-VALIDATION"
+      ],
+      "ground_truth": 19
+    },
+    "pygoat/ids-only": {
+      "findings": 11,
+      "duration": 69.86862826347351,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CODE-INJECT",
+        "CMD-INJECT",
+        "PICKLE-INJECT",
+        "XML-INJECT",
+        "WEAK-HASH",
+        "CSRF-PROTECT",
+        "PII-LOG",
+        "NO-HARDCODE",
+        "VALIDATE-INPUT",
+        "SESSION-SECURE"
+      ],
+      "ground_truth": 19
+    },
+    "pygoat/trimmed-20": {
+      "findings": 15,
+      "duration": 59.20733642578125,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CODE-INJECT",
+        "CMD-INJECT",
+        "INSEC-DESERIALIZE",
+        "XXE-INJECT",
+        "WEAK-HASH",
+        "RANDOM-SECURE",
+        "CSRF-PROTECT",
+        "PII-LOG",
+        "SESSION-SECURE",
+        "ERROR-SAFE",
+        "VALIDATE-INPUT",
+        "DEPS-UPDATE",
+        "HASH-PASSWORD",
+        "AUTHZ-CHECK"
+      ],
+      "ground_truth": 19
+    },
+    "dvna/full-skill": {
+      "findings": 13,
+      "duration": 63.653055906295776,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "DESERIALIZATION",
+        "CRED-STORE",
+        "XPATH-INJECT",
+        "CRYPTO-DEPRECATE",
+        "OPEN-REDIRECT",
+        "TIMING-ATTACK",
+        "MISSING-HELMET",
+        "MISSING-CSRF-TOKEN",
+        "MISSING-VALIDATION-LIB",
+        "MISSING-RATE-LIMIT",
+        "PASSWORD-HASH"
+      ],
+      "ground_truth": 13
+    },
+    "dvna/principles-only": {
+      "findings": 15,
+      "duration": 65.53557085990906,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "CODE-INJECT",
+        "DESERIALIZATION",
+        "CRED-STORE",
+        "CRYPTO-DEPRECATE",
+        "SESSION-SECURE",
+        "AUTHZ-CHECK",
+        "XPATH-INJECT",
+        "MISSING-HELMET",
+        "CSRF-TOKEN",
+        "RATE-LIMIT",
+        "TIMING-ATTACK",
+        "PASSWORD-HASH",
+        "CRYPTO-STRONG"
+      ],
+      "ground_truth": 13
+    },
+    "dvna/ids-only": {
+      "findings": 14,
+      "duration": 86.59717965126038,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "CODE-INJECT",
+        "DESERIALIZATION",
+        "XML-EXTERNAL-ENTITY",
+        "WEAK-RESET-TOKEN",
+        "OPEN-REDIRECT",
+        "WEAK-SESSION-SECRET",
+        "INSECURE-COOKIES",
+        "ERROR-DISCLOSE",
+        "MISSING-VALIDATION-LIB",
+        "MISSING-AUTHZ-CHECK",
+        "MISSING-SECURITY-HEADERS",
+        "CRITICAL"
+      ],
+      "ground_truth": 13
+    },
+    "dvna/trimmed-20": {
+      "findings": 14,
+      "duration": 79.20779848098755,
+      "finding_ids": [
+        "SQL-INJECT",
+        "CMD-INJECT",
+        "DESERIALIZATION",
+        "XXE-ATTACK",
+        "CRYPTO-WEAK",
+        "OPEN-REDIRECT",
+        "SESSION-WEAK",
+        "MISSING-AUTHZ",
+        "ERROR-DISCLOSE",
+        "MISSING-HELMET",
+        "CSRF-TOKEN",
+        "RATE-LIMIT",
+        "PASSWORD-HASH",
+        "SESSION-FRAMEWORK"
+      ],
+      "ground_truth": 13
+    },
+    "auth/full-skill": {
+      "findings": 10,
+      "duration": 68.2750415802002,
+      "finding_ids": [
+        "VALIDATE-INPUT",
+        "MISSING-AUTHZ-CHECK",
+        "PII-LOG",
+        "MISSING-AUDIT-TRAIL",
+        "SIZE-LIMIT",
+        "PII-IDENTIFY",
+        "MISSING-VALIDATION-LAYER",
+        "TYPE-CHECK",
+        "USE-TRANSACTION",
+        "AUTHZ-CHECK"
+      ],
+      "ground_truth": null
+    },
+    "auth/principles-only": {
+      "findings": 7,
+      "duration": 54.07829570770264,
+      "finding_ids": [
+        "AUTHZ-CHECK",
+        "VALIDATE-INPUT",
+        "PII-ENCRYPT",
+        "AUDIT-TRAIL",
+        "MISSING-RATE-LIMIT",
+        "MISSING-FAIL-CLOSED",
+        "DATA-MINIMIZATION"
+      ],
+      "ground_truth": null
+    },
+    "auth/ids-only": {
+      "findings": 9,
+      "duration": 55.91498041152954,
+      "finding_ids": [
+        "VALIDATE-INPUT",
+        "MFA-DEFAULT",
+        "SESSION-SECURE",
+        "PII-LOG",
+        "RATE-LIMIT",
+        "AUDIT-TRAIL",
+        "AUTHZ-CHECK",
+        "SQL-INJECT",
+        "TRANS-ATOMIC"
+      ],
+      "ground_truth": null
+    },
+    "auth/trimmed-20": {
+      "findings": 13,
+      "duration": 74.66222143173218,
+      "finding_ids": [
+        "INPUT-VALIDATE",
+        "PII-ENCRYPT",
+        "AUTHZ-CHECK",
+        "ERROR-SAFE",
+        "PII-LOG",
+        "AUDIT-TRAIL",
+        "CONSENT-EXPLICIT",
+        "DATA-RETENTION",
+        "SQL-INJECT",
+        "ATOMIC-TRANS",
+        "ROLE-VALIDATE",
+        "SESSION-SECURE",
+        "MFA-SUPPORT"
+      ],
+      "ground_truth": null
+    }
+  }
+}

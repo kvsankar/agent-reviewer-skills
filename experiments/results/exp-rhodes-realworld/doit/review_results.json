@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-03-06T23:49:56.170570",
+  "zero-shot": {
+    "findings": 9,
+    "duration": 64.71595525741577,
+    "finding_ids": [
+      "LONG-METHOD-1",
+      "STRING-FORMAT-1",
+      "MAGIC-NUMBER-1",
+      "BROAD-EXCEPT-1",
+      "VALIDATION-1",
+      "LONG-METHOD-2",
+      "UNUSED-IMPORT-1",
+      "TYPE-HINTS-1",
+      "MUTABLE-DEFAULT-1"
+    ]
+  },
+  "generic-prompt": {
+    "findings": 8,
+    "duration": 86.32919049263,
+    "finding_ids": [
+      "LONG-METHOD",
+      "GOD-CLASS",
+      "PARAM-COUNT",
+      "OLD-FORMAT",
+      "MAGIC-NUM",
+      "MIXED-CONCERNS",
+      "USE-CONST",
+      "BROAD-EXCEPT"
+    ]
+  },
+  "full-skill": {
+    "findings": 9,
+    "duration": 73.07289409637451,
+    "finding_ids": [
+      "HOIST-IO",
+      "FUNC-SHELL",
+      "INDENT-LIMIT",
+      "PRECISE-NOUN",
+      "NO-GLOBAL-MUT",
+      "TOP-DOWN",
+      "EXPLICIT-NAME",
+      "DICT-COMP",
+      "EXCEPT-HIER"
+    ]
+  },
+  "hybrid": {
+    "findings": 11,
+    "duration": 85.96422100067139,
+    "finding_ids": [
+      "HOIST-IO",
+      "NO-MOCK",
+      "FUNC-TEST",
+      "PRECISE-NOUN",
+      "TOP-DOWN",
+      "CONTROL-CALLER",
+      "NO-GLOBAL-MUT",
+      "KEY-SHARE",
+      "EXCEPT-HIER",
+      "FUNC-SHELL",
+      "EXPLICIT-NAME"
+    ]
+  },
+  "codex-zero-shot": {
+    "findings": 0,
+    "duration": 224.8694417476654,
+    "finding_ids": []
+  }
+}

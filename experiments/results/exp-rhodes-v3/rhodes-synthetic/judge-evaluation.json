@@ -1,0 +1,1112 @@
+{
+  "codex-zero-shot": {
+    "total_issues": 15,
+    "num_runs": 1,
+    "avg_detected": 6.0,
+    "avg_recall": 0.4,
+    "per_run_recall": [
+      0.4
+    ],
+    "per_run_detected": [
+      6
+    ],
+    "issue_detection_rates": {
+      "GT-RH-01": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-02": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-03": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-04": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-05": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-06": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-07": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-08": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-09": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-10": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-11": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-12": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-13": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-14": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-15": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      }
+    },
+    "runs": [
+      {
+        "condition": "codex-zero-shot",
+        "total_issues": 15,
+        "detected": 6,
+        "missed": 9,
+        "recall": 0.4,
+        "judgments": [
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "CFG-001 Per-request config file read in `process` - Shows file I/O code `with open(\"config/pricing.json\") as f: config = json.load(f)` and states 'Disk I/O on every request hurts performance and reliability. Load once and inject dependencies.'",
+            "reasoning": "The review explicitly identifies file I/O operations happening inside the process method and recommends moving them to initialization time via dependency injection, which directly matches the ground truth issue of I/O mixed in business logic that should be hoisted to the top level.",
+            "issue_id": "GT-RH-01",
+            "issue_type": "HOIST-IO"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the fulfill_order() function or address the mixing of pure logic (signature/insurance calculations) with I/O operations (DB, HTTP calls). None of the 13 findings identify the functional core, imperative shell pattern violation described in the ground truth issue.",
+            "issue_id": "GT-RH-02",
+            "issue_type": "FUNC-SHELL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "While the review identifies technical issues in get_daily_report() (DB-002 about SQL syntax and NET-001 about SMTP API misuse), it does not address the architectural coupling problem or the testability concerns that require extensive mocking of DB and SMTP dependencies.",
+            "issue_id": "GT-RH-03",
+            "issue_type": "NO-MOCK"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review covers many issues but does not mention the multiple inheritance pattern in OrderProcessor(BaseProcessor, PricingMixin, DiscountMixin) or suggest using composition instead. Even when the OrderProcessor class is referenced in finding CFG-001, the inheritance structure is maintained in the suggested improvement.",
+            "issue_id": "GT-RH-04",
+            "issue_type": "COMP-INHERIT"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the get_order_summary() function or the issue of a getter method unexpectedly clearing self.orders as a side effect. None of the 13 findings address surprising mutations in getter functions or the specific problem with get_order_summary() clearing state.",
+            "issue_id": "GT-RH-05",
+            "issue_type": "NO-MUTSTATE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review found a naming issue with a function called 'calc' (STYLE-001), but did not identify the specific issue with ReportService methods 'run()' and '_do()' mentioned in the ground truth. These are different naming problems in different parts of the code.",
+            "issue_id": "GT-RH-06",
+            "issue_type": "EXPLICIT-NAME"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review mentions create_shipping_label() in NET-002 only as part of an API call context, but does not analyze the function's internal implementation or suggest using named tuples/dataclasses instead of dictionaries with fixed keys",
+            "issue_id": "GT-RH-07",
+            "issue_type": "NAMED-TUPLE"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### 10) `PERF-001` Queue front insertion is inefficient and order semantics are unclear... `list.insert(0, ...)` is O(n). `deque` is the right structure for front insertions and clearer queue intent.",
+            "reasoning": "The review explicitly identifies the same performance issue: using list.insert(0, order) which is O(n) for front insertion. It correctly describes the performance problem and suggests using deque as the solution, matching exactly what the ground truth issue describes.",
+            "issue_id": "GT-RH-08",
+            "issue_type": "LIST-FRONT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### 11) `STYLE-001` Cryptic helper naming (`calc`)\n**Problematic code**\n```python\ndef calc(d, r, t):\n    p = d * (1 - r)\n    f = p * (1 + t)\n    return round(f, 2)\n```\n\n**Improved code**\n```python\ndef calculate_final_price(amount, discount_rate, tax_rate):\n    discounted = amount * (1 - discount_rate)\n    final_amount = discounted * (1 + tax_rate)\n    return round(final_amount, 2)\n```\n\n**Why this matters**\nDescriptive names reduce cognitive load and prevent misuse.",
+            "reasoning": "The review directly identifies the calc() function with single-letter variables (d, r, t, p, f) as problematic and recommends replacing them with descriptive names (amount, discount_rate, tax_rate, discounted, final_amount). This addresses the core 'Naming Over Comments' issue - using descriptive variable names instead of cryptic single-letter variables that require explanation.",
+            "issue_id": "GT-RH-09",
+            "issue_type": "NAME-COMMENT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "Finding 8: 'VAL-001 Deeply nested validation with silent drops (validate_order_batch)' which shows the problematic nested structure 'if order.get(\"status\") == \"pending\": if order.get(\"items\"): for item in order[\"items\"]: if item.get(\"quantity\", 0) > 0: if item.get(\"product_id\"): if item[\"product_id\"] in config[\"valid_products\"]: if item[\"quantity\"] <= config[\"max_quantity\"]:' and explains 'Guard clauses improve readability, reduce bugs'",
+            "reasoning": "The review explicitly identifies the validate_order_batch function and shows the excessive nesting structure with multiple nested if/for/if statements, which directly matches the ground truth issue about 7 levels of nesting. The review provides a solution using guard clauses to reduce the nesting.",
+            "issue_id": "GT-RH-10",
+            "issue_type": "INDENT-LIMIT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### 1) `SEC-001` Unsafe dynamic rule execution (`apply_dynamic_rule`) **Problematic code** ```python def apply_dynamic_rule(order, rule_string): total = order[\"total\"] return eval(rule_string) ``` **Why this matters** `eval` allows arbitrary code execution. Replacing it with named rules eliminates a critical security risk.",
+            "reasoning": "The review clearly identifies the apply_dynamic_rule function as problematic specifically because it uses eval() on a rule string, which allows arbitrary code execution. This matches exactly with the ground truth issue about avoiding eval() in application code.",
+            "issue_id": "GT-RH-11",
+            "issue_type": "NO-EVAL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review identified 13 different issues but none addressed the top-down code organization problem. No findings mentioned the process_refund() function, helper functions being defined after they are called, or violations of top-down reading principles. The review focused on security, database, validation, performance, and style issues, but not code organization.",
+            "issue_id": "GT-RH-12",
+            "issue_type": "TOP-DOWN"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review identified import-time side effects (DB-001) but did not detect the specific issue of module-level mutable globals REGISTERED_HANDLERS and ORDER_CACHE being modified at runtime in the register_handler function. The DB-001 finding addresses different global state issues (logging config and database connection at import time) rather than runtime mutation of module-level collections.",
+            "issue_id": "GT-RH-13",
+            "issue_type": "NO-GLOBAL-MUT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### 2) `DB-001` Import-time side effects for logging and DB\n**Problematic code**\n```python\nlogging.basicConfig(level=logging.DEBUG, filename=\"/var/log/orders.log\")\n_db = sqlite3.connect(os.environ.get(\"DB_PATH\", \"orders.db\"))\n_db.execute(\"CREATE TABLE IF NOT EXISTS orders (id TEXT, data TEXT)\")\n```\n**Why this matters**\nImporting the module now triggers I/O and global state changes. That hurts testability, startup reliability, and reuse.",
+            "reasoning": "The review explicitly identifies the exact same import-time side effects mentioned in the ground truth: logging.basicConfig, sqlite3.connect, and CREATE TABLE operations. It correctly diagnoses this as 'Import-time side effects' and explains the problems with I/O at import time, which matches the ground truth issue description perfectly.",
+            "issue_id": "GT-RH-14",
+            "issue_type": "NO-IMPORT-FX"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review covers many issues including validation problems, but does not mention OrderValidator class, __call__ method, or any readability concerns about ambiguous callable syntax. The specific issue about validator(order) being ambiguous between construction and validation is not addressed.",
+            "issue_id": "GT-RH-15",
+            "issue_type": "NO-CALL"
+          }
+        ],
+        "run": 1,
+        "total_findings_in_review": 0
+      }
+    ]
+  },
+  "full-skill": {
+    "total_issues": 15,
+    "num_runs": 1,
+    "avg_detected": 8.0,
+    "avg_recall": 0.533,
+    "per_run_recall": [
+      0.533
+    ],
+    "per_run_detected": [
+      8
+    ],
+    "issue_detection_rates": {
+      "GT-RH-01": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-02": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-03": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-04": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-05": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-06": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-07": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-08": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-09": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-10": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-11": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-12": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-13": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-14": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-15": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      }
+    },
+    "runs": [
+      {
+        "condition": "full-skill",
+        "total_issues": 15,
+        "detected": 8,
+        "missed": 7,
+        "recall": 0.533,
+        "judgments": [
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### HOIST-IO: I/O operations mixed throughout business logic\n\n**Current code:**\n```python\ndef process(self, order_data):\n    \"\"\"Process an order from raw data.\"\"\"\n    with open(\"config/pricing.json\") as f:  # File I/O mixed with logic\n        config = json.load(f)\n    \n    # Business logic mixed with database queries\n    cursor = _db.execute(\n        \"SELECT price FROM products WHERE id = ?\", (item[\"product_id\"],)\n    )\n    row = cursor.fetchone()\n    if row:\n        price = row[0] * item[\"quantity\"]\n    \n    # More I/O mixed in\n    _db.execute(\n        \"INSERT INTO orders VALUES (?, ?)\",\n        (order_id, json.dumps(order_data)),\n    )\n    _db.commit()\n```",
+            "reasoning": "The review identified the exact same issue - I/O operations (file reads, database queries, database writes) mixed within the process() function's business logic. It uses the same HOIST-IO mnemonic ID and provides the same solution of separating I/O from pure business logic.",
+            "issue_id": "GT-RH-01",
+            "issue_type": "HOIST-IO"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "While the review identifies the same architectural principle violation (HOIST-IO: mixing I/O with business logic), it analyzes a different function called 'process()' rather than the specific 'fulfill_order()' function mentioned in the ground truth. The ground truth is specifically about fulfill_order() mixing signature/insurance calculations with DB/HTTP operations, but the review discusses a process() method mixing pricing calculations with file/database I/O.",
+            "issue_id": "GT-RH-02",
+            "issue_type": "FUNC-SHELL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses general principles about avoiding mocking and I/O separation (HOIST-IO section and Rhodes quotes), but does not specifically identify the get_daily_report() function as requiring excessive mocking of DB/SMTP to test. The review focuses on other functions like process(), validate_order_batch(), etc., but never mentions get_daily_report.",
+            "issue_id": "GT-RH-03",
+            "issue_type": "NO-MOCK"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-MULTI-INHERIT: Multiple inheritance creates complexity\n\n**Current code:**\n```python\nclass OrderProcessor(BaseProcessor, PricingMixin, DiscountMixin):\n    \"\"\"Main order processing class using multiple inheritance.\"\"\"\n```\n\n**Suggested refactoring:**\n```python\nclass OrderProcessor:\n    def __init__(self, pricing_service, discount_service, logger):\n        self.pricing = pricing_service\n        self.discounts = discount_service\n        self.logger = logger\n```\n\n**Why this matters:**\nComposition allows testing each service independently and swapping implementations at runtime. Multiple inheritance creates method resolution order complexity and testing combinatorial explosion.\n\n**Rhodes' principle:**\n\"Multiple inheritance creates complexity and testing nightmares. Use composition\u2014inject dependencies through constructor parameters.\"",
+            "reasoning": "The review explicitly identifies the OrderProcessor class using multiple inheritance (BaseProcessor, PricingMixin, DiscountMixin) and recommends refactoring to use composition instead. This directly matches the ground truth issue about composition over inheritance for the OrderProcessor class.",
+            "issue_id": "GT-RH-04",
+            "issue_type": "COMP-INHERIT"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses mutable global state (NO-GLOBAL-MUT) but does not mention the specific function get_order_summary() or the issue of a getter method unexpectedly clearing self.orders as a side effect. The review covers various other patterns but not the specific problematic getter behavior described in the ground truth.",
+            "issue_id": "GT-RH-05",
+            "issue_type": "NO-MUTSTATE"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "USE-VERBS: Functions should use action verbs - Current code shows 'class ReportService: def run(self, data): # Vague verb' and 'result.append(self._do(item)) # Very vague verb'. Explanation states 'Function names should clearly indicate what action they perform. run() and _do() tell you nothing about the actual operation being performed.'",
+            "reasoning": "The review explicitly identifies the same ReportService class with vague method names run() and _do(), and explains that these names don't clearly indicate what operations they perform, which matches the ground truth issue exactly.",
+            "issue_id": "GT-RH-06",
+            "issue_type": "EXPLICIT-NAME"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the create_shipping_label() function or identify any issues with dictionaries that should be converted to named tuples or dataclasses. The only reference to NAMED-TUPLE is in the strengths section, where it praises 'Good use of dictionary structures for order data and shipping labels', which contradicts the ground truth issue about needing to use named tuples instead of dictionaries.",
+            "issue_id": "GT-RH-07",
+            "issue_type": "NAMED-TUPLE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the add_urgent function, list.insert(0, x) operations, PriorityQueue implementation, or any O(n) front insertion performance issues. All suggestions focus on different concerns like I/O separation, naming conventions, and code organization, but none address the specific list performance problem described in the ground truth.",
+            "issue_id": "GT-RH-08",
+            "issue_type": "LIST-FRONT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### PRECISE-NOUN: Variable names should reveal intent\n\n**Current code:**\n```python\ndef calc(d, r, t):\n    p = d * (1 - r)\n    f = p * (1 + t)\n    return round(f, 2)\n```\n\n**Suggested refactoring:**\n```python\ndef calculate_final_price(discount_amount, discount_rate, tax_rate):\n    \"\"\"Calculate final price after discount and tax\"\"\"\n    price_after_discount = discount_amount * (1 - discount_rate)\n    final_price = price_after_discount * (1 + tax_rate)\n    return round(final_price, 2)\n```\n\n**Why this matters:**\nSingle-letter variables create \"type desert\" where you can't understand what the function does without reading implementation. Descriptive names make code self-documenting.",
+            "reasoning": "The review explicitly identifies the calc() function with single-letter variables (d, r, t, p, f) and explains that these variables should be replaced with descriptive names instead of relying on comments. This directly matches the ground truth issue about naming over comments.",
+            "issue_id": "GT-RH-09",
+            "issue_type": "NAME-COMMENT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### INDENT-LIMIT: Deeply nested conditionals indicate design problems\n\n**Current code:**\n```python\ndef validate_order_batch(orders, config):\n    \"\"\"Validate a batch of orders.\"\"\"\n    results = []\n    for order in orders:\n        if order.get(\"status\") == \"pending\":\n            if order.get(\"items\"):\n                for item in order[\"items\"]:\n                    if item.get(\"quantity\", 0) > 0:\n                        if item.get(\"product_id\"):\n                            if item[\"product_id\"] in config[\"valid_products\"]:\n                                if item[\"quantity\"] <= config[\"max_quantity\"]:\n                                    # 6 levels deep!\n```",
+            "reasoning": "The review explicitly identifies the validate_order_batch() function with excessive nesting levels using the exact same mnemonic ID (INDENT-LIMIT) and shows the problematic nested if/for structure. The review demonstrates the same underlying issue of deep indentation that the ground truth describes.",
+            "issue_id": "GT-RH-10",
+            "issue_type": "INDENT-LIMIT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-EVAL: eval() creates security vulnerabilities\n\n**Current code:**\n```python\ndef apply_dynamic_rule(order, rule_string):\n    \"\"\"Apply a dynamic pricing rule.\n\n    rule_string is something like \"total * 0.9 if total > 100 else total\"\n    \"\"\"\n    total = order[\"total\"]\n    return eval(rule_string)  # DANGEROUS!\n```\n\n**Why this matters:**\n`eval()` allows arbitrary code execution, creating severe security vulnerabilities. Rule engines should use safe, predefined operations rather than evaluating arbitrary strings.",
+            "reasoning": "The review specifically identifies the apply_dynamic_rule function using eval() on a rule_string parameter, which exactly matches the ground truth issue. It uses the same mnemonic ID (NO-EVAL) and explains the security vulnerability, providing a comprehensive safe alternative.",
+            "issue_id": "GT-RH-11",
+            "issue_type": "NO-EVAL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review covers various Python code quality issues (I/O separation, global state, inheritance, eval usage, etc.) but does not address the specific top-down code organization problem where process_refund() calls helper functions defined below it. No mention of top-down reading order, the process_refund function, or helper function placement is found in the review.",
+            "issue_id": "GT-RH-12",
+            "issue_type": "TOP-DOWN"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-GLOBAL-MUT: Mutable globals create testing nightmares\n\n**Current code:**\n```python\nREGISTERED_HANDLERS = []\nORDER_CACHE = {}\n\ndef register_handler(handler):\n    REGISTERED_HANDLERS.append(handler)\n```\n\n**Why this matters:**\nGlobal mutable state makes tests interdependent. One test's handler registration affects other tests.",
+            "reasoning": "The review explicitly identifies the same mutable globals (REGISTERED_HANDLERS and ORDER_CACHE) and the register_handler function that modifies them. It uses the exact same mnemonic ID (NO-GLOBAL-MUT) and describes the same underlying problem of global mutable state being modified at runtime.",
+            "issue_id": "GT-RH-13",
+            "issue_type": "NO-GLOBAL-MUT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-IMPORT-FX: Import-time side effects create deployment fragility\n\n**Current code:**\n```python\nimport logging\nimport sqlite3\n\nlogging.basicConfig(level=logging.DEBUG, filename=\"/var/log/orders.log\")\n_db = sqlite3.connect(os.environ.get(\"DB_PATH\", \"orders.db\"))\n_db.execute(\"CREATE TABLE IF NOT EXISTS orders (id TEXT, data TEXT)\")\n```",
+            "reasoning": "The review explicitly identifies import-time side effects using the same mnemonic ID (NO-IMPORT-FX) and shows the exact problematic code: logging.basicConfig, sqlite3.connect, and CREATE TABLE operations happening at module level during import. It explains why this creates deployment fragility and provides appropriate refactoring solutions.",
+            "issue_id": "GT-RH-14",
+            "issue_type": "NO-IMPORT-FX"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the __call__ method, OrderValidator class, or any issues with callable objects being ambiguous between construction and validation. The review focuses on completely different issues like I/O separation, import-time side effects, global state, multiple inheritance, eval() usage, nesting, and naming conventions.",
+            "issue_id": "GT-RH-15",
+            "issue_type": "NO-CALL"
+          }
+        ],
+        "run": 1,
+        "total_findings_in_review": 8
+      }
+    ]
+  },
+  "generic-prompt": {
+    "total_issues": 15,
+    "num_runs": 1,
+    "avg_detected": 10.0,
+    "avg_recall": 0.667,
+    "per_run_recall": [
+      0.667
+    ],
+    "per_run_detected": [
+      10
+    ],
+    "issue_detection_rates": {
+      "GT-RH-01": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-02": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-03": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-04": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-05": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-06": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-07": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-08": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-09": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-10": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-11": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-12": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-13": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-14": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-15": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      }
+    },
+    "runs": [
+      {
+        "condition": "generic-prompt",
+        "total_issues": 15,
+        "detected": 10,
+        "missed": 5,
+        "recall": 0.667,
+        "judgments": [
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "The review identifies this issue in two sections: 1) SRP-VIOLATION section shows the process() function with 'File I/O', 'Database access', 'Persistence', and 'Notification' mixed together, and 2) MIXED-CONCERNS section titled 'I/O mixed with business logic' with explanation 'Separate data retrieval, business logic, and I/O operations for better testability and maintainability.'",
+            "reasoning": "The review clearly detected the same issue described in the ground truth. It identified the process() function as problematic for mixing I/O operations (file reads, database queries, database writes, notifications) with business logic, which exactly matches the ground truth description of 'I/O mixed inside OrderProcessor.process() business logic'.",
+            "issue_id": "GT-RH-01",
+            "issue_type": "HOIST-IO"
+          },
+          {
+            "detected": true,
+            "confidence": "medium",
+            "evidence": "Under MIXED-CONCERNS: 'I/O mixed with business logic' showing database I/O mixed with business calculations, and under SRP-VIOLATION showing database access mixed with pricing logic in process() method",
+            "reasoning": "The review identifies the core issue of mixing pure computational logic with I/O operations across multiple functions, demonstrating the same Functional Core/Imperative Shell violation described in the ground truth, though it doesn't specifically mention the fulfill_order() function by name",
+            "issue_id": "GT-RH-02",
+            "issue_type": "FUNC-SHELL"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### MIXED-CONCERNS\n**I/O mixed with business logic**\n\n**Current code:**\n```python\ndef get_daily_report():\n    conn = sqlite3.connect(\"orders.db\")  # Database I/O\n    cursor = conn.execute(\"SELECT * FROM orders WHERE date = date('now')\")\n    orders = cursor.fetchall()\n    conn.close()\n    \n    total_revenue = sum(json.loads(o[1])[\"total\"] for o in orders)  # Business logic\n    \n    import smtplib  # Email I/O\n    server = smtplib.SMTP(\"smtp.company.com\")\n    server.send_message(f\"Daily revenue: ${total_revenue:.2f}\")\n    server.quit()\n```\n\n**Explanation:** Separate data retrieval, business logic, and I/O operations for better testability and maintainability.",
+            "reasoning": "The review identified the exact same function (get_daily_report) and the exact same problem - tight coupling to external dependencies (database and SMTP) that makes testing difficult. The review describes how the function mixes I/O with business logic and provides a solution that separates concerns, which directly addresses the mocking issue mentioned in the ground truth.",
+            "issue_id": "GT-RH-03",
+            "issue_type": "NO-MOCK"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### INHERITANCE-MISUSE\n**Multiple inheritance creates complexity**\n\n**Current code:**\n```python\nclass OrderProcessor(BaseProcessor, PricingMixin, DiscountMixin):\n    \"\"\"Main order processing class using multiple inheritance.\"\"\"\n```\n\n**Improved version:**\n```python\nclass OrderProcessor:\n    def __init__(\n        self,\n        pricing_service: PricingService,\n        discount_service: DiscountService,\n        logger: Logger,\n        notification_service: NotificationService\n    ):\n        self._pricing_service = pricing_service\n        self._discount_service = discount_service\n        self._logger = logger\n        self._notification_service = notification_service\n```\n\n**Explanation:** Favor composition over inheritance. It's more flexible and easier to test each component independently.",
+            "reasoning": "The review explicitly identifies the OrderProcessor class using multiple inheritance (BaseProcessor, PricingMixin, DiscountMixin) and recommends refactoring it to use composition instead, which directly matches the ground truth issue about composition over inheritance.",
+            "issue_id": "GT-RH-04",
+            "issue_type": "COMP-INHERIT"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses global mutable state issues but does not identify the specific problem of get_order_summary() having side effects that clear self.orders. No mention of getter methods having unexpected mutations or the get_order_summary function specifically.",
+            "issue_id": "GT-RH-05",
+            "issue_type": "NO-MUTSTATE"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### BAD-NAMES **Poor naming hurts readability** **Current code:** ```python class ReportService: def _do(self, item): return { \"name\": item[\"name\"], \"total\": sum(i[\"price\"] * i[\"qty\"] for i in item[\"lines\"]), } ``` **Improved version:** ```python class ReportService: def _calculate_order_total(self, order_data: dict) -> dict: \"\"\"Calculate total for a single order.\"\"\" ``` **Explanation:** Descriptive names make code self-documenting and reduce cognitive load.",
+            "reasoning": "The review specifically identifies ReportService with the vague method name '_do()' and criticizes it for poor naming that hurts readability. It provides an improved version with a descriptive method name '_calculate_order_total()' that clearly indicates what the operation performs. This directly matches the ground truth issue about ReportService using vague method names that are unclear about what operations they perform.",
+            "issue_id": "GT-RH-06",
+            "issue_type": "EXPLICIT-NAME"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses using dataclasses instead of raw dictionaries in the DATA-STRUCTURES section, but it specifically refers to the process() method, not the create_shipping_label() function mentioned in the ground truth. The review does not identify or mention the create_shipping_label() function at all, despite covering the general concept of proper data structures.",
+            "issue_id": "GT-RH-07",
+            "issue_type": "NAMED-TUPLE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention PriorityQueue, list.insert(0), O(n) front insertion performance issues, add_urgent function, or add_batch method. The review focuses on different issues like global state, SRP violations, security risks, and naming conventions, but does not address the specific performance problem with list front insertions in the PriorityQueue implementation.",
+            "issue_id": "GT-RH-08",
+            "issue_type": "LIST-FRONT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### BAD-NAMES\n**Poor naming hurts readability**\n\n**Current code:**\n```python\ndef calc(d, r, t):\n    p = d * (1 - r)\n    f = p * (1 + t)\n    return round(f, 2)\n```\n\n**Improved version:**\n```python\ndef calculate_final_price(discount_amount: float, discount_rate: float, tax_rate: float) -> float:\n    \"\"\"Calculate final price after discount and tax.\"\"\"\n    price_after_discount = discount_amount * (1 - discount_rate)\n    final_price = price_after_discount * (1 + tax_rate)\n    return round(final_price, 2)\n```\n\n**Explanation:** Descriptive names make code self-documenting and reduce cognitive load.",
+            "reasoning": "The review clearly identifies the calc() function with single-letter variables (d, r, t, p, f) as having poor naming that hurts readability. It provides an improved version with descriptive variable names, which directly addresses the ground truth issue of using naming over comments to make code self-documenting.",
+            "issue_id": "GT-RH-09",
+            "issue_type": "NAME-COMMENT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### DEEP-NESTING **Excessive nesting reduces readability** **Current code:** ```python def validate_order_batch(orders, config): results = [] for order in orders: if order.get(\"status\") == \"pending\": if order.get(\"items\"): for item in order[\"items\"]: if item.get(\"quantity\", 0) > 0: if item.get(\"product_id\"): if item[\"product_id\"] in config[\"valid_products\"]: if item[\"quantity\"] <= config[\"max_quantity\"]: results.append(...) ``` **Explanation:** Use early returns and extract methods to reduce nesting.",
+            "reasoning": "The review identifies the exact same function (validate_order_batch) and the exact same problem (excessive nesting levels). The review shows the deeply nested code structure and provides a solution using early returns and method extraction to reduce nesting, directly addressing the indentation discipline issue described in the ground truth.",
+            "issue_id": "GT-RH-10",
+            "issue_type": "INDENT-LIMIT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "**SECURITY-RISK** **Using eval() creates security vulnerability** **Current code:** ```python def apply_dynamic_rule(order, rule_string): \"\"\"Apply a dynamic pricing rule. rule_string is something like \"total * 0.9 if total > 100 else total\" \"\"\" total = order[\"total\"] return eval(rule_string) ``` **Explanation:** `eval()` can execute arbitrary code. Use a predefined rule system or safe expression evaluators instead.",
+            "reasoning": "The review directly identifies the apply_dynamic_rule function using eval() and explains it as a security vulnerability that can execute arbitrary code, which exactly matches the ground truth issue about avoiding eval() in application code.",
+            "issue_id": "GT-RH-11",
+            "issue_type": "NO-EVAL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the process_refund function or address top-down code organization issues. The review focuses on other problems like global state, SRP violations, nesting, security, naming, mixed concerns, inheritance, context managers, and data structures, but does not identify the specific issue of helper functions being defined after they are called.",
+            "issue_id": "GT-RH-12",
+            "issue_type": "TOP-DOWN"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "REGISTERED_HANDLERS = []\nORDER_CACHE = {}\n\n**Explanation:** Global mutable state makes testing impossible and creates hidden dependencies. Use dependency injection and factory patterns instead.",
+            "reasoning": "The review explicitly identifies the same global mutable variables (REGISTERED_HANDLERS and ORDER_CACHE) mentioned in the ground truth issue and correctly describes the problem as global mutable state that creates testing and dependency issues.",
+            "issue_id": "GT-RH-13",
+            "issue_type": "NO-GLOBAL-MUT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "_db = sqlite3.connect(os.environ.get(\"DB_PATH\", \"orders.db\")) _db.execute(\"CREATE TABLE IF NOT EXISTS orders (id TEXT, data TEXT)\") ... Global mutable state makes testing impossible and creates hidden dependencies. Use dependency injection and factory patterns instead.",
+            "reasoning": "The review clearly identifies the problematic sqlite3.connect and CREATE TABLE operations being performed at module level as part of global state, which are exactly the import-time side effects described in the ground truth. While it uses different terminology ('global mutable state' vs 'import-time side effects'), it identifies the same code and underlying problem.",
+            "issue_id": "GT-RH-14",
+            "issue_type": "NO-IMPORT-FX"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention OrderValidator's __call__ method or the readability/ambiguity issues with making classes callable. While the review shows an improved OrderValidator usage with a validate() method in the SRP-VIOLATION section, it doesn't identify or discuss the specific problem of using __call__ making validator(order) ambiguous between construction and validation.",
+            "issue_id": "GT-RH-15",
+            "issue_type": "NO-CALL"
+          }
+        ],
+        "run": 1,
+        "total_findings_in_review": 9
+      }
+    ]
+  },
+  "hybrid": {
+    "total_issues": 15,
+    "num_runs": 1,
+    "avg_detected": 9.0,
+    "avg_recall": 0.6,
+    "per_run_recall": [
+      0.6
+    ],
+    "per_run_detected": [
+      9
+    ],
+    "issue_detection_rates": {
+      "GT-RH-01": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-02": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-03": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-04": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-05": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-06": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-07": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-08": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-09": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-10": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-11": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-12": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-13": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-14": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-15": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      }
+    },
+    "runs": [
+      {
+        "condition": "hybrid",
+        "total_issues": 15,
+        "detected": 9,
+        "missed": 6,
+        "recall": 0.6,
+        "judgments": [
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### HOIST-IO: I/O operations deeply embedded in business logic\n\n**Current code:**\n```python\ndef process(self, order_data):\n    \"\"\"Process an order from raw data.\"\"\"\n    with open(\"config/pricing.json\") as f:  # File I/O in business logic\n        config = json.load(f)\n    \n    # Business logic mixed with database calls\n    cursor = _db.execute(\n        \"SELECT price FROM products WHERE id = ?\", (item[\"product_id\"],)\n    )\n    row = cursor.fetchone()\n    \n    _db.execute(\n        \"INSERT INTO orders VALUES (?, ?)\",\n        (order_id, json.dumps(order_data)),\n    )\n    _db.commit()\n```",
+            "reasoning": "The review explicitly identifies the exact same issue described in the ground truth - I/O operations (file reads and database queries) mixed within the process() function's business logic. It uses the same mnemonic ID (HOIST-IO) and suggests the same solution of hoisting I/O to the top level.",
+            "issue_id": "GT-RH-01",
+            "issue_type": "HOIST-IO"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "HOIST-IO: I/O operations deeply embedded in business logic - shows business logic mixed with database calls and suggests refactoring to separate pure function process_order_data() from I/O operations, stating 'Move all I/O operations to the program's top level, allowing core logic to remain pure and testable.'",
+            "reasoning": "The review identifies the exact same architectural violation as the ground truth - mixing pure business logic with I/O operations, which violates the Functional Core, Imperative Shell pattern. While it discusses process() rather than fulfill_order(), it describes the identical problem of tangling pure logic with database and file I/O operations.",
+            "issue_id": "GT-RH-02",
+            "issue_type": "FUNC-SHELL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "While the review discusses the general principle that mocking signals architectural problems (in the Rhodes quote: 'Mocking signals architectural problems'), it does not identify the specific function 'get_daily_report()' or its DB/SMTP dependencies that require mocking. The review focuses on other functions like 'process()' and discusses I/O separation, but fails to detect the specific issue with get_daily_report().",
+            "issue_id": "GT-RH-03",
+            "issue_type": "NO-MOCK"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "NO-MULTI-INHERIT: Multiple inheritance creating complex dependencies... class OrderProcessor(BaseProcessor, PricingMixin, DiscountMixin): \"Main order processing class using multiple inheritance.\" ... Suggested refactoring: Use composition\u2014inject dependencies through constructor parameters. Multiple inheritance creates complexity and testing difficulties.",
+            "reasoning": "The review explicitly identifies the OrderProcessor class using multiple inheritance with BaseProcessor, PricingMixin, and DiscountMixin (exactly matching the ground truth), criticizes this pattern, and suggests refactoring to use composition instead with dependency injection.",
+            "issue_id": "GT-RH-04",
+            "issue_type": "COMP-INHERIT"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses global mutable state issues (NO-GLOBAL-MUT) but does not mention the get_order_summary() function or the specific problem of a getter method unexpectedly clearing self.orders as a side effect. The mutable state discussion in the review is about global variables, not surprising mutations in getter methods.",
+            "issue_id": "GT-RH-05",
+            "issue_type": "NO-MUTSTATE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review discusses naming issues in the PRECISE-NOUN section, but it addresses cryptic variable/parameter names in a function called 'calc' within order_processor.py, not vague method names like 'run()' and '_do()' in a ReportService class. The ground truth issue is about specific method names in ReportService at lines 118-132, which is not addressed in this review of order_processor.py.",
+            "issue_id": "GT-RH-06",
+            "issue_type": "EXPLICIT-NAME"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "**NAMED-TUPLE**: Good use of dictionary structure for shipping labels with clear field names",
+            "reasoning": "The review explicitly praised the dictionary structure for shipping labels as a strength rather than identifying it as a problem. The ground truth issue is that create_shipping_label() should use named tuples or dataclasses instead of dictionaries, but the review considered the dictionary approach to be good practice.",
+            "issue_id": "GT-RH-07",
+            "issue_type": "NAMED-TUPLE"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "LIST-FRONT: O(n) operations on list front destroying performance - identifies PriorityQueue.add_urgent() using self.items.insert(0, order) as O(n) operation and add_batch() as O(n\u00b2), suggesting collections.deque with appendleft() as O(1) solution",
+            "reasoning": "The review exactly matches the ground truth issue, identifying the same PriorityQueue class, add_urgent function, O(n) front insertion problem, and O(n\u00b2) add_batch performance issue with the correct solution",
+            "issue_id": "GT-RH-08",
+            "issue_type": "LIST-FRONT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### PRECISE-NOUN: Cryptic variable names hiding intent\n\n**Current code:**\n```python\ndef calc(d, r, t):\n    p = d * (1 - r)\n    f = p * (1 + t)\n    return round(f, 2)\n```\n\n**Suggested refactoring:**\n```python\ndef calculate_final_price(base_price, discount_rate, tax_rate):\n    \"\"\"Calculate final price after discount and tax.\"\"\"\n    discounted_price = base_price * (1 - discount_rate)\n    final_price = discounted_price * (1 + tax_rate)\n    return round(final_price, 2)\n```\n\n**Why this matters:**\n`calc(100, 0.1, 0.08)` tells you nothing. `calculate_final_price(100, 0.1, 0.08)` immediately reveals this calculates a price with 10% discount and 8% tax. Self-documenting code eliminates need for comments and reduces bugs.",
+            "reasoning": "The review directly identifies the calc() function with single-letter variables (d, r, t, p, f) and addresses the core issue of using cryptic variable names that require comments instead of descriptive names. The phrase 'Self-documenting code eliminates need for comments' directly aligns with the 'Naming Over Comments' guideline.",
+            "issue_id": "GT-RH-09",
+            "issue_type": "NAME-COMMENT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### INDENT-LIMIT: Deep nesting creating unmaintainable complexity\n\n**Current code:**\n```python\ndef validate_order_batch(orders, config):\n    \"\"\"Validate a batch of orders.\"\"\"\n    results = []\n    for order in orders:\n        if order.get(\"status\") == \"pending\":\n            if order.get(\"items\"):\n                for item in order[\"items\"]:\n                    if item.get(\"quantity\", 0) > 0:\n                        if item.get(\"product_id\"):\n                            if item[\"product_id\"] in config[\"valid_products\"]:\n                                if item[\"quantity\"] <= config[\"max_quantity\"]:\n                                    # 6 levels deep!\n```",
+            "reasoning": "The review explicitly identifies the exact same function (validate_order_batch) with the exact same issue (deep nesting) using the same mnemonic ID (INDENT-LIMIT). The review shows the nested if/for/if/if/if/if structure and provides a detailed refactoring solution to address the complexity.",
+            "issue_id": "GT-RH-10",
+            "issue_type": "INDENT-LIMIT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-EVAL: Dangerous eval() usage creating security vulnerability\n\n**Current code:**\n```python\ndef apply_dynamic_rule(order, rule_string):\n    \"\"\"Apply a dynamic pricing rule.\n    \n    rule_string is something like \"total * 0.9 if total > 100 else total\"\n    \"\"\"\n    total = order[\"total\"]\n    return eval(rule_string)  # SECURITY RISK!\n```",
+            "reasoning": "The review explicitly identifies the apply_dynamic_rule() function using eval() on a rule_string parameter, uses the exact same mnemonic ID (NO-EVAL), and explains the security vulnerability of using eval() in application code. This is a perfect match for the ground truth issue.",
+            "issue_id": "GT-RH-11",
+            "issue_type": "NO-EVAL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review identifies various code quality issues (I/O separation, inheritance patterns, performance, etc.) but does not address function ordering or top-down code organization. It does not mention the process_refund() function or the issue of helper functions being defined after they are called.",
+            "issue_id": "GT-RH-12",
+            "issue_type": "TOP-DOWN"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "#### NO-GLOBAL-MUT: Dangerous global mutable state creating coupling\n\n**Current code:**\n```python\nREGISTERED_HANDLERS = []\nORDER_CACHE = {}\n\ndef register_handler(handler):\n    REGISTERED_HANDLERS.append(handler)  # Modifies global state\n```",
+            "reasoning": "The review explicitly identifies the exact same issue: module-level mutable globals REGISTERED_HANDLERS and ORDER_CACHE modified at runtime by the register_handler function. It uses the same mnemonic ID (NO-GLOBAL-MUT) and describes the same problems: coupling, testing issues, and threading concerns.",
+            "issue_id": "GT-RH-13",
+            "issue_type": "NO-GLOBAL-MUT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "NO-IMPORT-FX: Critical import-time side effects breaking modularity - shows code with logging.basicConfig, sqlite3.connect, and CREATE TABLE at import time, explains 'Import-time side effects make modules untestable and fragile' and recommends deferred initialization",
+            "reasoning": "The review directly identifies the same problematic code (logging.basicConfig, sqlite3.connect, CREATE TABLE at module level) and describes the same underlying issue of import-time side effects, using the exact mnemonic ID NO-IMPORT-FX from the ground truth",
+            "issue_id": "GT-RH-14",
+            "issue_type": "NO-IMPORT-FX"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review covers multiple code issues (I/O separation, import-time side effects, eval usage, multiple inheritance, list performance, global state, naming, and indentation) but does not mention the __call__() method, OrderValidator class, or any concerns about ambiguous callable objects. The specific issue about validator(order) being ambiguous due to __call__() implementation is not addressed.",
+            "issue_id": "GT-RH-15",
+            "issue_type": "NO-CALL"
+          }
+        ],
+        "run": 1,
+        "total_findings_in_review": 8
+      }
+    ]
+  },
+  "zero-shot": {
+    "total_issues": 15,
+    "num_runs": 1,
+    "avg_detected": 9.0,
+    "avg_recall": 0.6,
+    "per_run_recall": [
+      0.6
+    ],
+    "per_run_detected": [
+      9
+    ],
+    "issue_detection_rates": {
+      "GT-RH-01": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-02": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-03": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-04": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-05": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-06": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-07": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-08": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-09": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-10": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-11": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-12": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      },
+      "GT-RH-13": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-14": {
+        "detected_in": 1,
+        "total_runs": 1,
+        "rate": 1.0
+      },
+      "GT-RH-15": {
+        "detected_in": 0,
+        "total_runs": 1,
+        "rate": 0.0
+      }
+    },
+    "runs": [
+      {
+        "condition": "zero-shot",
+        "total_issues": 15,
+        "detected": 9,
+        "missed": 6,
+        "recall": 0.6,
+        "judgments": [
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "In the SRP-VIOLATION section: 'class OrderProcessor... def process(self, order_data): # Handles: file I/O, database operations, pricing, tax calculation, notifications, logging, order ID generation with open(\"config/pricing.json\") as f: config = json.load(f)' and the improved code shows separating concerns with 'PricingService: Handles all pricing calculations' and 'OrderService: Handles order persistence and ID generation'",
+            "reasoning": "The review identified that the process method mixes I/O operations (file I/O, database operations, notifications) with business logic (pricing, tax calculation), which is the same core issue as the ground truth HOIST-IO problem. While framed as an SRP violation rather than I/O hoisting, it describes the same underlying problem and proposes separation of I/O concerns from business logic.",
+            "issue_id": "GT-RH-01",
+            "issue_type": "HOIST-IO"
+          },
+          {
+            "detected": true,
+            "confidence": "medium",
+            "evidence": "### SRP-VIOLATION: Single Responsibility Principle violations - 'Handles: file I/O, database operations, pricing, tax calculation, notifications, logging, order ID generation' and the improved code separates 'PricingService' for calculations from 'OrderService' for persistence",
+            "reasoning": "The review identifies the same core problem - mixing pure business logic (pricing, tax calculation) with I/O operations (database, file I/O, notifications) - though it frames it as an SRP violation rather than specifically mentioning Functional Core/Imperative Shell pattern. The proposed solution demonstrates proper separation of pure logic from I/O operations.",
+            "issue_id": "GT-RH-02",
+            "issue_type": "FUNC-SHELL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the get_daily_report() function specifically, nor does it identify issues with mocking requirements in tests or architectural coupling between DB/SMTP operations. While the review mentions general testing difficulties with global state, it does not address the specific issue of a function requiring mocking to test.",
+            "issue_id": "GT-RH-03",
+            "issue_type": "NO-MOCK"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "class OrderProcessor(BaseProcessor, PricingMixin, DiscountMixin): def process(self, order_data): # Handles: file I/O, database operations, pricing, tax calculation, # notifications, logging, order ID generation ... **Improved Code:** shows separate PricingService and OrderService classes instead of inheritance",
+            "reasoning": "The review identified the exact problematic code (OrderProcessor with multiple inheritance from BaseProcessor, PricingMixin, DiscountMixin) and provided a composition-based solution using separate service classes (PricingService, OrderService), which directly addresses the composition over inheritance principle, even though it was framed as an SRP violation.",
+            "issue_id": "GT-RH-04",
+            "issue_type": "COMP-INHERIT"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the get_order_summary() function or identify any issues with getters having side effects. While the review addresses global state issues, it doesn't specifically identify the problematic pattern of a getter method (get_order_summary) clearing self.orders as a side effect.",
+            "issue_id": "GT-RH-05",
+            "issue_type": "NO-MUTSTATE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "The review identified 'def _do(self, item):' under 'NAMING-CLARITY: Unclear function and variable names' but did not mention the primary function 'run' or the ReportService class",
+            "reasoning": "While the review detected a _do() method with unclear naming (which is mentioned in the ground truth description), it failed to identify the primary issue: the 'run' function on lines 118-132 in ReportService. The ground truth specifically targets the 'run' function, and the review found a different _do() method in what appears to be a different context (order processing rather than report service).",
+            "issue_id": "GT-RH-06",
+            "issue_type": "EXPLICIT-NAME"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "**Problematic Code:** ```python def create_shipping_label(order): \"\"\"Create a shipping label from order data.\"\"\" label = { \"from_name\": \"Warehouse A\", # ... rest of label } return label ``` **Improved Code:** Uses `class ShippingLabel(TypedDict):` with structured fields and `return ShippingLabel(...)` instead of plain dictionary",
+            "reasoning": "The review correctly identifies the create_shipping_label() function returning a plain dictionary with fixed keys and recommends using TypedDict (a structured type similar to named tuples) for better type safety, which directly addresses the ground truth issue of using named tuples/dataclasses instead of plain dictionaries.",
+            "issue_id": "GT-RH-07",
+            "issue_type": "NAMED-TUPLE"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention PriorityQueue, list.insert(0, x), O(n) front insertion performance issues, or the add_urgent/add_batch functions. The review focuses on security (eval usage), resource management (database connections), code organization, and error handling, but completely misses the specific data structure performance issue described in the ground truth.",
+            "issue_id": "GT-RH-08",
+            "issue_type": "LIST-FRONT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### NAMING-CLARITY: Unclear function and variable names **Problematic Code:** def calc(d, r, t): p = d * (1 - r) f = p * (1 + t) return round(f, 2) **Why this matters:** Clear names make code self-documenting and reduce the need for comments. Future maintainers can understand the purpose without deciphering cryptic abbreviations.",
+            "reasoning": "The review identified the exact same calc() function with single-letter variables (d, r, t, p, f) and explained that clear names reduce the need for comments, which directly addresses the 'naming over comments' principle from the ground truth.",
+            "issue_id": "GT-RH-09",
+            "issue_type": "NAME-COMMENT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### DEEP-NESTING: Complex nested conditional logic\n**Severity: MEDIUM**\n\n**Problematic Code:**\n```python\ndef validate_order_batch(orders, config):\n    results = []\n    for order in orders:\n        if order.get(\"status\") == \"pending\":\n            if order.get(\"items\"):\n                for item in order[\"items\"]:\n                    if item.get(\"quantity\", 0) > 0:\n                        if item.get(\"product_id\"):\n                            if item[\"product_id\"] in config[\"valid_products\"]:\n                                if item[\"quantity\"] <= config[\"max_quantity\"]:\n                                    # Success case deeply nested\n                                    results.append({...})\n```",
+            "reasoning": "The review identifies the exact same function (validate_order_batch) and describes the same underlying problem of excessive nesting. The code sample shows the deep conditional nesting structure that matches the ground truth issue about indentation discipline and 7 levels of nesting.",
+            "issue_id": "GT-RH-10",
+            "issue_type": "INDENT-LIMIT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### SEC-EVAL: Dangerous use of eval() for dynamic rules\n**Severity: CRITICAL**\n\n**Problematic Code:**\n```python\ndef apply_dynamic_rule(order, rule_string):\n    \"\"\"Apply a dynamic pricing rule.\n\n    rule_string is something like \"total * 0.9 if total > 100 else total\"\n    \"\"\"\n    total = order[\"total\"]\n    return eval(rule_string)\n```\n\n**Why this matters:** `eval()` executes arbitrary code, creating a severe security vulnerability. Attackers could inject malicious code through rule strings.",
+            "reasoning": "The review explicitly identifies the apply_dynamic_rule() function and its use of eval() on a rule string, which is exactly the issue described in the ground truth. The review explains the security vulnerability and provides an alternative solution.",
+            "issue_id": "GT-RH-11",
+            "issue_type": "NO-EVAL"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review focuses on security vulnerabilities, resource management, error handling, and design principles, but does not mention anything about code organization, top-down reading, or the specific issue of process_refund() calling helper functions that are defined later in the file. No evidence of detecting function ordering issues.",
+            "issue_id": "GT-RH-12",
+            "issue_type": "TOP-DOWN"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "### GLOBAL-STATE: Module-level side effects and global variables\n**Severity: HIGH**\n\n**Problematic Code:**\n```python\nlogging.basicConfig(level=logging.DEBUG, filename=\"/var/log/orders.log\")\n_db = sqlite3.connect(os.environ.get(\"DB_PATH\", \"orders.db\"))\n\nREGISTERED_HANDLERS = []\nORDER_CACHE = {}\n```",
+            "reasoning": "The review explicitly identifies the same global mutable variables (REGISTERED_HANDLERS and ORDER_CACHE) mentioned in the ground truth and correctly describes the problem as 'Module-level side effects and global variables'. The review explains why this is problematic and provides a solution that moves these to instance variables.",
+            "issue_id": "GT-RH-13",
+            "issue_type": "NO-GLOBAL-MUT"
+          },
+          {
+            "detected": true,
+            "confidence": "high",
+            "evidence": "GLOBAL-STATE section identifies 'logging.basicConfig(level=logging.DEBUG, filename=\"/var/log/orders.log\")' and '_db = sqlite3.connect(os.environ.get(\"DB_PATH\", \"orders.db\"))' as problematic module-level side effects, and DB-RESOURCE section shows '_db.execute(\"CREATE TABLE IF NOT EXISTS orders (id TEXT, data TEXT)\")' being moved from module level to deferred initialization",
+            "reasoning": "The review identifies the exact same problematic code (logging.basicConfig, sqlite3.connect, CREATE TABLE at module level) and recommends moving these I/O operations to deferred initialization, which addresses the import-time side effects issue, even though it uses the terminology 'module-level side effects' rather than 'import-time side effects'",
+            "issue_id": "GT-RH-14",
+            "issue_type": "NO-IMPORT-FX"
+          },
+          {
+            "detected": false,
+            "confidence": "high",
+            "evidence": "none",
+            "reasoning": "The review does not mention the __call__() method anywhere. While it discusses OrderValidator in the context of deep nesting issues and proposes a refactored version, it never addresses the specific readability concern about using __call__() making validator(order) ambiguous between construction and validation.",
+            "issue_id": "GT-RH-15",
+            "issue_type": "NO-CALL"
+          }
+        ],
+        "run": 1,
+        "total_findings_in_review": 8
+      }
+    ]
+  }
+}

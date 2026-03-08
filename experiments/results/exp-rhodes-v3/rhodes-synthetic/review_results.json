@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-03-08T14:53:16.686031",
+  "zero-shot": {
+    "runs": [
+      {
+        "findings": 8,
+        "duration": 68.66003227233887,
+        "finding_ids": [
+          "SEC-EVAL",
+          "DB-RESOURCE",
+          "GLOBAL-STATE",
+          "ERROR-HANDLING",
+          "SRP-VIOLATION",
+          "DEEP-NESTING",
+          "NAMING-CLARITY",
+          "TYPE-SAFETY"
+        ]
+      }
+    ],
+    "avg_findings": 8.0,
+    "avg_duration": 68.66003227233887
+  },
+  "generic-prompt": {
+    "runs": [
+      {
+        "findings": 9,
+        "duration": 62.9230215549469,
+        "finding_ids": [
+          "GLOBAL-STATE",
+          "SRP-VIOLATION",
+          "DEEP-NESTING",
+          "SECURITY-RISK",
+          "BAD-NAMES",
+          "MIXED-CONCERNS",
+          "INHERITANCE-MISUSE",
+          "NO-CONTEXT-MGR",
+          "DATA-STRUCTURES"
+        ]
+      }
+    ],
+    "avg_findings": 9.0,
+    "avg_duration": 62.9230215549469
+  },
+  "full-skill": {
+    "runs": [
+      {
+        "findings": 9,
+        "duration": 72.39177918434143,
+        "finding_ids": [
+          "HOIST-IO",
+          "NO-IMPORT-FX",
+          "NO-GLOBAL-MUT",
+          "NO-MULTI-INHERIT",
+          "NO-EVAL",
+          "INDENT-LIMIT",
+          "PRECISE-NOUN",
+          "USE-VERBS",
+          "NAMED-TUPLE"
+        ]
+      }
+    ],
+    "avg_findings": 9.0,
+    "avg_duration": 72.39177918434143
+  },
+  "hybrid": {
+    "runs": [
+      {
+        "findings": 10,
+        "duration": 74.28316617012024,
+        "finding_ids": [
+          "HOIST-IO",
+          "NO-IMPORT-FX",
+          "NO-EVAL",
+          "NO-MULTI-INHERIT",
+          "LIST-FRONT",
+          "NO-GLOBAL-MUT",
+          "PRECISE-NOUN",
+          "INDENT-LIMIT",
+          "NAMED-TUPLE",
+          "DICT-COMP"
+        ]
+      }
+    ],
+    "avg_findings": 10.0,
+    "avg_duration": 74.28316617012024
+  }
+}

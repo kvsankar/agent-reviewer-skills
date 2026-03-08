@@ -1,0 +1,69 @@
+{
+  "output": "## Security & Privacy Review: Node.js Application\n\n### \u2705 Strengths\n- **PASSWORD-HASH**: Uses bcrypt for password hashing with salt generation\n- **AUTHZ-CHECK**: Has authentication middleware to protect routes\n\n### \ud83d\udd34 Critical Issues (Immediate Fix Required)\n\n#### SQL-INJECT: SQL Injection in User Search\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:8-9\nvar query = \"SELECT name,id FROM Users WHERE login='\" + req.body.login + \"'\";\ndb.sequelize.query(query, {\n    model: db.User\n}).then(user => {\n```\n\n**Secure implementation:**\n```javascript\n// Use parameterized queries\ndb.User.findOne({\n    where: {\n        login: req.body.login\n    },\n    attributes: ['name', 'id']\n}).then(user => {\n\n// Or with Sequelize raw query\ndb.sequelize.query(\n    \"SELECT name,id FROM Users WHERE login = :login\",\n    {\n        replacements: { login: req.body.login },\n        model: db.User\n    }\n).then(user => {\n```\n\n**Security impact:**\nAllows attackers to execute arbitrary SQL queries, potentially accessing sensitive data, modifying records, or bypassing authentication.\n\n**Compliance:** OWASP A03:2021 - Injection, CWE-89\n\n---\n\n#### CMD-INJECT: Command Injection in Ping Function\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:36\nexec('ping -c 2 ' + req.body.address, function (err, stdout, stderr) {\n    output = stdout + stderr\n    res.render('app/ping', {\n        output: output\n    })\n})\n```\n\n**Secure implementation:**\n```javascript\nconst { execFile } = require('child_process');\n\n// Use execFile instead of exec to avoid shell interpretation\nexecFile('ping', ['-c', '2', req.body.address], (err, stdout, stderr) => {\n    output = stdout + stderr;\n    res.render('app/ping', {\n        output: output\n    });\n});\n\n// Or validate input strictly\nconst validIpRegex = /^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$/;\nif (!validIpRegex.test(req.body.address)) {\n    return res.status(400).send('Invalid IP address');\n}\n```\n\n**Security impact:**\nAllows remote code execution on the server through command injection. Attackers could execute arbitrary system commands.\n\n**Compliance:** OWASP A03:2021 - Injection, CWE-78\n\n---\n\n#### DESERIALIZATION: Unsafe Deserialization in Bulk Products\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:185\nvar products = serialize.unserialize(req.files.products.data.toString('utf8'))\n```\n\n**Secure implementation:**\n```javascript\n// Use JSON instead of node-serialize\ntry {\n    var products = JSON.parse(req.files.products.data.toString('utf8'));\n    \n    // Validate structure\n    const Joi = require('joi');\n    const productSchema = Joi.array().items(Joi.object({\n        name: Joi.string().required(),\n        code: Joi.string().required(),\n        tags: Joi.string(),\n        description: Joi.string()\n    }));\n    \n    const { error, value } = productSchema.validate(products);\n    if (error) {\n        return res.render('app/bulkproducts', {\n            messages: { danger: 'Invalid product data format' },\n            legacy: true\n        });\n    }\n    products = value;\n} catch (err) {\n    return res.render('app/bulkproducts', {\n        messages: { danger: 'Invalid JSON format' },\n        legacy: true\n    });\n}\n```\n\n**Security impact:**\nnode-serialize allows remote code execution through object deserialization. Attackers can inject malicious code that executes when the object is unserialized.\n\n**Compliance:** OWASP A08:2021 - Software and Data Integrity Failures, CWE-502\n\n---\n\n#### CODE-INJECT: Code Injection via Math Expression\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:169-170\nres.render('app/calc', {\n    output: mathjs.eval(req.body.eqn)\n})\n```\n\n**Secure implementation:**\n```javascript\n// Restrict mathjs to safe operations only\nconst math = require('mathjs');\n\nconst limitedEvaluate = math.evaluate;\nmath.import({\n    'import':     function () { throw new Error('Function import is disabled') },\n    'createUnit': function () { throw new Error('Function createUnit is disabled') },\n    'evaluate':   function () { throw new Error('Function evaluate is disabled') },\n    'parse':      function () { throw new Error('Function parse is disabled') },\n    'simplify':   function () { throw new Error('Function simplify is disabled') },\n    'derivative': function () { throw new Error('Function derivative is disabled') }\n}, { override: true });\n\ntry {\n    // Only allow basic math operations\n    const expr = req.body.eqn.replace(/[^0-9+\\-*/().\\s]/g, '');\n    const result = math.evaluate(expr);\n    res.render('app/calc', { output: result });\n} catch (error) {\n    res.render('app/calc', { output: 'Invalid expression' });\n}\n```\n\n**Security impact:**\nmathjs.eval() can potentially execute dangerous functions or access Node.js internals, leading to code injection.\n\n**Compliance:** OWASP A03:2021 - Injection, CWE-94\n\n---\n\n#### CRED-STORE: Hardcoded Session Secret\n\n**Vulnerable code:**\n```javascript\n// server.js:21-22\napp.use(session({\n  secret: 'keyboard cat',\n```\n\n**Secure implementation:**\n```javascript\n// Use environment variables for secrets\nrequire('dotenv').config();\n\napp.use(session({\n    secret: process.env.SESSION_SECRET || (() => {\n        if (process.env.NODE_ENV === 'production') {\n            throw new Error('SESSION_SECRET environment variable is required in production');\n        }\n        return require('crypto').randomBytes(32).toString('hex');\n    })(),\n    resave: false,\n    saveUninitialized: false,\n    cookie: {\n        secure: process.env.NODE_ENV === 'production',\n        httpOnly: true,\n        sameSite: 'strict',\n        maxAge: 24 * 60 * 60 * 1000 // 24 hours\n    }\n}));\n```\n\n**Security impact:**\nHardcoded secrets allow attackers to forge sessions and impersonate users.\n\n**Compliance:** OWASP A07:2021 - Identification and Authentication Failures, CWE-798\n\n---\n\n### \u26a0\ufe0f Warnings (Should Fix)\n\n#### CRYPTO-STRONG: Weak Password Reset Token\n\n**Vulnerable code:**\n```javascript\n// authHandler.js:47, 70\nif (req.query.token == md5(req.query.login)) {\n```\n\n**Secure implementation:**\n```javascript\nconst crypto = require('crypto');\n\n// Generate secure random token\nfunction generateResetToken() {\n    return crypto.randomBytes(32).toString('hex');\n}\n\n// Store tokens with expiration in database\nconst resetToken = generateResetToken();\nconst expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour\n\nawait db.PasswordReset.create({\n    userId: user.id,\n    token: crypto.createHash('sha256').update(resetToken).digest('hex'),\n    expiresAt: expiresAt\n});\n\n// Verify token\nconst hashedToken = crypto.createHash('sha256').update(req.query.token).digest('hex');\nconst resetRecord = await db.PasswordReset.findOne({\n    where: {\n        token: hashedToken,\n        expiresAt: { [Op.gt]: new Date() }\n    }\n});\n```\n\n**Security impact:**\nMD5 is cryptographically broken and predictable tokens allow password reset attacks.\n\n**Compliance:** OWASP A02:2021 - Cryptographic Failures, CWE-327\n\n---\n\n#### TIMING-ATTACK: Timing Attack in Token Comparison\n\n**Vulnerable code:**\n```javascript\n// authHandler.js:47\nif (req.query.token == md5(req.query.login)) {\n```\n\n**Secure implementation:**\n```javascript\nconst crypto = require('crypto');\n\n// Constant-time comparison\nfunction secureCompare(a, b) {\n    if (a.length !== b.length) {\n        return false;\n    }\n    return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));\n}\n\nconst expectedToken = crypto.createHash('sha256').update(user.login + user.salt).digest('hex');\nif (secureCompare(req.query.token, expectedToken)) {\n    // Valid token\n}\n```\n\n**Security impact:**\nTiming differences can reveal information about valid tokens through side-channel attacks.\n\n**Compliance:** CWE-208\n\n---\n\n#### SESSION-SECURE: Insecure Session Configuration\n\n**Vulnerable code:**\n```javascript\n// server.js:21-26\napp.use(session({\n  secret: 'keyboard cat',\n  resave: true,\n  saveUninitialized: true,\n  cookie: { secure: false }\n}))\n```\n\n**Secure implementation:**\n```javascript\n// Already shown in CRED-STORE example above\n```\n\n**Security impact:**\nInsecure session settings allow session hijacking and fixation attacks.\n\n**Compliance:** OWASP A07:2021 - Identification and Authentication Failures\n\n---\n\n#### XXE-ATTACK: XML External Entity Vulnerability\n\n**Vulnerable code:**\n```javascript\n// appHandler.js:196-197\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})\n```\n\n**Secure implementation:**\n```javascript\n// Disable entity processing\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {\n    noent: false,    // Disable entity processing\n    nonet: true,     // Disable network access\n    noblanks: true\n});\n\n// Better: Use JSON instead of XML\n```\n\n**Security impact:**\nXXE attacks can lead to file disclosure, SSRF, or denial of service.\n\n**Compliance:** OWASP A05:2021 - Security Misconfiguration, CWE-611\n\n---\n\n### \ud83d\udca1 Recommendations (Best Practices)\n\n#### MISSING-HELMET: No Security Headers\n\n**Recommendation:**\n```javascript\n// server.js - Add after other middleware\nconst helmet = require('helmet');\n\napp.use(helmet({\n    contentSecurityPolicy: {\n        directives: {\n            defaultSrc: [\"'self'\"],\n            styleSrc: [\"'self'\", \"'unsafe-inline'\"],\n            scriptSrc: [\"'self'\"],\n            imgSrc: [\"'self'\", \"data:\", \"https:\"]\n        }\n    },\n    hsts: {\n        maxAge: 31536000,\n        includeSubDomains: true\n    }\n}));\n```\n\n**Security impact:**\nMissing security headers leave the application vulnerable to XSS, clickjacking, and other attacks.\n\n---\n\n#### MISSING-RATE-LIMIT: No Rate Limiting\n\n**Recommendation:**\n```javascript\nconst rateLimit = require('express-rate-limit');\n\n// General rate limiting\napp.use(rateLimit({\n    windowMs: 15 * 60 * 1000, // 15 minutes\n    max: 100 // requests per window\n}));\n\n// Stricter limit for auth endpoints\nconst authLimiter = rateLimit({\n    windowMs: 15 * 60 * 1000,\n    max: 5 // login attempts\n});\n\napp.use('/login', authLimiter);\napp.use('/forgotpw', authLimiter);\n```\n\n**Security impact:**\nNo rate limiting allows brute force attacks and DoS.\n\n---\n\n#### MISSING-VALIDATION: No Input Validation\n\n**Recommendation:**\n```javascript\nconst { body, validationResult } = require('express-validator');\n\n// Add validation middleware\napp.post('/app/usersearch',\n    body('login').trim().isLength({ min: 1, max: 50 }).escape(),\n    (req, res) => {\n        const errors = validationResult(req);\n        if (!errors.isEmpty()) {\n            return res.status(400).json({ errors: errors.array() });\n        }\n        // Continue with handler\n    }\n);\n```\n\n**Security impact:**\nLack of input validation increases attack surface for injection attacks.\n\n---\n\n### \ud83d\udccb Compliance Checklist\n- [ ] \u274c OWASP Top 10 compliance (Multiple A03 injection issues)\n- [ ] \u274c Session security (Weak secret, insecure cookies)\n- [ ] \u274c Cryptographic security (MD5 usage, weak tokens)\n- [ ] \u274c Input validation (Multiple injection points)\n- [ ] \u274c Error handling (May leak stack traces)\n- [ ] \u274c Dependencies security (Need npm audit)\n\n**Priority Action Items:**\n1. Fix SQL injection in userSearch immediately\n2. Fix command injection in ping function\n3. Remove unsafe deserialization\n4. Implement proper session security\n5. Add comprehensive input validation\n6. Implement security headers and rate limiting\n",
+  "duration_seconds": 66.60313367843628,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:08:23.861739",
+  "success": true,
+  "findings": [
+    {
+      "id": "SQL-INJECT",
+      "title": "SQL Injection in User Search"
+    },
+    {
+      "id": "CMD-INJECT",
+      "title": "Command Injection in Ping Function"
+    },
+    {
+      "id": "DESERIALIZATION",
+      "title": "Unsafe Deserialization in Bulk Products"
+    },
+    {
+      "id": "CODE-INJECT",
+      "title": "Code Injection via Math Expression"
+    },
+    {
+      "id": "CRED-STORE",
+      "title": "Hardcoded Session Secret"
+    },
+    {
+      "id": "CRYPTO-STRONG",
+      "title": "Weak Password Reset Token"
+    },
+    {
+      "id": "TIMING-ATTACK",
+      "title": "Timing Attack in Token Comparison"
+    },
+    {
+      "id": "SESSION-SECURE",
+      "title": "Insecure Session Configuration"
+    },
+    {
+      "id": "XXE-ATTACK",
+      "title": "XML External Entity Vulnerability"
+    },
+    {
+      "id": "MISSING-HELMET",
+      "title": "No Security Headers"
+    },
+    {
+      "id": "MISSING-RATE-LIMIT",
+      "title": "No Rate Limiting"
+    },
+    {
+      "id": "MISSING-VALIDATION",
+      "title": "No Input Validation"
+    },
+    {
+      "id": "PASSWORD-HASH",
+      "title": ""
+    },
+    {
+      "id": "AUTHZ-CHECK",
+      "title": ""
+    }
+  ],
+  "findings_count": 14,
+  "condition": "full-skill",
+  "variant": "full",
+  "run": 1
+}

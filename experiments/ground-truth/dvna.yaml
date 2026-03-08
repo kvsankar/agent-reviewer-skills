@@ -1,0 +1,107 @@
+# Ground truth for DVNA - Damn Vulnerable NodeJS Application
+# Source: https://github.com/appsecco/dvna
+# Files: core/appHandler.js, core/authHandler.js, server.js, views/
+
+repository: https://github.com/appsecco/dvna
+skill: javascript-security-privacy-reviewer
+files:
+  - path: core/appHandler.js
+    issues:
+      - id: GT-DV-01
+        type: SQL-INJECT
+        line_range: [9, 36]
+        severity: CRITICAL
+        description: "SQL injection via string concatenation in userSearch()"
+        cwe: CWE-89
+
+      - id: GT-DV-02
+        type: CMD-INJECT
+        line_range: [38, 45]
+        severity: CRITICAL
+        description: "Command injection via child_process.exec() in ping()"
+        cwe: CWE-78
+
+      - id: GT-DV-03
+        type: PII-ACCESS
+        line_range: [206, 213]
+        severity: HIGH
+        description: "API returns password hashes in listUsersAPI()"
+        cwe: CWE-200
+
+      - id: GT-DV-04
+        type: XML-INJECT
+        line_range: [233, 248]
+        severity: CRITICAL
+        description: "XXE via libxmljs with noent:true in bulkProducts()"
+        cwe: CWE-611
+
+      - id: GT-DV-05
+        type: AUTHZ-CHECK
+        line_range: [144, 184]
+        severity: HIGH
+        description: "IDOR - no ownership check in userEditSubmit()"
+        cwe: CWE-639
+
+      - id: GT-DV-06
+        type: CODE-INJECT
+        line_range: [215, 231]
+        severity: CRITICAL
+        description: "Insecure deserialization via node-serialize in bulkProductsLegacy()"
+        cwe: CWE-502
+
+      - id: GT-DV-07
+        type: VALIDATE-INPUT
+        line_range: [186, 192]
+        severity: MEDIUM
+        description: "Open redirect - unvalidated URL in redirect()"
+        cwe: CWE-601
+
+      - id: GT-DV-08
+        type: ERROR-SAFE
+        line_range: [194, 204]
+        severity: MEDIUM
+        description: "Stack trace disclosure in calc() - no error handling"
+        cwe: CWE-215
+
+  - path: core/authHandler.js
+    issues:
+      - id: GT-DV-09
+        type: TOKEN-EXPIRE
+        line_range: [41, 67]
+        severity: CRITICAL
+        description: "Password reset token is predictable MD5 of username"
+        cwe: CWE-640
+
+  - path: server.js
+    issues:
+      - id: GT-DV-10
+        type: NO-HARDCODE
+        line_range: [23, 28]
+        severity: HIGH
+        description: "Hardcoded session secret 'keyboard cat'"
+        cwe: CWE-798
+
+      - id: GT-DV-11
+        type: COOKIE-SECURE
+        line_range: [23, 28]
+        severity: MEDIUM
+        description: "Cookie secure flag set to false"
+        cwe: CWE-614
+
+  - path: views/app/products.ejs
+    issues:
+      - id: GT-DV-12
+        type: XSS-PREVENT
+        line_range: [18, 26]
+        severity: HIGH
+        description: "Reflected XSS via unescaped output <%- %>"
+        cwe: CWE-79
+
+      - id: GT-DV-13
+        type: XSS-PREVENT
+        line_range: [47, 58]
+        severity: HIGH
+        description: "Stored XSS via unescaped product data"
+        cwe: CWE-79
+
+    total_issues: 13

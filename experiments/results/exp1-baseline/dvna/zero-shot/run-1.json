@@ -1,0 +1,57 @@
+{
+  "output": "# Security and Code Quality Review\n\n## Critical Security Issues\n\n### SQL-INJECT\n**Severity:** CRITICAL\n**Impact:** Complete database compromise, data theft, unauthorized access\n\n**Problematic Code:**\n```javascript\n// appHandler.js:9-10\nvar query = \"SELECT name,id FROM Users WHERE login='\" + req.body.login + \"'\";\ndb.sequelize.query(query, {\n    model: db.User\n})\n```\n\n**Improved Code:**\n```javascript\n// Use parameterized queries\ndb.User.findOne({\n    where: {\n        login: req.body.login\n    },\n    attributes: ['name', 'id']\n}).then(user => {\n    if (user) {\n        var output = {\n            user: {\n                name: user.name,\n                id: user.id\n            }\n        }\n        // rest of the logic...\n    }\n})\n```\n\n### CMD-INJECT\n**Severity:** CRITICAL  \n**Impact:** Remote code execution, server compromise\n\n**Problematic Code:**\n```javascript\n// appHandler.js:33-38\nexec('ping -c 2 ' + req.body.address, function (err, stdout, stderr) {\n    output = stdout + stderr\n    res.render('app/ping', {\n        output: output\n    })\n})\n```\n\n**Improved Code:**\n```javascript\nconst { spawn } = require('child_process');\n\n// Validate input format (IP address or hostname)\nconst addressRegex = /^[a-zA-Z0-9.-]+$/;\nif (!addressRegex.test(req.body.address)) {\n    return res.render('app/ping', {\n        output: 'Invalid address format'\n    });\n}\n\n// Use spawn with argument array instead of string concatenation\nconst ping = spawn('ping', ['-c', '2', req.body.address]);\nlet output = '';\n\nping.stdout.on('data', (data) => {\n    output += data;\n});\n\nping.stderr.on('data', (data) => {\n    output += data;\n});\n\nping.on('close', (code) => {\n    res.render('app/ping', {\n        output: output\n    });\n});\n```\n\n### UNSAFE-DESERIAL\n**Severity:** CRITICAL\n**Impact:** Remote code execution through object deserialization\n\n**Problematic Code:**\n```javascript\n// appHandler.js:185-186\nvar products = serialize.unserialize(req.files.products.data.toString('utf8'))\n```\n\n**Improved Code:**\n```javascript\n// Use JSON.parse instead of node-serialize\ntry {\n    var products = JSON.parse(req.files.products.data.toString('utf8'));\n    \n    // Validate the structure\n    if (!Array.isArray(products)) {\n        throw new Error('Invalid format: expected array');\n    }\n    \n    products.forEach((product, index) => {\n        if (!product.name || !product.code) {\n            throw new Error(`Invalid product at index ${index}: missing required fields`);\n        }\n    });\n} catch (err) {\n    res.render('app/bulkproducts', {\n        messages: { danger: 'Invalid file format' },\n        legacy: true\n    });\n    return;\n}\n```\n\n### XXE-ATTACK\n**Severity:** CRITICAL\n**Impact:** Local file disclosure, SSRF, DoS\n\n**Problematic Code:**\n```javascript\n// appHandler.js:202\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {noent:true,noblanks:true})\n```\n\n**Improved Code:**\n```javascript\n// Disable external entity processing\nvar products = libxmljs.parseXmlString(req.files.products.data.toString('utf8'), {\n    noent: false,     // Disable entity processing\n    nonet: true,      // Disable network access\n    noblanks: true\n});\n```\n\n### OPEN-REDIRECT\n**Severity:** HIGH\n**Impact:** Phishing attacks, credential theft\n\n**Problematic Code:**\n```javascript\n// appHandler.js:148-153\nmodule.exports.redirect = function (req, res) {\n    if (req.query.url) {\n        res.redirect(req.query.url)\n    } else {\n        res.send('invalid redirect url')\n    }\n}\n```\n\n**Improved Code:**\n```javascript\nmodule.exports.redirect = function (req, res) {\n    if (req.query.url) {\n        // Validate that URL is relative or from allowed domains\n        const allowedDomains = ['example.com', 'app.example.com'];\n        const url = req.query.url;\n        \n        // Allow relative URLs starting with /\n        if (url.startsWith('/')) {\n            return res.redirect(url);\n        }\n        \n        // Check if absolute URL is from allowed domain\n        try {\n            const parsedUrl = new URL(url);\n            if (allowedDomains.includes(parsedUrl.hostname)) {\n                return res.redirect(url);\n            }\n        } catch (e) {\n            // Invalid URL\n        }\n        \n        res.send('Redirect not allowed');\n    } else {\n        res.send('invalid redirect url');\n    }\n}\n```\n\n### CODE-INJECT\n**Severity:** HIGH\n**Impact:** Server-side code execution through math expressions\n\n**Problematic Code:**\n```javascript\n// appHandler.js:155-163\nmodule.exports.calc = function (req, res) {\n    if (req.body.eqn) {\n        res.render('app/calc', {\n            output: mathjs.eval(req.body.eqn)\n        })\n    }\n}\n```\n\n**Improved Code:**\n```javascript\nmodule.exports.calc = function (req, res) {\n    if (req.body.eqn) {\n        try {\n            // Create a restricted math.js instance\n            const math = mathjs.create({\n                functionScope: 'limited',\n                objectScope: 'limited'\n            });\n            \n            // Validate input - only allow basic math operations\n            const allowedChars = /^[0-9+\\-*/.() ]+$/;\n            if (!allowedChars.test(req.body.eqn)) {\n                throw new Error('Invalid characters in equation');\n            }\n            \n            const result = math.evaluate(req.body.eqn);\n            res.render('app/calc', {\n                output: result\n            });\n        } catch (err) {\n            res.render('app/calc', {\n                output: 'Invalid equation'\n            });\n        }\n    } else {\n        res.render('app/calc', {\n            output: 'Enter a valid math string like (3+3)*2'\n        });\n    }\n}\n```\n\n## High Security Issues\n\n### WEAK-RESET-TOKEN\n**Severity:** HIGH\n**Impact:** Account takeover through predictable password reset tokens\n\n**Problematic Code:**\n```javascript\n// authHandler.js:31, 49\nif (req.query.token == md5(req.query.login)) {\n```\n\n**Improved Code:**\n```javascript\nconst crypto = require('crypto');\n\n// When generating reset token (in forgotPw function)\nconst resetToken = crypto.randomBytes(32).toString('hex');\nconst resetExpiry = new Date(Date.now() + 3600000); // 1 hour expiry\n\nuser.resetToken = resetToken;\nuser.resetExpiry = resetExpiry;\nawait user.save();\n\n// When validating reset token\nif (req.query.token === user.resetToken && new Date() < user.resetExpiry) {\n    // Valid token\n} else {\n    req.flash('danger', \"Invalid or expired reset token\");\n    res.redirect('/forgotpw');\n}\n```\n\n### HARDCODED-SECRET\n**Severity:** HIGH\n**Impact:** Session hijacking, authentication bypass\n\n**Problematic Code:**\n```javascript\n// server.js:24-29\napp.use(session({\n  secret: 'keyboard cat',\n  resave: true,\n  saveUninitialized: true,\n  cookie: { secure: false }\n}))\n```\n\n**Improved Code:**\n```javascript\napp.use(session({\n  secret: process.env.SESSION_SECRET || crypto.randomBytes(64).toString('hex'),\n  resave: false,\n  saveUninitialized: false,\n  cookie: { \n    secure: process.env.NODE_ENV === 'production', // HTTPS only in production\n    httpOnly: true,\n    maxAge: 24 * 60 * 60 * 1000 // 24 hours\n  }\n}))\n```\n\n## Medium Security Issues\n\n### INFO-DISCLOSURE\n**Severity:** MEDIUM\n**Impact:** Information leakage through error messages\n\n**Problematic Code:**\n```javascript\n// appHandler.js:87-96\n.catch(err => {\n    output = {\n        product: product\n    }\n    req.flash('danger',err)\n    res.render('app/modifyproduct', {\n        output: output\n    })\n})\n```\n\n**Improved Code:**\n```javascript\n.catch(err => {\n    console.error('Product modification error:', err); // Log full error\n    output = {\n        product: product\n    }\n    req.flash('danger', 'Unable to save product. Please try again.')\n    res.render('app/modifyproduct', {\n        output: output\n    })\n})\n```\n\n### MISSING-VALIDATION\n**Severity:** MEDIUM  \n**Impact:** Data integrity issues, potential XSS\n\n**Problematic Code:**\n```javascript\n// appHandler.js:78-82\nproduct.code = req.body.code\nproduct.name = req.body.name\nproduct.description = req.body.description\nproduct.tags = req.body.tags\n```\n\n**Improved Code:**\n```javascript\n// Validate and sanitize inputs\nconst validator = require('validator');\n\nif (!req.body.code || !validator.isLength(req.body.code, {min: 1, max: 50})) {\n    req.flash('danger', 'Product code is required and must be 1-50 characters');\n    return res.render('app/modifyproduct', {output: {product: product}});\n}\n\nif (!req.body.name || !validator.isLength(req.body.name, {min: 1, max: 100})) {\n    req.flash('danger', 'Product name is required and must be 1-100 characters');\n    return res.render('app/modifyproduct', {output: {product: product}});\n}\n\nproduct.code = validator.escape(req.body.code);\nproduct.name = validator.escape(req.body.name);\nproduct.description = validator.escape(req.body.description || '');\nproduct.tags = validator.escape(req.body.tags || '');\n```\n\n### DEPRECATED-FIND\n**Severity:** LOW\n**Impact:** Future compatibility issues\n\n**Problematic Code:**\n```javascript\n// Multiple locations using deprecated Sequelize methods\ndb.Product.find({\n    where: {\n        'id': req.query.id\n    }\n})\n```\n\n**Improved Code:**\n```javascript\n// Use findOne instead of deprecated find\ndb.Product.findOne({\n    where: {\n        'id': req.query.id\n    }\n})\n```\n\n## Summary\n\nThis application contains **4 critical vulnerabilities** that allow remote code execution and complete system compromise. The most urgent fixes needed are:\n\n1. Replace raw SQL with parameterized queries\n2. Fix command injection in ping functionality  \n3. Remove unsafe deserialization\n4. Disable XML external entities\n5. Implement proper redirect validation\n6. Secure the math expression evaluator\n7. Use cryptographically secure password reset tokens\n8. Move session secret to environment variables\n\nAll critical and high-severity issues should be addressed immediately before deploying to production.\n",
+  "duration_seconds": 49.97917032241821,
+  "model": "claude-sonnet-4-20250514",
+  "timestamp": "2026-03-05T17:06:32.620983",
+  "success": true,
+  "findings": [
+    {
+      "id": "SQL-INJECT",
+      "title": "**Severity:** CRITICAL"
+    },
+    {
+      "id": "CMD-INJECT",
+      "title": "**Severity:** CRITICAL"
+    },
+    {
+      "id": "UNSAFE-DESERIAL",
+      "title": "**Severity:** CRITICAL"
+    },
+    {
+      "id": "XXE-ATTACK",
+      "title": "**Severity:** CRITICAL"
+    },
+    {
+      "id": "OPEN-REDIRECT",
+      "title": "**Severity:** HIGH"
+    },
+    {
+      "id": "CODE-INJECT",
+      "title": "**Severity:** HIGH"
+    },
+    {
+      "id": "WEAK-RESET-TOKEN",
+      "title": "**Severity:** HIGH"
+    },
+    {
+      "id": "HARDCODED-SECRET",
+      "title": "**Severity:** HIGH"
+    },
+    {
+      "id": "INFO-DISCLOSURE",
+      "title": "**Severity:** MEDIUM"
+    },
+    {
+      "id": "MISSING-VALIDATION",
+      "title": "**Severity:** MEDIUM"
+    },
+    {
+      "id": "DEPRECATED-FIND",
+      "title": "**Severity:** LOW"
+    }
+  ],
+  "findings_count": 11,
+  "condition": "zero-shot",
+  "variant": null,
+  "run": 1
+}

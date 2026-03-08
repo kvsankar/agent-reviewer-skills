@@ -1,0 +1,976 @@
+{
+  "exp1-baseline/pygoat/full-skill": {
+    "tp": 14,
+    "fp": 0,
+    "fn": 5,
+    "precision": 1.0,
+    "recall": 0.7368421052631579,
+    "f1": 0.8484848484848484,
+    "total_findings": 14,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XML-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:insec_des_lab",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "ID:XSS-PREVENT+TEXT:xss_lab",
+      "GT-PG-10": "ID:XSS-PREVENT+TEXT:xss_lab2",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:crypto_failure_lab",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:MISSING-CSRF+TEXT:csrf_exempt",
+      "GT-PG-19": "ID:PII-LOG+TEXT:a10_lab2"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-13",
+        "type": "PATH-TRAVERSE",
+        "description": "Path traversal via unvalidated file parameter"
+      },
+      {
+        "id": "GT-PG-14",
+        "type": "VALIDATE-INPUT",
+        "description": "SSRF via unvalidated URL parameter"
+      },
+      {
+        "id": "GT-PG-17",
+        "type": "NO-HARDCODE",
+        "description": "Hardcoded JWT secret key"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [],
+    "duration": 66.63143515586853
+  },
+  "exp1-baseline/pygoat/generic-prompt": {
+    "tp": 16,
+    "fp": 0,
+    "fn": 3,
+    "precision": 1.0,
+    "recall": 0.8421052631578947,
+    "f1": 0.9142857142857143,
+    "total_findings": 0,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "TEXT:sql_lab",
+      "GT-PG-02": "TEXT:injection_sql_lab",
+      "GT-PG-03": "TEXT:cmd_lab",
+      "GT-PG-04": "TEXT:cmd_lab2",
+      "GT-PG-05": "TEXT:xxe_parse",
+      "GT-PG-06": "TEXT:insec_des_lab",
+      "GT-PG-07": "TEXT:a9_lab",
+      "GT-PG-08": "TEXT:a9_lab2",
+      "GT-PG-09": "TEXT:xss_lab",
+      "GT-PG-10": "TEXT:xss_lab2",
+      "GT-PG-11": "TEXT:ba_lab",
+      "GT-PG-12": "TEXT:crypto_failure_lab",
+      "GT-PG-13": "TEXT:ssrf_lab",
+      "GT-PG-14": "TEXT:ssrf_lab2",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "TEXT:auth_failure_lab3"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-17",
+        "type": "NO-HARDCODE",
+        "description": "Hardcoded JWT secret key"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      },
+      {
+        "id": "GT-PG-19",
+        "type": "PII-LOG",
+        "description": "Unsanitized user input in log entries"
+      }
+    ],
+    "false_positives": [],
+    "duration": 58.806843757629395
+  },
+  "exp1-baseline/pygoat/zero-shot": {
+    "tp": 12,
+    "fp": 1,
+    "fn": 7,
+    "precision": 0.9230769230769231,
+    "recall": 0.631578947368421,
+    "f1": 0.7499999999999999,
+    "total_findings": 14,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT-1+TEXT:sql_lab",
+      "GT-PG-03": "ID:CMD-INJECT-1+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT-1+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XXE-1+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT-1+TEXT:insec_des_lab",
+      "GT-PG-07": "ID:CODE-INJECT-1+TEXT:a9_lab",
+      "GT-PG-09": "ID:XSS-REFLECT-1+TEXT:xss_lab",
+      "GT-PG-12": "ID:WEAK-CRYPTO-1+TEXT:crypto_failure_lab",
+      "GT-PG-13": "ID:PATH-TRAVERSAL-1+TEXT:ssrf_lab",
+      "GT-PG-14": "ID:SSRF-1+TEXT:ssrf_lab2",
+      "GT-PG-15": "ID:CODE-INJECT-1+TEXT:ssti_lab",
+      "GT-PG-17": "ID:JWT-WEAK-1+TEXT:sec_misconfig_lab3"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-02",
+        "type": "SQL-INJECT",
+        "description": "SQL injection in injection_sql_lab()"
+      },
+      {
+        "id": "GT-PG-08",
+        "type": "CODE-INJECT",
+        "description": "ImageMath.eval() with user-controlled expression"
+      },
+      {
+        "id": "GT-PG-10",
+        "type": "XSS-PREVENT",
+        "description": "XSS with ineffective filter bypass"
+      },
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-16",
+        "type": "CSRF-PROTECT",
+        "description": "CSRF-exempt decorator on state-changing endpoint"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      },
+      {
+        "id": "GT-PG-19",
+        "type": "PII-LOG",
+        "description": "Unsanitized user input in log entries"
+      }
+    ],
+    "false_positives": [
+      "INFO-DISCLOSURE-1"
+    ],
+    "duration": 65.1209282875061
+  },
+  "exp1-baseline/dvna/full-skill": {
+    "tp": 10,
+    "fp": 4,
+    "fn": 3,
+    "precision": 0.7142857142857143,
+    "recall": 0.7692307692307693,
+    "f1": 0.7407407407407408,
+    "total_findings": 14,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "ID:SQL-INJECT+TEXT:userSearch",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "ID:XXE-ATTACK+TEXT:bulkProducts",
+      "GT-DV-06": "ID:DESERIALIZATION+TEXT:serialize",
+      "GT-DV-08": "TEXT:calc",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false",
+      "GT-DV-12": "CWE:CWE-79",
+      "GT-DV-13": "TEXT:product data"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-07",
+        "type": "VALIDATE-INPUT",
+        "description": "Open redirect - unvalidated URL in redirect()"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      }
+    ],
+    "false_positives": [
+      "CRED-STORE",
+      "CRYPTO-STRONG",
+      "TIMING-ATTACK",
+      "SESSION-SECURE"
+    ],
+    "duration": 66.60313367843628
+  },
+  "exp1-baseline/dvna/generic-prompt": {
+    "tp": 9,
+    "fp": 0,
+    "fn": 4,
+    "precision": 1.0,
+    "recall": 0.6923076923076923,
+    "f1": 0.8181818181818181,
+    "total_findings": 0,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "CWE:CWE-89",
+      "GT-DV-02": "TEXT:ping",
+      "GT-DV-03": "TEXT:password",
+      "GT-DV-04": "TEXT:bulkProducts",
+      "GT-DV-06": "TEXT:serialize",
+      "GT-DV-07": "TEXT:redirect",
+      "GT-DV-08": "TEXT:calc",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      },
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      },
+      {
+        "id": "GT-DV-13",
+        "type": "XSS-PREVENT",
+        "description": "Stored XSS via unescaped product data"
+      }
+    ],
+    "false_positives": [],
+    "duration": 55.258100271224976
+  },
+  "exp1-baseline/dvna/zero-shot": {
+    "tp": 8,
+    "fp": 1,
+    "fn": 5,
+    "precision": 0.8888888888888888,
+    "recall": 0.6153846153846154,
+    "f1": 0.7272727272727274,
+    "total_findings": 11,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "TEXT:password",
+      "GT-DV-04": "ID:XXE-ATTACK+TEXT:bulkProducts",
+      "GT-DV-06": "ID:UNSAFE-DESERIAL+TEXT:serialize",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-08": "ID:INFO-DISCLOSURE+TEXT:calc",
+      "GT-DV-10": "ID:HARDCODED-SECRET+TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-01",
+        "type": "SQL-INJECT",
+        "description": "SQL injection via string concatenation in userSearch()"
+      },
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      },
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      },
+      {
+        "id": "GT-DV-13",
+        "type": "XSS-PREVENT",
+        "description": "Stored XSS via unescaped product data"
+      }
+    ],
+    "false_positives": [
+      "DEPRECATED-FIND"
+    ],
+    "duration": 49.97917032241821
+  },
+  "exp2-ablation/pygoat/full-skill": {
+    "tp": 17,
+    "fp": 1,
+    "fn": 2,
+    "precision": 0.9444444444444444,
+    "recall": 0.8947368421052632,
+    "f1": 0.918918918918919,
+    "total_findings": 19,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XXE-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:pickle.loads",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "ID:XSS-PREVENT+TEXT:xss_lab",
+      "GT-PG-10": "ID:XSS-PREVENT+TEXT:xss_lab2",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:crypto_failure_lab",
+      "GT-PG-13": "ID:PATH-TRAVERSE+TEXT:ssrf_lab",
+      "GT-PG-14": "ID:SSRF-PREVENT+TEXT:ssrf_lab2",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:MISSING-CSRF+TEXT:auth_failure_lab3",
+      "GT-PG-17": "CWE:CWE-798",
+      "GT-PG-19": "ID:PII-LOG+TEXT:logging.info"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "RANDOM-SECURE"
+    ],
+    "duration": 124.35230731964111
+  },
+  "exp2-ablation/pygoat/ids-only": {
+    "tp": 16,
+    "fp": 0,
+    "fn": 3,
+    "precision": 1.0,
+    "recall": 0.8421052631578947,
+    "f1": 0.9142857142857143,
+    "total_findings": 11,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:eval(",
+      "GT-PG-05": "ID:XML-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:pickle.loads",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "CWE:CWE-79",
+      "GT-PG-10": "CWE:CWE-79",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:md5(",
+      "GT-PG-13": "TEXT:path",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:CSRF-PROTECT+TEXT:csrf_exempt",
+      "GT-PG-17": "CWE:CWE-798",
+      "GT-PG-19": "ID:PII-LOG+TEXT:logging.info"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-14",
+        "type": "VALIDATE-INPUT",
+        "description": "SSRF via unvalidated URL parameter"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [],
+    "duration": 69.86862826347351
+  },
+  "exp2-ablation/pygoat/principles-only": {
+    "tp": 17,
+    "fp": 1,
+    "fn": 2,
+    "precision": 0.9444444444444444,
+    "recall": 0.8947368421052632,
+    "f1": 0.918918918918919,
+    "total_findings": 16,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "CWE:CWE-89",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "CWE:CWE-78",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:eval(",
+      "GT-PG-05": "ID:XXE-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:pickle.loads",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "CWE:CWE-79",
+      "GT-PG-10": "CWE:CWE-79",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:md5(",
+      "GT-PG-13": "ID:PATH-TRAVERSE+TEXT:ssrf_lab",
+      "GT-PG-14": "ID:SSRF-PREVENT+TEXT:ssrf_lab2",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:MISSING-CSRF+TEXT:csrf_exempt",
+      "GT-PG-17": "CWE:CWE-798",
+      "GT-PG-19": "TEXT:logging.info"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "LOG-SANITIZE"
+    ],
+    "duration": 66.19996500015259
+  },
+  "exp2-ablation/pygoat/trimmed-20": {
+    "tp": 14,
+    "fp": 4,
+    "fn": 5,
+    "precision": 0.7777777777777778,
+    "recall": 0.7368421052631579,
+    "f1": 0.7567567567567567,
+    "total_findings": 15,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XXE-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:insec_des_lab",
+      "GT-PG-07": "ID:CODE-INJECT+TEXT:yaml.load",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "TEXT:xss_lab",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:crypto_failure_lab",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:CSRF-PROTECT+TEXT:csrf_exempt",
+      "GT-PG-17": "TEXT:jwt",
+      "GT-PG-19": "ID:PII-LOG+TEXT:a10_lab2"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-10",
+        "type": "XSS-PREVENT",
+        "description": "XSS with ineffective filter bypass"
+      },
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-13",
+        "type": "PATH-TRAVERSE",
+        "description": "Path traversal via unvalidated file parameter"
+      },
+      {
+        "id": "GT-PG-14",
+        "type": "VALIDATE-INPUT",
+        "description": "SSRF via unvalidated URL parameter"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "RANDOM-SECURE",
+      "ERROR-SAFE",
+      "DEPS-UPDATE",
+      "HASH-PASSWORD"
+    ],
+    "duration": 59.20733642578125
+  },
+  "exp2-ablation/dvna/full-skill": {
+    "tp": 10,
+    "fp": 4,
+    "fn": 3,
+    "precision": 0.7142857142857143,
+    "recall": 0.7692307692307693,
+    "f1": 0.7407407407407408,
+    "total_findings": 13,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "CWE:CWE-89",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "TEXT:bulkProducts",
+      "GT-DV-06": "ID:DESERIALIZATION+TEXT:serialize",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false",
+      "GT-DV-12": "CWE:CWE-79",
+      "GT-DV-13": "CWE:CWE-79"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-08",
+        "type": "ERROR-SAFE",
+        "description": "Stack trace disclosure in calc() - no error handling"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      }
+    ],
+    "false_positives": [
+      "CRED-STORE",
+      "XPATH-INJECT",
+      "CRYPTO-DEPRECATE",
+      "TIMING-ATTACK"
+    ],
+    "duration": 63.653055906295776
+  },
+  "exp2-ablation/dvna/ids-only": {
+    "tp": 13,
+    "fp": 2,
+    "fn": 0,
+    "precision": 0.8666666666666667,
+    "recall": 1.0,
+    "f1": 0.9285714285714286,
+    "total_findings": 14,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "ID:SQL-INJECT+TEXT:userSearch",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "TEXT:password",
+      "GT-DV-04": "ID:XML-EXTERNAL-ENTITY+TEXT:bulkProducts",
+      "GT-DV-05": "ID:MISSING-AUTHZ-CHECK+TEXT:userEditSubmit",
+      "GT-DV-06": "ID:CODE-INJECT+TEXT:bulkProductsLegacy",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-08": "ID:ERROR-DISCLOSE+TEXT:calc",
+      "GT-DV-09": "ID:WEAK-RESET-TOKEN+TEXT:resetPw",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "ID:INSECURE-COOKIES+TEXT:secure: false",
+      "GT-DV-12": "CWE:CWE-79",
+      "GT-DV-13": "CWE:CWE-79"
+    },
+    "missed": [],
+    "false_positives": [
+      "WEAK-SESSION-SECRET",
+      "CRITICAL"
+    ],
+    "duration": 86.59717965126038
+  },
+  "exp2-ablation/dvna/principles-only": {
+    "tp": 11,
+    "fp": 8,
+    "fn": 2,
+    "precision": 0.5789473684210527,
+    "recall": 0.8461538461538461,
+    "f1": 0.6875,
+    "total_findings": 15,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "ID:SQL-INJECT+TEXT:userSearch",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "TEXT:libxmljs",
+      "GT-DV-05": "ID:AUTHZ-CHECK+TEXT:userEditSubmit",
+      "GT-DV-06": "ID:CODE-INJECT+TEXT:serialize",
+      "GT-DV-08": "TEXT:calc",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false",
+      "GT-DV-12": "CWE:CWE-79",
+      "GT-DV-13": "CWE:CWE-79"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-07",
+        "type": "VALIDATE-INPUT",
+        "description": "Open redirect - unvalidated URL in redirect()"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      }
+    ],
+    "false_positives": [
+      "CRED-STORE",
+      "CRYPTO-DEPRECATE",
+      "SESSION-SECURE",
+      "XPATH-INJECT",
+      "CSRF-TOKEN",
+      "RATE-LIMIT",
+      "TIMING-ATTACK",
+      "CRYPTO-STRONG"
+    ],
+    "duration": 65.53557085990906
+  },
+  "exp2-ablation/dvna/trimmed-20": {
+    "tp": 9,
+    "fp": 5,
+    "fn": 4,
+    "precision": 0.6428571428571429,
+    "recall": 0.6923076923076923,
+    "f1": 0.6666666666666666,
+    "total_findings": 14,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "CWE:CWE-89",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:listUsersAPI",
+      "GT-DV-04": "ID:XXE-ATTACK+TEXT:bulkProducts",
+      "GT-DV-06": "ID:DESERIALIZATION+TEXT:bulkProductsLegacy",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false",
+      "GT-DV-13": "TEXT:product data"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-08",
+        "type": "ERROR-SAFE",
+        "description": "Stack trace disclosure in calc() - no error handling"
+      },
+      {
+        "id": "GT-DV-09",
+        "type": "TOKEN-EXPIRE",
+        "description": "Password reset token is predictable MD5 of username"
+      },
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      }
+    ],
+    "false_positives": [
+      "CRYPTO-WEAK",
+      "SESSION-WEAK",
+      "CSRF-TOKEN",
+      "RATE-LIMIT",
+      "SESSION-FRAMEWORK"
+    ],
+    "duration": 79.20779848098755
+  },
+  "exp3-improved/pygoat/full-v2": {
+    "tp": 18,
+    "fp": 3,
+    "fn": 1,
+    "precision": 0.8571428571428571,
+    "recall": 0.9473684210526315,
+    "f1": 0.9,
+    "total_findings": 19,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XXE-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:insec_des_lab",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "ID:XSS-PREVENT+TEXT:xss_lab",
+      "GT-PG-10": "CWE:CWE-79",
+      "GT-PG-11": "ID:AUTHZ-CHECK+TEXT:ba_lab",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:crypto_failure_lab",
+      "GT-PG-13": "ID:PATH-TRAVERSE+TEXT:ssrf_lab",
+      "GT-PG-14": "ID:SSRF-PREVENT+TEXT:ssrf_lab2",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:CSRF-PROTECT+TEXT:csrf_exempt",
+      "GT-PG-17": "TEXT:jwt",
+      "GT-PG-19": "TEXT:a10_lab2"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "RANDOM-SECURE",
+      "LOG-SANITIZE",
+      "IMPORT-GOOD"
+    ],
+    "duration": 86.8104600906372
+  },
+  "exp3-improved/pygoat/hybrid": {
+    "tp": 15,
+    "fp": 1,
+    "fn": 4,
+    "precision": 0.9375,
+    "recall": 0.7894736842105263,
+    "f1": 0.8571428571428572,
+    "total_findings": 15,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "ID:SQL-INJECT+TEXT:sql_lab",
+      "GT-PG-02": "ID:SQL-INJECT+TEXT:injection_sql_lab",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XXE-INJECT+TEXT:xxe_parse",
+      "GT-PG-06": "ID:CODE-INJECT+TEXT:insec_des_lab",
+      "GT-PG-07": "CWE:CWE-502",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-11": "ID:AUTHZ-CHECK+TEXT:ba_lab",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:crypto_failure_lab",
+      "GT-PG-13": "TEXT:ssrf_lab",
+      "GT-PG-14": "ID:SSRF-VULN+TEXT:ssrf_lab2",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:MISSING-CSRF+TEXT:csrf_exempt",
+      "GT-PG-19": "ID:PII-LOG+TEXT:a10_lab2"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-09",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS - user input rendered without escaping"
+      },
+      {
+        "id": "GT-PG-10",
+        "type": "XSS-PREVENT",
+        "description": "XSS with ineffective filter bypass"
+      },
+      {
+        "id": "GT-PG-17",
+        "type": "NO-HARDCODE",
+        "description": "Hardcoded JWT secret key"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "HASH-PASSWORD"
+    ],
+    "duration": 86.11957550048828
+  },
+  "exp3-improved/pygoat/ids-only": {
+    "tp": 13,
+    "fp": 3,
+    "fn": 6,
+    "precision": 0.8125,
+    "recall": 0.6842105263157895,
+    "f1": 0.742857142857143,
+    "total_findings": 15,
+    "total_gt": 19,
+    "detected": {
+      "GT-PG-01": "CWE:CWE-89",
+      "GT-PG-02": "CWE:CWE-89",
+      "GT-PG-03": "ID:CMD-INJECT+TEXT:cmd_lab",
+      "GT-PG-04": "ID:CODE-INJECT+TEXT:cmd_lab2",
+      "GT-PG-05": "ID:XML-INJECT+TEXT:xxe_parse",
+      "GT-PG-07": "ID:CODE-INJECT+TEXT:yaml.load",
+      "GT-PG-08": "CWE:CWE-94",
+      "GT-PG-09": "ID:XSS-PREVENT+TEXT:xss_lab",
+      "GT-PG-10": "CWE:CWE-79",
+      "GT-PG-12": "ID:WEAK-HASH+TEXT:md5(",
+      "GT-PG-15": "CWE:CWE-94",
+      "GT-PG-16": "ID:CSRF-PROTECT+TEXT:csrf_exempt",
+      "GT-PG-19": "ID:PII-LOG+TEXT:logging.info"
+    },
+    "missed": [
+      {
+        "id": "GT-PG-06",
+        "type": "CODE-INJECT",
+        "description": "Insecure pickle deserialization from user cookies"
+      },
+      {
+        "id": "GT-PG-11",
+        "type": "AUTHZ-CHECK",
+        "description": "Admin access via client-side cookie manipulation"
+      },
+      {
+        "id": "GT-PG-13",
+        "type": "PATH-TRAVERSE",
+        "description": "Path traversal via unvalidated file parameter"
+      },
+      {
+        "id": "GT-PG-14",
+        "type": "VALIDATE-INPUT",
+        "description": "SSRF via unvalidated URL parameter"
+      },
+      {
+        "id": "GT-PG-17",
+        "type": "NO-HARDCODE",
+        "description": "Hardcoded JWT secret key"
+      },
+      {
+        "id": "GT-PG-18",
+        "type": "SESSION-SECURE",
+        "description": "Cookie-based auth without signature verification"
+      }
+    ],
+    "false_positives": [
+      "RANDOM-SECURE",
+      "DEPS-AUDIT",
+      "HASH-PASSWORD"
+    ],
+    "duration": 56.154972314834595
+  },
+  "exp3-improved/dvna/full-v2": {
+    "tp": 10,
+    "fp": 7,
+    "fn": 3,
+    "precision": 0.5882352941176471,
+    "recall": 0.7692307692307693,
+    "f1": 0.6666666666666667,
+    "total_findings": 17,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "ID:SQL-INJECT+TEXT:userSearch",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "TEXT:bulkProducts",
+      "GT-DV-05": "ID:AUTHZ-CHECK+TEXT:userEditSubmit",
+      "GT-DV-06": "ID:DESERIALIZATION+TEXT:bulkProductsLegacy",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-09": "TEXT:resetPw",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-08",
+        "type": "ERROR-SAFE",
+        "description": "Stack trace disclosure in calc() - no error handling"
+      },
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      },
+      {
+        "id": "GT-DV-13",
+        "type": "XSS-PREVENT",
+        "description": "Stored XSS via unescaped product data"
+      }
+    ],
+    "false_positives": [
+      "TOKEN-PREDICT",
+      "SESSION-SECURE",
+      "RATE-LIMIT",
+      "HTTPS-ONLY",
+      "FAILING",
+      "IMMEDIATE",
+      "URGENT"
+    ],
+    "duration": 84.17020058631897
+  },
+  "exp3-improved/dvna/hybrid": {
+    "tp": 11,
+    "fp": 3,
+    "fn": 2,
+    "precision": 0.7857142857142857,
+    "recall": 0.8461538461538461,
+    "f1": 0.8148148148148148,
+    "total_findings": 14,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "ID:SQL-INJECT+TEXT:userSearch",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "ID:XXE+TEXT:bulkProducts",
+      "GT-DV-05": "ID:AUTHZ-CHECK+TEXT:userEditSubmit",
+      "GT-DV-06": "ID:CODE-INJECT+TEXT:bulkProductsLegacy",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-08": "ID:ERROR-DISCLOSE+TEXT:calc",
+      "GT-DV-09": "TEXT:resetPw",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      },
+      {
+        "id": "GT-DV-13",
+        "type": "XSS-PREVENT",
+        "description": "Stored XSS via unescaped product data"
+      }
+    ],
+    "false_positives": [
+      "TOKEN-PREDICT",
+      "SESSION-SECURE",
+      "INPUT-TYPE"
+    ],
+    "duration": 80.53076720237732
+  },
+  "exp3-improved/dvna/ids-only": {
+    "tp": 11,
+    "fp": 7,
+    "fn": 2,
+    "precision": 0.6111111111111112,
+    "recall": 0.8461538461538461,
+    "f1": 0.7096774193548387,
+    "total_findings": 15,
+    "total_gt": 13,
+    "detected": {
+      "GT-DV-01": "CWE:CWE-89",
+      "GT-DV-02": "ID:CMD-INJECT+TEXT:ping",
+      "GT-DV-03": "ID:PASSWORD-HASH+TEXT:password",
+      "GT-DV-04": "ID:XXE-INJECT+TEXT:bulkProducts",
+      "GT-DV-06": "ID:DESERIALIZATION+TEXT:serialize",
+      "GT-DV-07": "ID:OPEN-REDIRECT+TEXT:redirect",
+      "GT-DV-08": "ID:ERROR-DISCLOSE+TEXT:calc",
+      "GT-DV-09": "TEXT:resetPw",
+      "GT-DV-10": "TEXT:keyboard cat",
+      "GT-DV-11": "TEXT:secure: false",
+      "GT-DV-13": "TEXT:product data"
+    },
+    "missed": [
+      {
+        "id": "GT-DV-05",
+        "type": "AUTHZ-CHECK",
+        "description": "IDOR - no ownership check in userEditSubmit()"
+      },
+      {
+        "id": "GT-DV-12",
+        "type": "XSS-PREVENT",
+        "description": "Reflected XSS via unescaped output <%- %>"
+      }
+    ],
+    "false_positives": [
+      "CRYPTO-WEAK",
+      "SESSION-SECURE",
+      "RATE-LIMIT",
+      "API-VALIDATE",
+      "CSP-HEADER",
+      "CSRF-TOKEN",
+      "SESSION-FRAMEWORK"
+    ],
+    "duration": 79.35466957092285
+  }
+}
