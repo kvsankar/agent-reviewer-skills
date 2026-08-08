@@ -82,22 +82,11 @@ experiments provide no conclusive evidence that these skills improve agentic
 code-review quality. This is a dated experimental result, not a claim that
 in-context guidance can never help.
 
-## Final Comparison
-
-| Condition | Runs | Frozen-reference recall | Validated per run | Distinct validated defects |
-| --- | ---: | ---: | ---: | ---: |
-| Regular Codex review | 3 | 28.5% | 8.67 | 18 |
-| Codex with lean skill | 3 | 30.2% | 8.33 | 13 |
-
-The small recall difference did not translate into more useful discovery. The
-regular condition produced one more validated finding overall and five more
-distinct validated defects. The
-[experiment conclusion](docs/experiment-conclusion.md) explains the
-method, local-model results, interpretation, and limitations.
-
 The [exploration history](docs/exploration-history.md) presents the research,
 prototypes, and experiments together in chronological order, with links to the
-retained detail and evidence.
+retained detail and evidence. The
+[experiment conclusion](docs/experiment-conclusion.md) explains the final
+decision, measurements, and limitations.
 
 ## Repository Map
 
