@@ -20,7 +20,7 @@ from generate_variants import generate_variant
 
 
 BASE = Path(__file__).parent
-DEFAULT_SKILL = BASE.parent / "python-rhodes-reviewer" / "SKILL.md"
+DEFAULT_SKILL = BASE.parent / "reviewers" / "python-rhodes-reviewer" / "SKILL.md"
 
 ZERO_SHOT_PROMPT = """Review the following Python code for quality, style, and design issues.
 For each issue found:

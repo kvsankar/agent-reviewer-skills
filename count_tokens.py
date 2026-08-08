@@ -186,7 +186,7 @@ class TokenCounter:
             base_dir = Path(__file__).parent
 
         results = []
-        skill_files = list(base_dir.glob("*-reviewer/SKILL.md"))
+        skill_files = list(base_dir.glob("reviewers/*-reviewer/SKILL.md"))
 
         print(f"Found {len(skill_files)} SKILL.md files")
         print()

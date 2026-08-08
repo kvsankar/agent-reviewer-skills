@@ -120,7 +120,13 @@ class InstallerTests(unittest.TestCase):
             )
 
     def test_repository_skill_metadata_is_portable(self) -> None:
-        for skill in install_skills.find_skills():
+        skills = install_skills.find_skills()
+        self.assertEqual(len(skills), 23)
+        self.assertTrue(
+            all(skill.parent == install_skills.REVIEWERS_ROOT for skill in skills)
+        )
+
+        for skill in skills:
             with self.subTest(skill=skill.name):
                 content = (skill / "SKILL.md").read_text(encoding="utf-8")
                 frontmatter = content.split("---", 2)[1]

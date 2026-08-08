@@ -13,7 +13,12 @@ from experiment_runner import extract_findings
 from run_ollama import build_condition_prompt, safe_model_name
 
 
-DEFAULT_SKILL = Path(__file__).parent.parent / "python-rhodes-reviewer" / "SKILL.md"
+DEFAULT_SKILL = (
+    Path(__file__).parent.parent
+    / "reviewers"
+    / "python-rhodes-reviewer"
+    / "SKILL.md"
+)
 
 AGENT_TASK = """Review the repository in your current working directory.
 

@@ -36,9 +36,9 @@ services:
       # This allows using your Claude Code subscription without API key
       - ~/.claude/.credentials.json:/home/appuser/.claude/.credentials.json:ro
 
-      # Mount all skills from parent directory (read-only)
+      # Mount all reviewer skills (read-only)
       # This eliminates need to rebuild when skills change
-      - ..:/skills:ro
+      - ../reviewers:/skills:ro
 
       # Mount the review tool code itself (for development)
       # This allows code changes without rebuilding

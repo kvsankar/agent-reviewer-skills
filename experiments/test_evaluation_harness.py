@@ -20,7 +20,7 @@ from generate_variants import generate_variant
 
 
 BASE = Path(__file__).parent
-RHODES_SKILL = BASE.parent / "python-rhodes-reviewer" / "SKILL.md"
+RHODES_SKILL = BASE.parent / "reviewers" / "python-rhodes-reviewer" / "SKILL.md"
 
 
 class VariantTests(unittest.TestCase):

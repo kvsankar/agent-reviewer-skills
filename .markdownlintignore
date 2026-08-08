@@ -7,4 +7,4 @@ review-tool/sample_reviews/**
 
 # This skill embeds a complete source document whose heading structure and
 # shell transcripts are inputs to the ablation generator.
-python-rhodes-reviewer/SKILL.md
+reviewers/python-rhodes-reviewer/SKILL.md

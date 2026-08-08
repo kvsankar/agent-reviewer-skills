@@ -25,7 +25,7 @@ from experiment_runner import run_experiment_condition, load_code_files
 BASE = Path(__file__).parent
 REPOS = BASE / "repos"
 RESULTS = BASE / "results"
-SKILLS = BASE.parent  # claude-skills root
+SKILLS = BASE.parent / "reviewers"
 
 
 def run_exp1_baseline():

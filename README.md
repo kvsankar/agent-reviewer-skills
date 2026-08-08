@@ -99,7 +99,7 @@ method, local-model results, interpretation, and limitations.
 
 | Path | Canonical purpose |
 | --- | --- |
-| `*-reviewer/` | Individual skill prompt, usage README, and source attribution |
+| `reviewers/` | Individual reviewer skill packages and their source attribution |
 | `experiments/` | Current evaluation runners and retained evidence |
 | [`docs/evaluation-harness.md`](docs/evaluation-harness.md) | Evaluation methodology and reproduction commands |
 | [`docs/experiment-conclusion-2026-08-08.md`](docs/experiment-conclusion-2026-08-08.md) | Final decision and results |
@@ -116,39 +116,39 @@ README intentionally does not repeat its detailed guidelines or examples.
 
 | Skill | Focus |
 | --- | --- |
-| [Python refactoring](python-refactoring-reviewer/README.md) | Code smells, SOLID, and maintainability |
-| [Python functional](python-functional-reviewer/README.md) | Pure functions, composition, and side effects |
-| [Python Zen](python-zen-reviewer/README.md) | PEP 20 and Pythonic design |
-| [Python format refactoring](python-format-refactoring-reviewer/README.md) | Structural fixes for style problems |
-| [Python testing](python-test-reviewer/README.md) | Test design, confidence, and strategies |
-| [Python security and privacy](python-security-privacy-reviewer/README.md) | OWASP, privacy, and secure coding |
-| [Python performance](python-performance-reviewer/README.md) | Profiling, algorithms, I/O, and memory |
-| [Rhodes Python](python-rhodes-reviewer/README.md) | [Brandon Rhodes](https://rhodesmill.org/brandon/)-inspired architecture guidance |
+| [Python refactoring](reviewers/python-refactoring-reviewer/README.md) | Code smells, SOLID, and maintainability |
+| [Python functional](reviewers/python-functional-reviewer/README.md) | Pure functions, composition, and side effects |
+| [Python Zen](reviewers/python-zen-reviewer/README.md) | PEP 20 and Pythonic design |
+| [Python format refactoring](reviewers/python-format-refactoring-reviewer/README.md) | Structural fixes for style problems |
+| [Python testing](reviewers/python-test-reviewer/README.md) | Test design, confidence, and strategies |
+| [Python security and privacy](reviewers/python-security-privacy-reviewer/README.md) | OWASP, privacy, and secure coding |
+| [Python performance](reviewers/python-performance-reviewer/README.md) | Profiling, algorithms, I/O, and memory |
+| [Rhodes Python](reviewers/python-rhodes-reviewer/README.md) | [Brandon Rhodes](https://rhodesmill.org/brandon/)-inspired architecture guidance |
 
 ### JavaScript and TypeScript
 
 | Skill | Focus |
 | --- | --- |
-| [JavaScript testing](javascript-test-reviewer/README.md) | Jest, Vitest, Testing Library, and Cypress |
-| [JavaScript refactoring](javascript-refactoring-reviewer/README.md) | Code smells, SOLID, and modern patterns |
-| [JavaScript format refactoring](javascript-format-refactoring-reviewer/README.md) | Structural ESLint and Prettier fixes |
-| [JavaScript functional](javascript-functional-reviewer/README.md) | Immutability, composition, and effects |
-| [JavaScript security and privacy](javascript-security-privacy-reviewer/README.md) | Web and Node.js security |
-| [JavaScript performance](javascript-performance-reviewer/README.md) | Browser, Node.js, and React performance |
-| [React](react-reviewer/README.md) | Components, hooks, state, accessibility, and testing |
-| [React Native and Expo](javascript-react-native-expo-reviewer/README.md) | Mobile architecture and platform behavior |
+| [JavaScript testing](reviewers/javascript-test-reviewer/README.md) | Jest, Vitest, Testing Library, and Cypress |
+| [JavaScript refactoring](reviewers/javascript-refactoring-reviewer/README.md) | Code smells, SOLID, and modern patterns |
+| [JavaScript format refactoring](reviewers/javascript-format-refactoring-reviewer/README.md) | Structural ESLint and Prettier fixes |
+| [JavaScript functional](reviewers/javascript-functional-reviewer/README.md) | Immutability, composition, and effects |
+| [JavaScript security and privacy](reviewers/javascript-security-privacy-reviewer/README.md) | Web and Node.js security |
+| [JavaScript performance](reviewers/javascript-performance-reviewer/README.md) | Browser, Node.js, and React performance |
+| [React](reviewers/react-reviewer/README.md) | Components, hooks, state, accessibility, and testing |
+| [React Native and Expo](reviewers/javascript-react-native-expo-reviewer/README.md) | Mobile architecture and platform behavior |
 
 ### Framework, testing, and cross-language
 
 | Skill | Focus |
 | --- | --- |
-| [Agile requirements](agile-requirements-reviewer/README.md) | Stories, use cases, and acceptance criteria |
-| [Django](django-reviewer/README.md) | Production readiness, security, and performance |
-| [OpenAPI](openapi-reviewer/README.md) | API contract quality |
-| [Database schema](database-schema-reviewer/README.md) | Normalization, indexing, and migrations |
-| [Code authenticity](code-authenticity-reviewer/README.md) | Fabricated APIs, dependencies, and citations |
-| [Playwright testing](playwright-test-reviewer/README.md) | Stable end-to-end browser testing |
-| [Appium testing](appium-test-reviewer/README.md) | Reliable mobile automation |
+| [Agile requirements](reviewers/agile-requirements-reviewer/README.md) | Stories, use cases, and acceptance criteria |
+| [Django](reviewers/django-reviewer/README.md) | Production readiness, security, and performance |
+| [OpenAPI](reviewers/openapi-reviewer/README.md) | API contract quality |
+| [Database schema](reviewers/database-schema-reviewer/README.md) | Normalization, indexing, and migrations |
+| [Code authenticity](reviewers/code-authenticity-reviewer/README.md) | Fabricated APIs, dependencies, and citations |
+| [Playwright testing](reviewers/playwright-test-reviewer/README.md) | Stable end-to-end browser testing |
+| [Appium testing](reviewers/appium-test-reviewer/README.md) | Reliable mobile automation |
 
 ## Installation and Use
 
@@ -263,4 +263,4 @@ each skill's `SOURCES.md`.
 The Rhodes skill was released with
 [Brandon Rhodes](https://rhodesmill.org/brandon/)' permission. Its detailed
 attribution is in
-[`python-rhodes-reviewer/SOURCES.md`](python-rhodes-reviewer/SOURCES.md).
+[`reviewers/python-rhodes-reviewer/SOURCES.md`](reviewers/python-rhodes-reviewer/SOURCES.md).

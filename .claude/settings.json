@@ -1,28 +1,28 @@
 {
   "skills": [
     {
-      "name": "functional-python-reviewer",
-      "path": "./functional-python-reviewer"
+      "name": "python-functional-reviewer",
+      "path": "./reviewers/python-functional-reviewer"
     },
     {
-      "name": "security-privacy-reviewer",
-      "path": "./security-privacy-reviewer"
+      "name": "python-security-privacy-reviewer",
+      "path": "./reviewers/python-security-privacy-reviewer"
     },
     {
-      "name": "refactoring-reviewer",
-      "path": "./refactoring-reviewer"
+      "name": "python-refactoring-reviewer",
+      "path": "./reviewers/python-refactoring-reviewer"
     },
     {
-      "name": "zen-of-python-reviewer",
-      "path": "./zen-of-python-reviewer"
+      "name": "python-zen-reviewer",
+      "path": "./reviewers/python-zen-reviewer"
     },
     {
-      "name": "format-refactoring-reviewer",
-      "path": "./format-refactoring-reviewer"
+      "name": "python-format-refactoring-reviewer",
+      "path": "./reviewers/python-format-refactoring-reviewer"
     },
     {
       "name": "python-test-reviewer",
-      "path": "./python-test-reviewer"
+      "path": "./reviewers/python-test-reviewer"
     }
   ]
 }

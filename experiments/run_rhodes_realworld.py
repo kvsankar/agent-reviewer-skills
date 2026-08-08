@@ -19,7 +19,7 @@ from generate_variants import generate_variant
 BASE = Path(__file__).parent
 REPOS = BASE / "repos"
 RESULTS = BASE / "results"
-SKILLS = BASE.parent
+SKILLS = BASE.parent / "reviewers"
 
 ZERO_SHOT = """Review the following Python code for quality, style, and design issues.
 For each issue found:

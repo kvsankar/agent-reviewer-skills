@@ -383,13 +383,13 @@ Examples:
 Available reviewers:
   - agile-requirements-reviewer: Requirements and user stories
   - django-reviewer: Django production readiness
-  - format-refactoring-reviewer: Python style refactoring
-  - functional-javascript-reviewer: JavaScript functional patterns
-  - functional-python-reviewer: Python functional patterns
+  - python-format-refactoring-reviewer: Python style refactoring
+  - javascript-functional-reviewer: JavaScript functional patterns
+  - python-functional-reviewer: Python functional patterns
   - python-test-reviewer: Python test quality
-  - refactoring-reviewer: Python refactoring opportunities
-  - security-privacy-reviewer: Security and privacy issues
-  - zen-of-python-reviewer: Zen of Python principles
+  - python-refactoring-reviewer: Python refactoring opportunities
+  - python-security-privacy-reviewer: Security and privacy issues
+  - python-zen-reviewer: Zen of Python principles
 
 Available tags (expand to multiple reviewers):
   - python: All Python reviewers

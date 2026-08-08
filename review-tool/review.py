@@ -224,9 +224,9 @@ def expand_reviewer_tags(reviewer_inputs: List[str], tags_dict: Dict[str, List[s
         List of expanded reviewer names
 
     Examples:
-        ['python'], tags_dict -> ['refactoring-reviewer', 'functional-python-reviewer', ...]
-        ['django', 'security'], tags_dict -> ['django-reviewer', 'security-privacy-reviewer']
-        ['refactoring-reviewer'], tags_dict -> ['refactoring-reviewer']
+        ['python'], tags_dict -> ['python-refactoring-reviewer', 'python-functional-reviewer', ...]
+        ['django', 'security'], tags_dict -> ['django-reviewer', 'python-security-privacy-reviewer']
+        ['python-refactoring-reviewer'], tags_dict -> ['python-refactoring-reviewer']
     """
     expanded = []
     seen = set()
@@ -256,17 +256,18 @@ def list_reviewers_and_tags(tags_file: Optional[Path] = None, skills_dir: Option
 
     Args:
         tags_file: Path to tags.yaml file. If None, uses default location.
-        skills_dir: Path to skills directory. If None, uses parent of script directory.
+        skills_dir: Path to skills directory. If None, uses reviewers/ in the
+            repository root.
     """
     if tags_file is None:
         tags_file = Path(__file__).parent / 'tags.yaml'
 
     if skills_dir is None:
-        # Check /skills (Docker) or parent directory (local)
+        # Check /skills (Docker) or the repository reviewers directory (local)
         if Path('/skills').exists():
             skills_dir = Path('/skills')
         else:
-            skills_dir = Path(__file__).parent.parent
+            skills_dir = Path(__file__).parent.parent / 'reviewers'
 
     print("=" * 70)
     print("AVAILABLE REVIEWERS AND TAGS")
@@ -330,7 +331,7 @@ def list_reviewers_and_tags(tags_file: Optional[Path] = None, skills_dir: Option
     print("\nEXAMPLES:")
     print("  --reviewer python                    # All Python reviewers (tag)")
     print("  --reviewer django                    # Django-specific reviewers (tag)")
-    print("  --reviewer refactoring-reviewer      # Single reviewer")
+    print("  --reviewer python-refactoring-reviewer  # Single reviewer")
     print("  --reviewer security --reviewer tests # Combine tags")
     print("=" * 70)
 
@@ -674,11 +675,11 @@ class ReviewAgent:
 
     def __init__(self, provider: AIProvider):
         self.provider = provider
-        # Skills directory: check /skills (Docker volume) or parent directory (local)
+        # Skills directory: check /skills (Docker volume) or reviewers/ (local)
         if Path('/skills').exists():
             self.skills_dir = Path('/skills')
         else:
-            self.skills_dir = Path(__file__).parent.parent
+            self.skills_dir = Path(__file__).parent.parent / 'reviewers'
 
     def load_skill(self, reviewer_name: str) -> str:
         """Load skill prompt from SKILL.md"""
@@ -878,7 +879,7 @@ Examples:
   uv run review.py --repo https://github.com/user/repo --reviewer python-security-privacy-reviewer
 
   # Multiple reviewers
-  uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --reviewer security-privacy-reviewer --use-claude-cli
+  uv run review.py --repo https://github.com/user/repo --reviewer django-reviewer --reviewer python-security-privacy-reviewer --use-claude-cli
         """
     )
 

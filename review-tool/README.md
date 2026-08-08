@@ -386,7 +386,7 @@ done
 │                                                          │
 │  Mounted Volumes:                                       │
 │  - ~/.claude → /home/appuser/.claude (OAuth creds)     │
-│  - ../skills → /skills (reviewer templates)             │
+│  - ../reviewers → /skills (reviewer templates)          │
 │  - ./reviews → /app/reviews (output)                   │
 │  - ./review.py → /app/review.py (live code)           │
 └──────────────────────────────────────────────────────────┘
@@ -536,9 +536,9 @@ review-tool/
 
 ### Adding Custom Reviewers
 
-1. Create a new skill directory in parent:
+1. Create a new skill directory under `reviewers/`:
    ```bash
-   mkdir ../my-custom-reviewer
+   mkdir ../reviewers/my-custom-reviewer
    ```
 
 2. Add `SKILL.md` with review template:
@@ -572,7 +572,7 @@ No rebuilds needed! Code is mounted as volumes:
 volumes:
   - ./review.py:/app/review.py:ro     # Edit locally, runs in container
   - ./tags.yaml:/app/tags.yaml:ro     # Edit tag definitions
-  - ..:/skills:ro                      # All reviewer skills
+  - ../reviewers:/skills:ro            # All reviewer skills
 ```
 
 Just edit files and run - changes take effect immediately.

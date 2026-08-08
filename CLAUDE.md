@@ -19,8 +19,8 @@ Use the canonical documents instead of repeating their content here:
 
 ## Repository-Specific Rules
 
-- Each `*-reviewer/` directory owns its `SKILL.md`, user-facing `README.md`, and
-  attribution `SOURCES.md`. Keep a skill self-contained.
+- Each `reviewers/*-reviewer/` directory owns its `SKILL.md`, user-facing
+  `README.md`, and attribution `SOURCES.md`. Keep a skill self-contained.
 - New effectiveness claims must use immutable real upstream code. Synthetic or
   planted fixtures may test plumbing only and must never support a quality claim.
 - Keep non-agentic Ollama and agentic Pi results separate; they answer different

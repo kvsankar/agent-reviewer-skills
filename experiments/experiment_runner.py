@@ -6,7 +6,8 @@ Each run gets fresh context via --print mode.
 
 Usage:
     # Run a single experiment condition
-    python experiment_runner.py run --skill python-security-privacy-reviewer \
+    python experiment_runner.py run \
+        --skill ../reviewers/python-security-privacy-reviewer/SKILL.md \
         --variant full --repo-path ../auth/backend/authentication/services.py
 
     # Run a full experiment
@@ -302,7 +303,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "list-skills":
-        skills_dir = Path(__file__).parent.parent
+        skills_dir = Path(__file__).parent.parent / "reviewers"
         for d in sorted(skills_dir.iterdir()):
             skill_file = d / "SKILL.md"
             if skill_file.exists():

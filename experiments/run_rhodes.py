@@ -24,7 +24,7 @@ from generate_variants import generate_variant
 BASE = Path(__file__).parent
 REPOS = BASE / "repos"
 RESULTS = BASE / "results"
-SKILLS = BASE.parent
+SKILLS = BASE.parent / "reviewers"
 
 # Rhodes-specific prompts for non-skill conditions
 RHODES_ZERO_SHOT = """Review the following Python code for quality, style, and design issues.

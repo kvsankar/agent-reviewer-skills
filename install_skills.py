@@ -13,6 +13,7 @@ from typing import Iterable, Mapping, Sequence
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent
+REVIEWERS_ROOT = REPOSITORY_ROOT / "reviewers"
 
 # These are the documented personal skill directories for each agent. Copilot's
 # directory is shared by its VS Code agent mode and CLI.
@@ -49,7 +50,7 @@ def detect_platform(
     return system or "Unknown"
 
 
-def find_skills(source: Path = REPOSITORY_ROOT) -> list[Path]:
+def find_skills(source: Path = REVIEWERS_ROOT) -> list[Path]:
     """Return top-level skill directories in stable name order."""
     return sorted(
         (
@@ -203,7 +204,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if not available:
-        parser.error(f"no top-level skill directories found under {REPOSITORY_ROOT}")
+        parser.error(f"no reviewer skill directories found under {REVIEWERS_ROOT}")
 
     try:
         skills = selected_skills(available, args.skill)
