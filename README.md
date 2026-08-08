@@ -1,680 +1,158 @@
 # Reviewer Skills Experiment
 
 > [!NOTE]
-> **Experiment concluded (August 2026).** This repository tested whether large,
-> specialized reviewer prompts improve agentic code review. In the final
-> real-code comparison, a compact Rhodes-inspired skill did not materially
-> outperform an ordinary Codex review and found fewer distinct validated
-> defects. Small local models also showed no validated benefit in the tested
-> real-repository runs. The skills remain available as an experimental archive,
-> not as a demonstrated improvement over a capable coding agent.
-
-This repository contains 23 Claude Code reviewer skills, the evaluation harness,
-and the evidence behind that conclusion. See the
-[experiment conclusion](docs/experiment-conclusion-2026-08-08.md) for the short
-version and limitations.
-
-## 🎯 Available Skills (23 Total)
-
-### JavaScript/TypeScript Skills
-
-#### 1. **JavaScript Test Reviewer**
-Reviews JavaScript/TypeScript tests for quality and suggests multiple testing strategies.
-
-**Focus Areas:**
-- Test structure (AAA pattern, organization)
-- Multiple testing strategies for different scenarios
-- Jest, Vitest, Testing Library, Cypress best practices
-- User-centric testing (behavior over implementation)
-- Mocking strategies (MSW, jest.mock, etc.)
-- Component testing and E2E testing
-- Test quality over coverage
-
-**Use when:** Reviewing JavaScript/TypeScript tests, learning testing strategies, or improving test quality
-
----
-
-#### 2. **JavaScript Refactoring Reviewer**
-Reviews JavaScript/TypeScript code for refactoring opportunities to improve quality and maintainability.
-
-**Focus Areas:**
-- Code smells (long functions, god classes, duplication)
-- SOLID principles (SRP, OCP, LSP, DIP)
-- Modern JavaScript patterns (ES6+, async/await, functional)
-- Testability (dependency injection, pure functions)
-- Performance optimization (memoization, debouncing)
-- DRY and design patterns
-
-**Use when:** Refactoring JavaScript/TypeScript code, improving maintainability, or applying SOLID principles
-
----
-
-#### 3. **JavaScript Format/Style Refactoring Reviewer**
-Solves JavaScript/TypeScript formatting and style issues through refactoring, not just line wrapping.
-
-**Focus Areas:**
-- Line length through extraction
-- Complexity reduction (cyclomatic complexity)
-- Function design and parameter refactoring
-- Code organization and naming
-- ESLint/Prettier issue resolution through refactoring
-
-**Use when:** ESLint/Prettier complains and you want structural fixes instead of formatting
-
----
-
-#### 4. **JavaScript Functional Reviewer**
-Reviews JavaScript/TypeScript code using functional programming principles.
-
-**Focus Areas:**
-- Pure functions and immutability
-- Array methods (map, filter, reduce)
-- Function composition
-- Avoiding side effects
-- Functional patterns in JavaScript
-
-**Use when:** Applying functional programming patterns in JavaScript/TypeScript projects
-
----
-
-#### 5. **JavaScript Security & Privacy Reviewer**
-Reviews JavaScript/TypeScript code for security vulnerabilities and privacy issues.
-
-**Focus Areas:**
-- OWASP Top 10 (XSS, injection, authentication, CSRF)
-- Input validation and output encoding
-- Authentication and session security (JWT, OAuth)
-- Security headers (CSP, HSTS, CORS)
-- API security (rate limiting, authentication)
-- Data privacy (GDPR, CCPA, PII handling)
-- Cryptography (strong algorithms, key management)
-- Platform-specific (Node.js, React, Express security)
-
-**Use when:** Reviewing JavaScript/TypeScript for security vulnerabilities, checking OWASP compliance, or auditing privacy
-
----
-
-#### 6. **JavaScript Performance Reviewer**
-Reviews JavaScript/TypeScript code for performance optimization opportunities.
-
-**Focus Areas:**
-- Algorithm complexity optimization (Big-O analysis, nested loops)
-- Data structures (Set vs Array, Map vs Object, typed arrays)
-- Memory management (leaks, closures, garbage collection)
-- DOM operations (batching, layout thrashing, virtual scrolling)
-- Async patterns (Promise.all, Web Workers, lazy loading)
-- Bundling optimization (code splitting, tree shaking, compression)
-- React-specific (memoization, keys, context splitting)
-- Profiling and measurement (Chrome DevTools, Lighthouse)
-
-**Use when:** Code is slow, optimizing performance, finding bottlenecks, improving FPS, or reducing bundle size
-
----
-
-#### 7. **React Reviewer**
-Reviews React code for best practices, patterns, performance, accessibility, and common pitfalls.
-
-**Focus Areas:**
-- Component design (single responsibility, composition, props)
-- Hooks (dependencies, cleanup, custom hooks, rules)
-- State management (lifting state, colocation, derived state)
-- Rendering optimization (memoization, keys, lazy loading)
-- Patterns (compound components, render props, portals)
-- Accessibility (ARIA, keyboard navigation, focus management)
-- Error handling (error boundaries, async errors)
-- Testing (behavior testing, Testing Library queries)
-
-**Use when:** Reviewing React components, debugging hooks, improving performance, or ensuring accessibility
-
----
-
-### Python Skills
-
-#### 8. **Rhodes Python Code Reviewer**
-Reviews Python code using Brandon Rhodes' 70 coding principles from 15+ years of conference talks.
-
-**Focus Areas:**
-- Architecture (HOIST-IO, FUNC-SHELL, composition over inheritance)
-- Testing (pure functions, avoiding mocks, test confidence)
-- API Design (explicit names, immutability, showing cost)
-- Naming (precise nouns, relentless verbs)
-- Module Design (from python-patterns.guide)
-
-**Use when:** Reviewing Python code for architecture, testability, clarity, or learning Rhodes' principles
-
----
-
-#### 9. **Agile Requirements Reviewer**
-Reviews software specifications, user stories, and use cases using agile requirements best practices.
-
-**Focus Areas:**
-- INVEST criteria for user stories
-- Use case quality and completeness
-- Problem domain focus (WHAT not HOW)
-- Requirements clarity and testability
-- Detection of over-engineering and gold-plating
-
-**Use when:** Reviewing requirements, user stories, specifications, or acceptance criteria
-
----
-
-#### 10. **Django Reviewer**
-Comprehensive production readiness review for Django projects focusing on security, performance, and scalability.
-
-**Focus Areas:**
-- OWASP Top 10 and Django-specific security
-- Database optimization and N+1 query prevention
-- Django REST Framework API best practices
-- Production configuration and deployment
-- Performance and caching strategies
-- Authentication and authorization
-- Testing and code quality
-
-**Use when:** Reviewing Django projects for production deployment, security audits, or performance optimization
-
----
-
-#### 11. **Python Functional Reviewer**
-Reviews Python code for functional programming patterns and best practices.
-
-**Focus Areas:**
-- Pure functions and immutability
-- Higher-order functions
-- Function composition
-- Side effect management
-
-**Use when:** You want to adopt functional programming patterns in Python
-
----
-
-#### 12. **Python Performance Reviewer**
-Reviews Python code for performance optimization opportunities.
-
-**Focus Areas:**
-- Algorithm complexity optimization (Big-O analysis)
-- Data structures (set vs list, dict, deque, heapq)
-- Memory management (generators, __slots__, gc)
-- String operations (join, f-strings, compiled regex)
-- List/iteration patterns (comprehensions, enumerate, zip)
-- I/O optimization (streaming, batching, connection pooling)
-- Concurrency (asyncio, threading, multiprocessing, GIL)
-- Profiling and measurement (cProfile, line_profiler, memory_profiler)
-
-**Use when:** Code is slow, optimizing performance, or finding bottlenecks
-
----
-
-#### 13. **Python Security & Privacy Reviewer**
-Comprehensive Python security and privacy review covering OWASP Top 10 and data protection.
-
-**Focus Areas:**
-- Input validation and injection prevention
-- Authentication and authorization
-- Data encryption and privacy
-- Secure coding practices
-
-**Use when:** Security is critical or handling sensitive data
-
----
-
-#### 14. **Python Refactoring Reviewer**
-Identifies refactoring opportunities to improve code quality, readability, and maintainability.
-
-**Focus Areas:**
-- Code smells detection
-- SOLID principles
-- DRY and design patterns
-- Pythonic refactoring
-
-**Use when:** Improving existing code or reducing technical debt
-
----
-
-#### 15. **Python Zen Reviewer**
-Reviews code against the 19 principles of the Zen of Python (PEP 20).
-
-**Focus Areas:**
-- Pythonic style and idioms
-- Code aesthetics
-- Simplicity and readability
-- Python philosophy
-
-**Use when:** Ensuring code follows Python's design philosophy
-
----
-
-#### 16. **Python Format/Style Refactoring Reviewer**
-Solves formatting and style issues through refactoring, not just line wrapping.
-
-**Focus Areas:**
-- Line length through extraction
-- Complexity reduction
-- Nesting elimination with guard clauses
-- Parameter objects for long signatures
-
-**Use when:** Linters complain and you want structural fixes
-
----
-
-### General/Cross-Language Skills
-
-#### 17. **Python Test Reviewer**
-Reviews Python tests for quality and suggests multiple testing strategies.
-
-**Focus Areas:**
-- Test structure (AAA pattern)
-- Multiple testing strategies
-- Test doubles (mocks, stubs, fakes)
-- Test quality over coverage
-
-**Use when:** Reviewing tests or learning testing strategies
-
----
-
-#### 18. **OpenAPI Reviewer**
-Reviews OpenAPI/Swagger specifications for completeness, consistency, and API design best practices.
-
-**Focus Areas:**
-- OpenAPI 3.x structure and format
-- RESTful path naming and HTTP methods
-- Schema definitions and validation
-- Security schemes and requirements
-- Complete documentation with examples
-- Response definitions and error handling
-
-**Use when:** Reviewing API specifications, validating OpenAPI/Swagger files, or checking REST API design
-
----
-
-#### 19. **Database Schema Reviewer**
-Reviews relational database schemas for normalization, performance, and data integrity.
-
-**Focus Areas:**
-- Normalization (1NF through 5NF)
-- Primary keys and foreign key relationships
-- Indexing strategies and performance optimization
-- Data types and column sizing
-- Database-specific best practices (MySQL, PostgreSQL, SQL Server)
-- Naming conventions and constraints
-
-**Use when:** Reviewing database designs, DDL scripts, schema migrations, or optimizing database performance
-
----
-
-#### 20. **React Native Expo Reviewer**
-Reviews React Native and Expo applications for architecture, performance,
-platform behavior, and maintainability.
-
-**Use when:** Reviewing a React Native or Expo application
-
----
-
-#### 21. **Appium Test Reviewer**
-Reviews Appium mobile-automation suites for reliability, synchronization,
-maintainability, and platform coverage.
-
-**Use when:** Reviewing Appium tests or diagnosing flaky mobile automation
-
----
-
-#### 22. **Code Authenticity Reviewer**
-Reviews code and documentation for fabricated APIs, dependencies, citations,
-and other signs of unverified generated content.
-
-**Use when:** Checking AI-assisted work for unverifiable or invented details
-
----
-
-#### 23. **Playwright Test Reviewer**
-Reviews Playwright end-to-end tests for user-visible assertions, stable locators,
-synchronization, isolation, and flake resistance.
-
-**Use when:** Reviewing Playwright tests or diagnosing flaky browser automation
-
----
-
-## 🚀 Installation
-
-### Automated Installation (Recommended)
-
-The easiest way to install all skills to both Windows and WSL:
+> **Experiment concluded in August 2026.** The final real-code comparison found
+> no material advantage from a compact reviewer skill over an ordinary Codex
+> review, and the guided reviews found fewer distinct validated defects. The
+> tested local models also showed no validated benefit. This repository is an
+> experimental archive, not a demonstrated review-quality product.
+
+The repository contains 23 reviewer skills, the evaluation harness, and the
+evidence behind that negative result. The canonical account is the
+[experiment conclusion](docs/experiment-conclusion-2026-08-08.md).
+
+## Final Result
+
+| Condition | Runs | Frozen-reference recall | Validated per run | Distinct validated defects |
+| --- | ---: | ---: | ---: | ---: |
+| Regular Codex review | 3 | 28.5% | 8.67 | 18 |
+| Codex with lean skill | 3 | 30.2% | 8.33 | 13 |
+
+The small recall difference did not translate into more useful discovery. The
+regular condition produced one more validated finding overall and five more
+distinct validated defects. See the conclusion for methodology, local-model
+results, interpretation, and limitations.
+
+## Repository Map
+
+| Path | Canonical purpose |
+| --- | --- |
+| `*-reviewer/` | Individual skill prompt, usage README, and source attribution |
+| `experiments/` | Current evaluation runners and retained evidence |
+| [`docs/evaluation-harness.md`](docs/evaluation-harness.md) | Evaluation methodology and reproduction commands |
+| [`docs/experiment-conclusion-2026-08-08.md`](docs/experiment-conclusion-2026-08-08.md) | Final decision and results |
+| [`docs/project-history.md`](docs/project-history.md) | Concise project timeline |
+| [`docs/research/icl-code-review-research.md`](docs/research/icl-code-review-research.md) | Historical research hypothesis |
+| [`review-tool/`](review-tool/README.md) | Deprecated Docker harness retained for reproduction |
+
+## Skill Index
+
+Each linked skill README is the canonical description of that skill. The root
+README intentionally does not repeat its detailed guidelines or examples.
+
+### Python
+
+| Skill | Focus |
+| --- | --- |
+| [Python refactoring](python-refactoring-reviewer/README.md) | Code smells, SOLID, and maintainability |
+| [Python functional](python-functional-reviewer/README.md) | Pure functions, composition, and side effects |
+| [Python Zen](python-zen-reviewer/README.md) | PEP 20 and Pythonic design |
+| [Python format refactoring](python-format-refactoring-reviewer/README.md) | Structural fixes for style problems |
+| [Python testing](python-test-reviewer/README.md) | Test design, confidence, and strategies |
+| [Python security and privacy](python-security-privacy-reviewer/README.md) | OWASP, privacy, and secure coding |
+| [Python performance](python-performance-reviewer/README.md) | Profiling, algorithms, I/O, and memory |
+| [Rhodes Python](python-rhodes-reviewer/README.md) | Brandon Rhodes-inspired architecture guidance |
+
+### JavaScript and TypeScript
+
+| Skill | Focus |
+| --- | --- |
+| [JavaScript testing](javascript-test-reviewer/README.md) | Jest, Vitest, Testing Library, and Cypress |
+| [JavaScript refactoring](javascript-refactoring-reviewer/README.md) | Code smells, SOLID, and modern patterns |
+| [JavaScript format refactoring](javascript-format-refactoring-reviewer/README.md) | Structural ESLint and Prettier fixes |
+| [JavaScript functional](javascript-functional-reviewer/README.md) | Immutability, composition, and effects |
+| [JavaScript security and privacy](javascript-security-privacy-reviewer/README.md) | Web and Node.js security |
+| [JavaScript performance](javascript-performance-reviewer/README.md) | Browser, Node.js, and React performance |
+| [React](react-reviewer/README.md) | Components, hooks, state, accessibility, and testing |
+| [React Native and Expo](javascript-react-native-expo-reviewer/README.md) | Mobile architecture and platform behavior |
+
+### Framework, testing, and cross-language
+
+| Skill | Focus |
+| --- | --- |
+| [Agile requirements](agile-requirements-reviewer/README.md) | Stories, use cases, and acceptance criteria |
+| [Django](django-reviewer/README.md) | Production readiness, security, and performance |
+| [OpenAPI](openapi-reviewer/README.md) | API contract quality |
+| [Database schema](database-schema-reviewer/README.md) | Normalization, indexing, and migrations |
+| [Code authenticity](code-authenticity-reviewer/README.md) | Fabricated APIs, dependencies, and citations |
+| [Playwright testing](playwright-test-reviewer/README.md) | Stable end-to-end browser testing |
+| [Appium testing](appium-test-reviewer/README.md) | Reliable mobile automation |
+
+## Installation and Use
+
+Clone over SSH and install all skills:
 
 ```bash
-# Clone the repository
 git clone git@github.com:kvsankar/claude-skills.git
 cd claude-skills
-
-# Run the installation script
 python install_skills.py
 ```
 
-This will automatically:
-- Install all 23 skills to `~/.claude/skills/` on Windows
-- Install all 23 skills to `~/.claude/skills/` on WSL (if available)
-- Handle existing installations by replacing them with the latest version
-
-### Manual Installation
-
-#### Personal Installation (Available in All Projects)
-
-Copy the entire collection to your personal Claude directory:
+For a manual Linux or macOS installation:
 
 ```bash
-# Linux/Mac
-git clone git@github.com:kvsankar/claude-skills.git
-cp -r claude-skills/*-reviewer ~/.claude/skills/
-
-# Windows (PowerShell)
-git clone git@github.com:kvsankar/claude-skills.git
-Copy-Item -Recurse "claude-skills\*-reviewer" "$env:USERPROFILE\.claude\skills\"
+cp -r *-reviewer ~/.claude/skills/
 ```
 
-#### Project Installation (For Teams)
+To install one skill, copy only its directory. Invoke a skill by name, for
+example:
 
-Clone into your project's `.claude/skills/` directory:
-
-```bash
-cd your-project
-mkdir -p .claude/skills
-cd .claude/skills
-git clone git@github.com:kvsankar/claude-skills.git
+```text
+Use the python-security-privacy-reviewer on this API.
 ```
 
-Then update your project's `.claude/settings.json`:
+## Evaluation
 
-```json
-{
-  "skills": [
-    {
-      "name": "python-security-privacy-reviewer",
-      "path": "./.claude/skills/claude-skills/python-security-privacy-reviewer"
-    }
-  ]
-}
-```
+Effectiveness tests use immutable revisions of real upstream code. The two
+subject modes are direct, non-agentic Ollama review and agentic repository review
+through Pi; Codex provides the hosted agentic comparison. Claude matches reviews
+against a frozen reference without tools, followed by a separate source-aware
+pass for novel findings.
 
-### Individual Skill Installation
+- Design and commands: [Evaluation Harness](docs/evaluation-harness.md)
+- Final A/B evidence:
+  [Codex regular versus lean skill](experiments/results/codex-lean-ab-20260808/doit/final/summary.md)
+- Frozen reference:
+  [Real review pool](experiments/results/real-pool-20260808/doit/reference-v1/summary.md)
+- Withdrawn synthetic pilot:
+  [Local-Model Evaluation Pilot](docs/evaluation-pilot-2026-08-08.md)
 
-To install just one skill:
+The Docker-based [review tool](review-tool/README.md) is deprecated and must not
+be extended for new evaluations.
 
-```bash
-# Copy single skill to personal directory
-cp -r python-functional-reviewer ~/.claude/skills/
+## Repository Status
 
-# Or to project directory
-cp -r python-functional-reviewer .claude/skills/
-```
+This is a completed experiment. Corrections to documentation, attribution, or
+reproducibility are appropriate; new reviewer skills are outside its scope.
 
-## 💡 How to Use
+Raw conversations, machine-specific repository links, and large regenerable
+agent event streams are intentionally excluded from the public tree. Historical
+synthetic results remain clearly marked as withdrawn and are not effectiveness
+evidence.
 
-Once installed, skills activate automatically based on keywords in your requests:
-
-```
-"Review these Jest tests for quality"
-"Refactor this JavaScript code to follow SOLID principles"
-"Fix this ESLint complexity warning through refactoring"
-"Apply functional patterns to this JavaScript"
-"Review this code for XSS vulnerabilities"
-"Check if this Node.js code is secure"
-"This React component is slow - optimize it"
-"Review this React component for best practices"
-"Check my React hooks for issues"
-"Find performance bottlenecks in this function"
-"Review this user story for quality"
-"Review this Django view for security and performance"
-"Check this Django model for N+1 queries"
-"Optimize this slow Python code"
-"Find performance bottlenecks in this function"
-"Review this code for security issues"
-"Review this Python code using Rhodes guidelines"
-"What would Brandon Rhodes say about this architecture?"
-"Make this code more Pythonic"
-"Refactor this Python code to be more maintainable"
-"Review these pytest tests for quality"
-"Fix this line length issue through refactoring"
-"Review this OpenAPI specification"
-"Review this database schema for normalization"
-```
-
-Or invoke directly:
-```
-"Use the javascript-test-reviewer on these tests"
-"Use the javascript-refactoring-reviewer on this code"
-"Use the javascript-format-refactoring-reviewer on this file"
-"Use the javascript-functional-reviewer on this module"
-"Use the javascript-security-privacy-reviewer on this API"
-"Use the javascript-performance-reviewer on this slow component"
-"Use the react-reviewer on this React component"
-"Use the agile-requirements-reviewer on this specification"
-"Use the python-rhodes-reviewer on this Python code"
-"Use the django-reviewer on this Django project"
-"Use the python-performance-reviewer on this slow code"
-"Use the python-security-privacy-reviewer on this file"
-"Use the python-refactoring-reviewer on this code"
-"Use the python-zen-reviewer on this code"
-"Use the python-functional-reviewer on this module"
-"Use the openapi-reviewer on this API spec"
-"Use the database-schema-reviewer on this DDL script"
-```
-
-## 🧪 Evaluation Harness
-
-The final evaluation used two complementary modes:
-
-- **Non-agentic:** controlled prompts sent directly to Ollama models on `tsmac`
-- **Agentic:** local Ollama models operate through the open-source Pi coding
-  agent; Codex provides a hosted agent baseline
-
-Claude Code first matches saved reviews against a frozen reference without
-repository tools. Findings outside that reference are then anonymized and passed
-to a separate source-aware adjudication step before final scoring.
-
-One source-aware Claude review seeds the candidate pool; it is not treated as
-ground truth. Findings from every subject are pooled, deduplicated, verified
-against the real source, and frozen as a versioned reference before scoring.
-
-```bash
-# Direct, non-agentic local-model run
-python3 experiments/run_ollama.py \
-  --models devstral-small-2:latest qwen3-coder:30b \
-  --code experiments/repos/doit-repo/doit/action.py \
-  --output experiments/results/direct-real/doit
-
-# Agentic local-model run through Pi
-python3 experiments/run_pi_agentic.py \
-  --models devstral-small-2:latest qwen3-coder:30b \
-  --repo experiments/repos/doit-repo \
-  --output experiments/results/agentic-real/doit
-
-# Hosted agentic baseline
-python3 experiments/run_codex_agentic.py \
-  --repo experiments/repos/doit-repo \
-  --output experiments/results/agentic-real/doit
-
-# Independent semantic judge
-python3 experiments/evaluate_judge.py \
-  --gt experiments/results/real-pool/doit/reference-v1/reference.json \
-  --results-dir experiments/results/agentic-real/doit
-```
-
-The decisive regular-versus-lean experiment produced 18 distinct validated
-defects for regular review and 13 for the skill-guided review, with nearly equal
-average validated findings per run. This is a small experiment, not a universal
-claim, but it provides no reason to continue investing in this skill collection
-as a review-quality product.
-
-See [Evaluation Harness](docs/evaluation-harness.md) for the design and
-[final results](experiments/results/codex-lean-ab-20260808/doit/final/summary.md)
-for the retained evidence. The old Docker-based
-[review tool](review-tool/README.md) is deprecated and kept only to reproduce
-historical results.
-
----
-
-## 📚 Skill Details
-
-### Comprehensive Coverage
-
-Each skill provides:
-- ✅ **Detailed analysis** with specific recommendations
-- ✅ **Concrete examples** showing before/after code
-- ✅ **Mnemonic IDs** for easy reference
-- ✅ **Attribution** to authoritative sources
-- ✅ **Best practices** from industry standards
-
-### Quality Over Quantity
-
-These skills focus on **depth and quality**:
-- Detailed explanations, not just pattern matching
-- Multiple approaches with trade-offs
-- Complete, runnable code examples
-- Educational content that teaches concepts
-
-### Authoritative Sources
-
-Based on established resources:
-- **JavaScript/TypeScript:**
-  - **Jest Documentation** - Jest testing best practices
-  - **Vitest Documentation** - Modern testing patterns
-  - **Testing Library** - User-centric component testing (Kent C. Dodds)
-  - **clean-code-javascript** - JavaScript clean code principles
-  - **Refactoring Guru** - Refactoring patterns
-  - **ES6+ Best Practices** - Modern JavaScript patterns
-  - **Functional JavaScript Principles** - FP in JavaScript
-- **Python:**
-  - **PEP 8, PEP 20** - Python style and philosophy
-  - **pytest Documentation** - Python testing best practices
-  - **Functional Programming Principles** - FP in Python
-- **Django:**
-  - **Django Documentation** - Official Django patterns, security, and best practices
-  - **Two Scoops of Django** - Django community best practices
-  - **Django REST Framework** - API design and implementation
-- **API & Database:**
-  - **OpenAPI Specification 3.x** - Official OpenAPI/Swagger standards
-  - **REST API Design Principles** - Industry best practices for RESTful APIs
-  - **Database Normalization Theory** - Codd, Date, Fagin (1NF-5NF, BCNF)
-  - **MySQL/PostgreSQL/SQL Server Docs** - Database-specific best practices
-- **Cross-Cutting:**
-  - **IEEE 830, BABOK** - Requirements engineering standards
-  - **INVEST Criteria** - Agile user story best practices
-  - **OWASP Top 10** - Security standards
-  - **Martin Fowler** - Software design and refactoring principles
-  - **SOLID Principles** - Object-oriented design (Robert C. Martin)
-
-## 🏗️ Skill Architecture
-
-Each skill includes:
-
-```
-skill-name-reviewer/
-├── SKILL.md       # Main skill definition with guidelines
-├── README.md      # User documentation
-└── SOURCES.md     # Detailed attribution
-```
-
-All guidelines are **self-contained** - no external dependencies needed.
-
-## 🔍 Example Review
-
-When you use a skill, you get structured feedback:
-
-`````markdown
-## Security Review: user_authentication.py
-
-### ✅ Security Strengths
-- **AUTH-BCRYPT**: Properly uses bcrypt for password hashing (line 45)
-
-### 🚨 Security Issues
-
-#### CRITICAL: SQL-INJECT - SQL Injection Vulnerability
-
-**Current code:**
-```python
-query = f"SELECT * FROM users WHERE username = '{username}'"
-```
-
-**Secure code:**
-```python
-query = "SELECT * FROM users WHERE username = ?"
-cursor.execute(query, (username,))
-```
-
-**Why this matters:**
-Prevents attackers from injecting malicious SQL...
-
----
-`````
-
-**📂 See more examples:** [sample_reviews/](review-tool/sample_reviews/) contains 16 complete reviews of real open source projects including [HTTPie](https://github.com/httpie/cli) and [Datasette](https://github.com/simonw/datasette).
-
-## 🤝 Repository Status
-
-This is a completed experiment and is not under active feature development.
-Corrections to documentation, attribution, or reproducibility are welcome; new
-reviewer skills are outside the current scope.
-
-## 📄 License
+## License
 
 No repository-wide open-source license is currently granted. The repository is
-published as source-available experimental history; individual skills include
-detailed attribution in their `SOURCES.md` files. Anyone wishing to reuse or
-redistribute the material should first obtain permission or wait for an explicit
-license.
+published as source-available experimental history. Individual skills provide
+source attribution in their `SOURCES.md` files; reuse or redistribution requires
+permission until an explicit license is added.
 
-## 🙏 Acknowledgments
+## Brandon Rhodes Permission
 
-These skills build upon the work of many contributors to software engineering best practices.
-
-### Special Thanks to Brandon Rhodes
-
-> Hey, folks, this is Brandon Rhodes, making a personal comment on this project, since Sankar was kind enough to ask my permission before making it public! While I myself am dismayed at the broad impact of AI on society so far, and have always been skeptical about automated code review (I've always used 'pyflakes' instead of 'flake8' because flake8's clumsy attempts to apply PEP-8 produce so much noise), I see no reason to stand in the way of this experiment. It tries to distill some of the guidelines that I've offered in my talks into a set of rules that can be applied by machine. I can't guess whether Claude Code will really understand when my ideas are useful and when they're not, but it's interesting to see how many pieces of advice worked their way into my talks over so many years.
+> Hey, folks, this is Brandon Rhodes, making a personal comment on this project,
+> since Sankar was kind enough to ask my permission before making it public!
+> While I myself am dismayed at the broad impact of AI on society so far, and
+> have always been skeptical about automated code review (I've always used
+> 'pyflakes' instead of 'flake8' because flake8's clumsy attempts to apply PEP-8
+> produce so much noise), I see no reason to stand in the way of this experiment.
+> It tries to distill some of the guidelines that I've offered in my talks into
+> a set of rules that can be applied by machine. I can't guess whether Claude
+> Code will really understand when my ideas are useful and when they're not, but
+> it's interesting to see how many pieces of advice worked their way into my
+> talks over so many years.
 >
 > — Brandon Rhodes (December 2025)
 
-The **Rhodes Python Code Reviewer** skill summarizes 70 coding principles from Brandon Rhodes' 15+ years of conference presentations (2010-2024) and his [Python Patterns Guide](https://python-patterns.guide/). This skill was released with Brandon Rhodes' permission. We are grateful for his decades of contributions to Python education.
-
-- **Website:** [rhodesmill.org/brandon](https://rhodesmill.org/brandon/)
-- **Talks:** [rhodesmill.org/brandon/talks](https://rhodesmill.org/brandon/talks/)
-- **Python Patterns:** [python-patterns.guide](https://python-patterns.guide/)
-
-### Additional Acknowledgments
-
-**JavaScript/TypeScript:**
-- **Jest Team** - Jest documentation and testing best practices
-- **Vitest Team** (Anthony Fu and contributors) - Modern testing innovation
-- **Testing Library Team** (Kent C. Dodds) - User-centric testing principles
-- **Ryan McDermott** - clean-code-javascript adaptation
-- **JavaScript Community** - ES6+ best practices and modern patterns
-
-**Python:**
-- **Python Software Foundation** - PEP 8, PEP 20, Python documentation
-- **pytest Development Team** - Testing framework and documentation
-- **Django Software Foundation** - Django documentation, security guidelines, best practices
-- **Two Scoops of Django authors** - Django community standards and patterns
-- **Django REST Framework contributors** - API design best practices
-
-**API & Database:**
-- **OpenAPI Initiative** - OpenAPI Specification 3.x standards
-- **REST API Design Community** - RESTful API best practices (Google, Microsoft, Zalando, PayPal)
-- **Database Theory Pioneers** - E.F. Codd, C.J. Date, Ronald Fagin (normalization theory)
-- **MySQL/PostgreSQL/SQL Server Teams** - Database vendor documentation and best practices
-
-**Software Engineering:**
-- **Martin Fowler** - Refactoring, software design, and testing principles
-- **Robert C. Martin (Uncle Bob)** - Clean Code and SOLID principles
-- **Kent Beck** - Test-Driven Development and Extreme Programming
-- **Refactoring Guru** - Refactoring patterns catalog
-- **OWASP Foundation** - Security standards and guidelines
-- **IEEE & IIBA** - Requirements engineering standards (IEEE 830, BABOK)
-- **Agile Community** - INVEST criteria and agile requirements practices
-- **Functional Programming Community** - FP principles and patterns
-
-## 📞 Support
-
-For issues or questions:
-- Open an issue on GitHub
-- Check individual skill README files for specific guidance
-
----
-
-**An experiment in prompt-based code review, retained with its negative result.**
+The Rhodes skill was released with Brandon Rhodes' permission. Its detailed
+attribution is in
+[`python-rhodes-reviewer/SOURCES.md`](python-rhodes-reviewer/SOURCES.md).

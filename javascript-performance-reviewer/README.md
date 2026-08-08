@@ -223,11 +223,10 @@ Every guideline includes:
 
 ### Practical Examples
 
-All examples are:
-- **Complete** - Copy-paste ready
-- **Realistic** - Based on real-world scenarios
-- **Measured** - Include performance numbers
-- **Explained** - Show why it's faster
+Examples identify the runtime—browser, Node.js, or React—and pair the change
+with an appropriate measurement such as a DevTools trace, benchmark, render
+count, or bundle-size comparison. They explain both the gain and the added
+complexity.
 
 ### Platform-Specific
 
@@ -442,11 +441,9 @@ Never optimize without profiling:
 
 ### Focus on Impact
 
-Not all optimizations are worth it:
-- **Critical** (10-1000x): Always optimize
-- **High** (2-10x): Usually worth it
-- **Medium** (1.5-2x): Depends on hotness
-- **Low** (1.1-1.5x): Often not worth complexity
+Prioritize JavaScript hot paths confirmed by a browser or Node.js profile.
+Large algorithmic, network, rendering, and bundle improvements deserve action;
+small micro-benchmark gains rarely justify harder-to-read application code.
 
 ### Optimize What Matters
 

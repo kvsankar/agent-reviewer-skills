@@ -18,7 +18,9 @@ This skill transforms Claude into a JavaScript testing expert who:
 
 > **"The more your tests resemble the way your software is used, the more confidence they can give you."** - Testing Library
 
-This skill doesn't just show "bad test" vs "good test". Instead, it shows 2-4 different testing strategies for each scenario with detailed explanations of when to use each approach.
+The skill compares JavaScript-specific strategies—unit tests, component tests,
+network-level interception, and browser tests—so the recommendation reflects
+the confidence and runtime cost appropriate to the behavior.
 
 ## Installation
 
@@ -248,11 +250,9 @@ Every example shows:
 
 ### Trade-Off Analysis
 
-For each scenario, explains:
-- When to use each strategy
-- Pros and cons of each approach
-- Realistic trade-offs (speed vs thoroughness, simplicity vs coverage)
-- Best practices and recommendations
+For each scenario, it explains framework fit, isolation level, execution cost,
+and whether Jest/Vitest, Testing Library, MSW, or a browser runner provides the
+most credible evidence.
 
 ### Framework Coverage
 
@@ -322,9 +322,9 @@ No single testing approach fits all scenarios. Learn when to use:
 - "How do I test this async function with error handling?"
 
 ### Improving Test Quality
-- "How can I make these tests more maintainable?"
-- "These tests are slow, how can I speed them up?"
-- "Am I testing edge cases properly?"
+- "How can I make this component test less coupled to markup?"
+- "Why is this Vitest suite slow?"
+- "Which browser and async edge cases are missing?"
 
 ### Framework Migration
 - "Help me migrate from Enzyme to Testing Library"

@@ -69,4 +69,4 @@ reports/
 .env
 *.md.backup
 session-history/
-project-history.md
+/project-history.md
