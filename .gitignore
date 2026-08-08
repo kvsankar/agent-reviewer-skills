@@ -1,7 +1,3 @@
-# Raw slide files - Copyright Brandon Rhodes
-# Do not commit original slide files to avoid copyright issues
-slides/raw/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -50,22 +46,13 @@ htmlcov/
 *.tmp
 *.bak
 .cache/
-WIP.md
-test-openapi.yaml
-claude-conversations-temp/
-claude-conversations/
-wip/
-retrospectives/
 
 # OS
 Thumbs.db
 
 # Claude Code repository-local state
-.claude/
+/.claude/
 
 # Review tool
-reports/
 .env
 *.md.backup
-session-history/
-/project-history.md
