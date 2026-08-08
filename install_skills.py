@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import os
+import platform
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Iterable, Mapping, Sequence
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent
@@ -20,6 +22,31 @@ AGENT_DESTINATIONS = {
     "pi": Path(".pi/agent/skills"),
     "copilot": Path(".copilot/skills"),
 }
+
+
+def detect_platform(
+    system: str | None = None,
+    release: str | None = None,
+    environment: Mapping[str, str] | None = None,
+) -> str:
+    """Return a friendly name for the current supported environment."""
+    system = system or platform.system()
+    release = release or platform.release()
+    environment = os.environ if environment is None else environment
+
+    if system == "Windows":
+        return "Windows"
+    if system == "Darwin":
+        return "macOS"
+    if system == "Linux":
+        is_wsl = (
+            "microsoft" in release.lower()
+            or "wsl" in release.lower()
+            or "WSL_DISTRO_NAME" in environment
+            or "WSL_INTEROP" in environment
+        )
+        return "WSL" if is_wsl else "Linux"
+    return system or "Unknown"
 
 
 def find_skills(source: Path = REPOSITORY_ROOT) -> list[Path]:
@@ -117,7 +144,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Install repository skills for Claude Code, Codex, Pi, and GitHub "
-            "Copilot (VS Code agent mode and CLI)."
+            "Copilot (VS Code agent mode and CLI) on Windows, WSL, macOS, or "
+            "Linux."
         )
     )
     parser.add_argument(
@@ -185,6 +213,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     agents = selected_agents(args.agent)
     home = args.home.expanduser().resolve()
     destinations = target_directories(home, agents)
+    print(f"Platform: {detect_platform()}")
+    print(f"Home: {home}")
     results = install(
         skills,
         destinations,

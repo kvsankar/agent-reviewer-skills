@@ -152,14 +152,29 @@ README intentionally does not repeat its detailed guidelines or examples.
 
 ## Installation and Use
 
-Clone over SSH and install all skills for Claude Code, Codex, Pi, and GitHub
-Copilot:
+The installer supports Windows, WSL, macOS, and Linux and requires Python 3.10
+or newer. Clone the repository over SSH:
 
 ```bash
 git clone git@github.com:kvsankar/claude-skills.git
 cd claude-skills
+```
+
+On macOS, Linux, or WSL, run:
+
+```bash
 python3 install_skills.py
 ```
+
+On Windows PowerShell, run:
+
+```powershell
+py -3 install_skills.py
+```
+
+Windows and WSL have separate home directories and agent installations. If you
+use agents in both environments, run the installer once from Windows and once
+from WSL. The installer does not modify the other environment implicitly.
 
 The installer writes personal skills to the locations documented by each agent:
 
@@ -186,6 +201,7 @@ python3 install_skills.py --agent claude --agent pi \
 python3 install_skills.py --force
 ```
 
+Use `py -3` instead of `python3` in the examples when running from Windows.
 Run `python3 install_skills.py --help` for all options. Invoke a skill by name,
 for example:
 

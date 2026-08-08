@@ -43,6 +43,22 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(destinations["pi"], self.home / ".pi/agent/skills")
         self.assertEqual(destinations["copilot"], self.home / ".copilot/skills")
 
+    def test_detects_supported_platforms(self) -> None:
+        cases = (
+            ("Windows", "11", {}, "Windows"),
+            ("Darwin", "25.0", {}, "macOS"),
+            ("Linux", "6.8.0-generic", {}, "Linux"),
+            ("Linux", "5.15.0-microsoft-standard-WSL2", {}, "WSL"),
+            ("Linux", "6.8.0-generic", {"WSL_DISTRO_NAME": "Ubuntu"}, "WSL"),
+        )
+
+        for system, release, environment, expected in cases:
+            with self.subTest(expected=expected):
+                self.assertEqual(
+                    install_skills.detect_platform(system, release, environment),
+                    expected,
+                )
+
     def test_dry_run_writes_nothing(self) -> None:
         skills = install_skills.find_skills(self.source)
         destinations = install_skills.target_directories(self.home, ["claude"])
