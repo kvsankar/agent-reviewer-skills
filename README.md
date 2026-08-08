@@ -1,17 +1,87 @@
-# Reviewer Skills Experiment
+# Reviewer Skills: In-Context Guidance for Code Review
 
-> [!NOTE]
-> **Experiment concluded in August 2026.** The final real-code comparison found
-> no material advantage from a compact reviewer skill over an ordinary Codex
-> review, and the guided reviews found fewer distinct validated defects. The
-> tested local models also showed no validated benefit. This repository is an
-> experimental archive, not a demonstrated review-quality product.
+## Introduction
 
-The repository contains 23 reviewer skills, the evaluation harness, and the
-evidence behind that negative result. The canonical account is the
-[experiment conclusion](docs/experiment-conclusion-2026-08-08.md).
+This repository records an experiment in using specialized, in-context guidance
+to improve agentic code reviews. The central question was simple: can a coding
+agent produce a better review when its context includes curated principles,
+mnemonic reminders, and concrete examples of good and bad code?
 
-## Final Result
+The repository grew into 23 reviewer skills covering Python, JavaScript,
+frameworks, testing, security, performance, refactoring, and API and database
+design. Each skill was intended to give a general-purpose coding agent a focused
+review perspective without training or fine-tuning a separate model.
+
+The skills began as practical tools for Claude Code and other frontier coding
+agents available at the time. The project later became an evaluation of its own
+premise: whether this extra context actually finds more real problems than a
+capable agent asked to perform an ordinary code review.
+
+## Brief History
+
+### Origins and practical use: late 2025
+
+The work began in late October 2025 with an effort to extract Python design
+guidance from Brandon Rhodes' talks and teaching material. The guidance was
+organized into short, pronounceable mnemonic IDs, supported by explanations and
+examples, and packaged as a Claude Code reviewer skill. The same approach was
+then extended to other review concerns and languages. The working hypothesis
+was that placing this curated material in the context of the frontier coding
+models available then would produce better agentic reviews than relying on the
+models' default review behavior.
+
+The skills were used as working review aids, not originally built as a formal
+benchmark. They were also used to review examples in one another. By January
+2026 the collection had grown to 23 skills. A Docker-based runner was built to
+launch isolated agentic reviews, but it proved operationally heavy and was later
+deprecated.
+
+### The effectiveness question and research detour
+
+As the collection grew, so did the more important question: did loading these
+materials actually improve review quality over simply asking a strong agent to
+review the code? That led toward repeatable runs, baselines, ground truth, and
+automated judging.
+
+Before that evaluation approach matured, attention shifted to the surrounding
+research. In December 2025 the project examined few-shot and in-context learning
+for code review and compared published techniques with the skills' static
+before-and-after examples. It then explored selecting only relevant guidelines
+through embeddings and structural code extraction. That retrieval prototype was
+revisited in March 2026 and abandoned: lexical or embedding similarity could
+match local code patterns, but not reliably select architectural guidance such
+as “functional core, imperative shell.”
+
+The project then returned to direct evaluation. The first harness compared
+ordinary prompts with full skills and several compact forms, using automated
+matching and an LLM judge.
+
+### IDs, short guidance, and prompt size
+
+The experiments tried more than the original large skill documents. Conditions
+included zero-shot and generic reviews, full skills, principles without code
+examples, mnemonic IDs alone, trimmed lists, hybrid prompts, and finally a lean
+skill containing an ID plus one or two sentences per idea.
+
+Some early synthetic tests appeared to favor particular variants, especially
+compact checklists. Those results were unstable, and planted issues sometimes
+made the intended answers too visible. Synthetic evidence was therefore
+withdrawn rather than used to justify the skills.
+
+### Local models and real-code closure: August 2026
+
+The final phase used only real source code. It tested local models through
+Ollama and the Pi coding agent, and compared ordinary Codex reviews with Codex
+reviews given the lean skill. Claude was used to match findings against a frozen
+reference and to adjudicate genuinely new findings against source.
+
+Whatever the branch of exploration—large prompts, compact IDs, short
+descriptions, retrieval, frontier agents, or smaller local models—the retained
+experiments provide no conclusive evidence that these skills improve agentic
+code-review quality. This is a dated experimental result, not a claim that
+in-context guidance can never help.
+
+## Final Comparison
 
 | Condition | Runs | Frozen-reference recall | Validated per run | Distinct validated defects |
 | --- | ---: | ---: | ---: | ---: |
@@ -20,8 +90,9 @@ evidence behind that negative result. The canonical account is the
 
 The small recall difference did not translate into more useful discovery. The
 regular condition produced one more validated finding overall and five more
-distinct validated defects. See the conclusion for methodology, local-model
-results, interpretation, and limitations.
+distinct validated defects. The
+[experiment conclusion](docs/experiment-conclusion-2026-08-08.md) explains the
+method, local-model results, interpretation, and limitations.
 
 ## Repository Map
 

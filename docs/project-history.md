@@ -3,31 +3,47 @@
 This is the canonical project timeline. It records decisions and outcomes, not
 session-by-session activity.
 
-## November 2025: Initial system
+## October-November 2025: Origins and expansion
 
-- Created the first Python, API, and database reviewer skills.
-- Standardized language-prefixed skill names and mnemonic finding IDs.
-- Built the Docker-based Claude review tool and worked around WSL Docker issues
-  with an Ubuntu VM.
-- Expanded the collection to JavaScript, React, Django, security, performance,
-  testing, and refactoring reviews.
-- Established isolated reviewer contexts and structured Markdown output with
-  evidence, suggested changes, and rationale.
+- Began on 30 October by researching Brandon Rhodes' teaching material,
+  extracting Python design guidance, assigning short mnemonic IDs, and packaging
+  the result as a Claude Code reviewer skill.
+- Used the early Rhodes and functional Python skills as practical review aids,
+  including reviewing the examples in other skills.
+- Created the first repository commit on 10 November and expanded the collection
+  across Python, JavaScript, React, Django, APIs, databases, security,
+  performance, testing, and refactoring.
+- Built the Docker-based Claude review tool for isolated agentic runs and worked
+  around WSL Docker issues with an Ubuntu VM.
+- Standardized language-prefixed names and structured Markdown findings with
+  mnemonic IDs, evidence, suggested changes, and rationale.
 
-## December 2025: Expansion and research
+## December 2025-January 2026: Research and full collection
 
-- Added expected-good-pattern checks, Playwright coverage, and the
-  code-authenticity reviewer.
-- Added cross-platform installation and split several oversized skill files.
+- Added expected-good-pattern checks, Playwright coverage, the
+  code-authenticity reviewer, cross-platform installation, and split skill files
+  that had grown too large.
+- Researched few-shot and in-context learning for code review and compared those
+  findings with the skills' static before-and-after examples.
+- Started an embedding-based guideline retrieval prototype after identifying
+  dynamic selection and quantitative benchmarking as gaps.
 - Published the Rhodes Python reviewer with Brandon Rhodes' permission.
-- Researched few-shot code review and built an embedding-based guideline
-  retrieval prototype. The prototype was abandoned because lexical similarity
-  did not handle architectural guidance reliably.
+- Added React Native/Expo and Appium reviewers in January, bringing the
+  collection to 23.
 
-## March 2026: Mobile coverage
+## March 2026: Retrieval and automated evaluation
 
-- Added React Native/Expo and Appium reviewers, bringing the collection to 23.
-- Updated the legacy review tool's tags and documentation.
+- Revisited the retrieval prototype with embeddings and tree-sitter code units,
+  then abandoned it because similarity matching did not reliably select
+  architectural or philosophical guidance.
+- Recovered and expanded the in-context-learning research before returning to
+  direct experiments on review quality.
+- Built automated runners, ground-truth matching, and LLM-as-judge evaluation.
+- Compared zero-shot and generic prompts with full skills, principles-only,
+  IDs-only, trimmed, and hybrid variants.
+- Found high run-to-run variance and answer leakage in synthetic fixtures. Real
+  repository reviews were attempted, but the evidence was not strong enough to
+  support a conclusion.
 
 ## August 2026: Evaluation and closure
 
