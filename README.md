@@ -19,68 +19,51 @@ capable agent asked to perform an ordinary code review.
 
 ## Brief History
 
-### Origins and practical use: late 2025
+### Building and practical use: October 2025-January 2026
 
 The work began in late October 2025 with an effort to extract Python design
 guidance from [Brandon Rhodes](https://rhodesmill.org/brandon/)' talks and
-teaching material. The guidance was organized into short, pronounceable
-mnemonic IDs, supported by explanations and examples, and packaged as a Claude
-Code reviewer skill. The same approach was then extended to other review
-concerns and languages. The working hypothesis was that placing this curated
-material in the context of the frontier coding models available then would
-produce better agentic reviews than relying on the models' default review
-behavior.
+teaching material. Its principles were organized as mnemonic IDs, explanations,
+and before-and-after examples, then packaged as a Claude Code reviewer skill.
+The approach expanded across languages and review concerns, reaching 23 skills
+by January 2026. They were used as practical review aids before the project had
+a formal benchmark. A Docker runner supported early agentic use but proved
+operationally heavy.
 
-The skills were used as working review aids, not originally built as a formal
-benchmark. They were also used to review examples in one another. By January
-2026 the collection had grown to 23 skills. A Docker-based runner was built to
-launch isolated agentic reviews, but it proved operationally heavy and was later
-deprecated.
+### Research and prototypes: December 2025-March 2026
 
-### The effectiveness question and research detour
+The project then asked whether the skills actually improved review quality over
+an ordinary agent review. Research into few-shot and in-context learning
+suggested that example selection, compact context, and hybrid approaches might
+matter more than loading every guideline. An embedding and structural-code
+prototype tried to select relevant guidance, but it matched surface patterns
+more reliably than architectural ideas and was abandoned.
 
-As the collection grew, so did the more important question: did loading these
-materials actually improve review quality over simply asking a strong agent to
-review the code? That led toward repeatable runs, baselines, ground truth, and
-automated judging.
+### Automated evaluation: March 2026
 
-Before that evaluation approach matured, attention shifted to the surrounding
-research. In December 2025 the project examined few-shot and in-context learning
-for code review and compared published techniques with the skills' static
-before-and-after examples. It then explored selecting only relevant guidelines
-through embeddings and structural code extraction. That retrieval prototype was
-revisited in March 2026 and abandoned: lexical or embedding similarity could
-match local code patterns, but not reliably select architectural guidance such
-as “functional core, imperative shell.”
+The first automated evaluations compared ordinary prompts with full skills,
+principles-only guidance, mnemonic IDs, trimmed lists, and hybrid prompts.
+Security tests and Rhodes-inspired code-quality tests produced some apparently
+positive results, especially for compact guidance, but also exposed substantial
+run-to-run variance, weak reference construction, deliberately vulnerable
+targets, and answer leakage in synthetic fixtures. Reviews of real `doit` code
+changed emphasis without demonstrating that the skills found more useful
+issues. These runs remained exploratory rather than supporting a conclusion.
 
-The project then returned to direct evaluation. The first harness compared
-ordinary prompts with full skills and several compact forms, using automated
-matching and an LLM judge.
+### Real-code evaluation and closure: August 2026
 
-### IDs, short guidance, and prompt size
+The final evaluation adopted a real-code-only policy and separated direct model
+review from agentic repository review. It tested local models through Ollama and
+Pi, used Codex for the hosted comparison, and used separate Claude passes for
+reference matching and source-aware adjudication. The final regular-versus-lean
+comparison also evaluated valid new findings from both conditions instead of
+treating one baseline as complete ground truth.
 
-The experiments tried more than the original large skill documents. Conditions
-included zero-shot and generic reviews, full skills, principles without code
-examples, mnemonic IDs alone, trimmed lists, hybrid prompts, and finally a lean
-skill containing an ID plus one or two sentences per idea.
-
-Some early synthetic tests appeared to favor particular variants, especially
-compact checklists. Those results were unstable, and planted issues sometimes
-made the intended answers too visible. Synthetic evidence was therefore
-withdrawn rather than used to justify the skills.
-
-### Local models and real-code closure: August 2026
-
-The final phase used only real source code. It tested local models through
-Ollama and the Pi coding agent, and compared ordinary Codex reviews with Codex
-reviews given the lean skill. Claude was used to match findings against a frozen
-reference and to adjudicate genuinely new findings against source.
-
-Whatever the branch of exploration—large prompts, compact IDs, short
-descriptions, retrieval, frontier agents, or smaller local models—the retained
-experiments provide no conclusive evidence that these skills improve agentic
-code-review quality. This is a dated experimental result, not a claim that
-in-context guidance can never help.
+Across full skills, compact IDs, short guidance, retrieval, frontier agents, and
+smaller local models, the retained evidence provides no conclusive indication
+that these skills improve agentic code-review quality. The Docker harness was
+deprecated and active expansion stopped. This is a dated experimental result,
+not a claim that in-context guidance can never help.
 
 The [exploration history](docs/exploration-history.md) presents the research,
 prototypes, and experiments together in chronological order, with links to the
