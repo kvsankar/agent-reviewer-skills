@@ -32,9 +32,9 @@ The claude-skills project uses **structured before/after code examples** embedde
 
 | Tool | Guideline Format | Code Examples | Relevance Filtering | Auto-Discovery |
 |------|-----------------|---------------|---------------------|----------------|
-| **CodeRabbit** | Natural language + AST-grep YAML rules | Via AST-grep pattern/fix pairs | Path-based globs + code graph + 1:1 context ratio | Imports from Cursor/Copilot/Cline/Claude files |
-| **Qodo** | AI-generated from code patterns and PR history | Derived from codebase, not manually authored | RAG with code-embedding models | Yes — core differentiator |
-| **GitHub Copilot** | Markdown `.instructions.md` files | Yes — correct/incorrect snippets recommended | Path-scoped `applyTo` + precedence hierarchy | No |
+| **[CodeRabbit](https://www.coderabbit.ai/)** | Natural language + AST-grep YAML rules | Via AST-grep pattern/fix pairs | Path-based globs + code graph + 1:1 context ratio | Imports from Cursor/Copilot/Cline/Claude files |
+| **[Qodo](https://www.qodo.ai/)** | AI-generated from code patterns and PR history | Derived from codebase, not manually authored | RAG with code-embedding models | Yes — core differentiator |
+| **[GitHub Copilot](https://github.blog/ai-and-ml/github-copilot/how-to-refactor-code-with-github-copilot/)** | Markdown `.instructions.md` files | Yes — correct/incorrect snippets recommended | Path-scoped `applyTo` + precedence hierarchy | No |
 | **Sourcery** | YAML `.sourcery.yaml` config | Rule enable/disable, not example-based | Rule type filtering | Learns from feedback |
 | **Codacy** | 22K+ rules from 34 static analysis tools | Tool-specific rule formats | PR intent analysis + metadata | No |
 | **ast-grep** (standalone) | YAML rules with pattern/fix/message | Before (pattern) / after (fix) is native | File path filtering | No |
@@ -45,6 +45,16 @@ The claude-skills project uses **structured before/after code examples** embedde
 - **Qodo 2.1** (Feb 2026) introduced auto-discovered rules from codebase patterns and PR history. A "Rules Discovery Agent" generates standards; a "Rules Expert Agent" prunes conflicts and duplicates. Fundamentally different from manual rule authoring.
 - **GitHub Copilot** deprecated its structured "Coding Guidelines" feature (Sep 2025), replacing it with markdown instruction files. They explicitly recommend including before/after code snippets. **4,000 character limit** per instruction file.
 - **Amazon CodeGuru** was deprecated Nov 2025. Did not support custom rules.
+
+### Original December 2025 Landscape Sources
+
+The first AI-assisted scan also examined the following prior art. These links
+record what informed the early hypothesis; their inclusion is not evidence that
+the repository's skills improved reviews.
+
+- Review-prompt and skill collections: [Awesome Reviewers](https://github.com/baz-scm/awesome-reviewers), [ChatGPT Refactoring Prompts](https://github.com/craftvscruft/chatgpt-refactoring-prompts), [Anthropic's public skills](https://github.com/anthropics/skills), and [Awesome LLM Skills](https://github.com/Prat011/awesome-llm-skills)
+- Skill and prompt guidance: [Anthropic's skill-authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), [Google Cloud's few-shot examples](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/prompts/few-shot-examples), [DAIR.AI's Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide), and [PromptHub's few-shot guide](https://www.prompthub.us/blog/the-few-shot-prompting-guide)
+- Programming-oriented examples: [Martin Fowler's Xu Hao prompting example](https://martinfowler.com/articles/2023-chatgpt-xu-hao.html), [Repomix prompt examples](https://repomix.com/guide/prompt-examples), [Addy Osmani's prompt-engineering playbook](https://addyo.substack.com/p/the-prompt-engineering-playbook-for), and the [GitHub Copilot topic archive](https://github.blog/ai-and-ml/github-copilot/)
 
 ### ast-grep Deep Dive
 

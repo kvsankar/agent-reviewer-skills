@@ -495,20 +495,25 @@ Use agentic mode (default) instead of batch mode:
 
 The `sample_reviews/` directory contains real review examples from popular open-source projects:
 
-**HTTPie** (6 Python reviewers):
+**HTTPie** (8 Python reviewers):
 - [httpie/httpie](https://github.com/httpie/httpie) - Modern command-line HTTP client
-- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security
-- Total: 91KB of analysis
+- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security, performance, and Rhodes-inspired code quality
+- Total: 119KiB of analysis
 
-**Datasette** (6 Python reviewers):
+**Datasette** (8 Python reviewers):
 - [simonw/datasette](https://github.com/simonw/datasette) - Data exploration tool
-- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security
-- Total: 101KB of analysis
+- Reviews: refactoring, functional patterns, tests, Zen of Python, formatting, security, performance, and Rhodes-inspired code quality
+- Total: 108KiB of analysis
+
+**TodoApp** (7 JavaScript/React reviewers):
+- [maciekt07/TodoApp](https://github.com/maciekt07/TodoApp) - React and TypeScript task application
+- Reviews: refactoring, functional patterns, tests, formatting, security, performance, and React
+- Total: 135KiB of analysis
 
 **Chandrayaan3** (JavaScript reviewer):
 - [kvsankar/chandrayaan3](https://github.com/kvsankar/chandrayaan3) - ISRO mission visualization
 - Review: functional JavaScript patterns
-- Total: 11KB of analysis
+- Total: 11KiB of analysis
 
 All samples generated using default OAuth + Agentic mode. Each review demonstrates:
 - Mnemonic IDs for findings (e.g., USE-CONST, IMMUT-COPY)
