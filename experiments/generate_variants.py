@@ -14,6 +14,16 @@ import sys
 from pathlib import Path
 
 
+DETAILED_GUIDELINES_HEADING = re.compile(
+    r"^#\s+(?:Complete\b.*Guidelines|Python Coding Guidelines\b)"
+)
+
+
+def starts_detailed_guidelines(line: str) -> bool:
+    """Return whether a top-level heading starts full guideline detail."""
+    return bool(DETAILED_GUIDELINES_HEADING.match(line))
+
+
 def strip_code_blocks(content: str) -> str:
     """Remove code blocks that follow Vulnerable/Secure/Bad/Good labels.
 
@@ -83,7 +93,7 @@ def extract_ids_only(content: str) -> str:
 
     for line in lines:
         # Stop keeping when we hit the complete guidelines section
-        if re.match(r"^#\s+Complete\b", line):
+        if starts_detailed_guidelines(line):
             keep_sections = False
             continue
 
@@ -116,7 +126,7 @@ def trim_guidelines(content: str, n: int) -> str:
             continue
 
         # Detect start of complete guidelines
-        if re.match(r"^#\s+Complete\b", line):
+        if starts_detailed_guidelines(line):
             in_guidelines = True
             result.append(line)
             continue
@@ -155,7 +165,7 @@ def select_guidelines(content: str, ids: list[str]) -> str:
         current_id = None
 
     for line in lines:
-        if re.match(r"^#\s+Complete\b", line):
+        if starts_detailed_guidelines(line):
             in_guidelines = True
             result.append(line)
             continue
@@ -203,7 +213,7 @@ def hybrid_variant(content: str, priority_ids: list[str]) -> str:
     detail_lines = []
     in_guidelines = False
     for line in lines:
-        if re.match(r"^#\s+Complete\b", line):
+        if starts_detailed_guidelines(line):
             in_guidelines = True
         if in_guidelines:
             detail_lines.append(line)

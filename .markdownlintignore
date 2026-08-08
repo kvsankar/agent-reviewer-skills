@@ -1,5 +1,10 @@
-review-tool/sample_reviews/
-claude-conversations/
-claude-conversations-temp/
+# Generated prompts and model responses are retained verbatim as evidence.
+experiments/results/**
+review-tool/sample_reviews/**
+
+# Attribution catalogs intentionally preserve canonical URLs as plain text.
 **/SOURCES.md
-reports/
+
+# This skill embeds a complete source document whose heading structure and
+# shell transcripts are inputs to the ablation generator.
+python-rhodes-reviewer/SKILL.md

@@ -209,23 +209,23 @@ This skill compiles functional programming principles from publicly available ed
 - Python Functional Programming HOWTO
 - functools and itertools module documentation
 - License: Python Software Foundation License
-- https://docs.python.org/
+- [docs.python.org](https://docs.python.org/)
 
 **Arjan Egges (ArjanCodes)**
 - "Core Functional Programming Principles for Python"
 - "Python Functors and Monads: A Practical Guide"
 - Educational blog content
-- https://arjancodes.com/
+- [arjancodes.com](https://arjancodes.com/)
 
 **Stack Abuse**
 - "Functional Programming in Python"
 - Technical educational articles
-- https://stackabuse.com/
+- [stackabuse.com](https://stackabuse.com/)
 
 **Stack Builders**
 - "Functional Programming in Python: Principles & Tools"
 - Educational insights and examples
-- https://www.stackbuilders.com/
+- [stackbuilders.com](https://www.stackbuilders.com/)
 
 **Copyright Notice:**
 - Python documentation: © Python Software Foundation (PSF License - open and permissive)

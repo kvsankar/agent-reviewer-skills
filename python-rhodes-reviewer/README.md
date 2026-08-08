@@ -207,10 +207,10 @@ Brandon Rhodes is a Python programmer and conference speaker known for:
 - 60+ conference talks on Python best practices (2008-2025)
 
 **Sources:**
-- Website: https://rhodesmill.org/brandon/
-- Talks: https://rhodesmill.org/brandon/talks/
-- Python Patterns: https://python-patterns.guide/
-- GitHub: https://github.com/brandon-rhodes
+- Website: [rhodesmill.org/brandon](https://rhodesmill.org/brandon/)
+- Talks: [rhodesmill.org/brandon/talks](https://rhodesmill.org/brandon/talks/)
+- Python Patterns: [python-patterns.guide](https://python-patterns.guide/)
+- GitHub: [github.com/brandon-rhodes](https://github.com/brandon-rhodes)
 
 ## Attribution
 

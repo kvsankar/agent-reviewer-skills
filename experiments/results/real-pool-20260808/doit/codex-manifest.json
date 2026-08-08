@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-08-08T12:54:16.590263",
+  "subject": "codex",
+  "model": "configured-default",
+  "conditions": [
+    "zero-shot",
+    "ids-only",
+    "hybrid"
+  ],
+  "runs": 1,
+  "repo": "/home/sankar/code/pydoit/doit",
+  "source": {
+    "repository_root": "/home/sankar/code/pydoit/doit",
+    "upstream": "git@github-kvsankar:pydoit/doit.git",
+    "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
+  },
+  "skill": "/home/sankar/code/kvsankar/claude-skills/python-rhodes-reviewer/SKILL.md",
+  "permissions": "Codex yolo mode in a disposable copy; this is not an OS security boundary",
+  "codex_version": "codex-cli 0.147.0"
+}

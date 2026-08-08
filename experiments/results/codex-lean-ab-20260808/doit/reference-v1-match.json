@@ -1,0 +1,1436 @@
+{
+  "judge": {
+    "cli": "claude",
+    "cli_version": "2.1.177 (Claude Code)",
+    "model": "sonnet",
+    "tools": []
+  },
+  "ground_truth": "experiments/results/real-pool-20260808/doit/reference-v1/reference.json",
+  "results_dir": "experiments/results/codex-lean-ab-20260808/doit",
+  "summary": {
+    "codex/configured-default/lean-skill": {
+      "num_runs": 3,
+      "avg_recall": 0.302,
+      "per_run_recall": [
+        0.381,
+        0.238,
+        0.286
+      ],
+      "avg_unsupported": 0.0,
+      "avg_novel": 2.0,
+      "avg_usefulness": 2.67
+    },
+    "codex/configured-default/regular": {
+      "num_runs": 3,
+      "avg_recall": 0.285,
+      "per_run_recall": [
+        0.333,
+        0.19,
+        0.333
+      ],
+      "avg_unsupported": 0.33,
+      "avg_novel": 2.67,
+      "avg_usefulness": 2.67
+    }
+  },
+  "runs": [
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 1,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/lean-skill/run-1-review.md",
+      "total_issues": 21,
+      "detected": 8,
+      "missed": 13,
+      "recall": 0.381,
+      "valid_judgments": 21,
+      "findings_count": 7,
+      "unsupported_findings": [],
+      "unsupported_count": 0,
+      "novel_findings": [
+        {
+          "claim": "DbmDB.set and SqliteDB.set initialize an empty cache entry on miss instead of loading persisted task data, causing a subsequent dump() to overwrite the stored record with only the newly set key, silently deleting sibling dependency values.",
+          "file": "doit/dependency.py",
+          "symbol": "DbmDB.set / SqliteDB.set",
+          "evidence": "Finding 1 quotes: 'if task_id not in self._db: self._db[task_id] = {}' and 'if task_id not in self._cache: self._cache[task_id] = {}' at lines 183 and 309, and argues that a set() before get() after reopening the DB erases the persisted record on the next dump()."
+        }
+      ],
+      "novel_count": 1,
+      "quality": {
+        "usefulness": 3,
+        "specificity": 4,
+        "notes": "The review is precise and well-evidenced for what it covers \u2014 each finding includes quoted code, a concrete consequence, and a targeted fix. However, it detects only 8 of 21 reference issues (R-001, R-004, R-008, R-009, R-011, R-013, R-015, R-018), missing the majority including the high-severity PythonAction stream-corruption bug (R-024), all cmdparse issues, all plugin.py issues, the devnull fd leak, and the CWD restoration gap. The novel DbmDB/SqliteDB cache-miss finding is a substantive, well-argued claim worth follow-up."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 5: 'if open() fails, finally attempts to close an unassigned db_file, masking the original exception'",
+          "reasoning": "The review explicitly identifies the unbound db_file problem at dependency.py:87-93, stating open() failure leaves db_file unassigned and the finally clause then raises a secondary error masking the original. Matches the defect and code location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "Finding 4 discusses loader.py:76-96 but only addresses sys.path accumulation and sys.modules collisions.",
+          "reasoning": "The review never mentions the unconditional overwrite of the module-level initial_workdir variable or the 'global initial_workdir' assignment.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "Finding 4 does not mention os.chdir or CWD restoration.",
+          "reasoning": "The review discusses get_module() but omits the failure to restore CWD after os.chdir if importlib.import_module subsequently raises.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 4: 'sys.path.insert(0, base_path) \u2026 The inserted sys.path entries also accumulate indefinitely.'",
+          "reasoning": "The review identifies the permanent, uncleaned sys.path insertions at loader.py:79 and 86-90 and recommends a try/finally scope, matching the ground truth defect and location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of Dependency.get_value() or bare Exception raises there.",
+          "reasoning": "The review does not address dependency.py:558-571 or the FIXME bare Exception issue in get_value().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "Finding 3 discusses action.py:207-215 env mutation, not the devnull fd leak.",
+          "reasoning": "The review does not mention open(os.devnull, 'w') or the missing close/context manager at action.py:224-235.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 6: 'assert plugin_type in self.PLUGIN_TYPES \u2026 Assertions are disabled under python -O.'",
+          "reasoning": "The review correctly identifies the assert at doit_cmd.py:135, explains the -O stripping risk, and recommends an explicit if/raise. Matches the ground truth exactly.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 3: 'Only the outer keyword dictionary is copied. A non-empty env mapping remains caller-owned and is modified by adding or replacing PYTHONUNBUFFERED.'",
+          "reasoning": "The review correctly identifies the shallow copy at action.py:207 and the subsequent in-place mutation of the shared env dict, matching the ground truth defect and location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": false,
+          "confidence": "medium",
+          "evidence": "Finding 3 quotes 'if not env:' in the problematic code block, but the description focuses only on mutation of a non-empty env, not on the empty-dict vs None conflation.",
+          "reasoning": "The review's narrative never states that 'if not env' incorrectly treats {} the same as None, nor does it describe the behavioral consequence for callers supplying an intentionally empty environment. The suggested fix happens to use 'is None' but the specific bug is not articulated.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 4: 'If two different directories contain identically named dodo files, the second call can return the first module from sys.modules.'",
+          "reasoning": "The review identifies the basename-only import and sys.modules cache collision at loader.py:96, recommends spec_from_file_location with a unique key, matching the ground truth defect.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of load_tasks() or term[0] indexing.",
+          "reasoning": "The review does not address loader.py:192-195 or the IndexError on empty-string args in load_tasks().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 5: 'Opening with \"w\" truncates the valid database before encoding and writing have completed. Serialization errors, disk exhaustion, interruption, or process termination can leave an empty or partial dependency database.'",
+          "reasoning": "The review directly identifies the truncation-before-encode defect at dependency.py:87-93 and recommends atomic write via temp file + os.replace(), matching the ground truth.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PythonAction.pm_pdb or class-level attribute mutation.",
+          "reasoning": "The review does not address action.py:386 or the class-level pm_pdb mutation in cmd_run.py.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 2: 'A non-empty caller-owned list is retained and extended in place.' with code showing uptodate.extend() at task.py:230-237.",
+          "reasoning": "The review correctly identifies the in-place extend() of the caller's uptodate list and recommends list(uptodate or ()), matching the ground truth defect and line range.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load or ImportError handling.",
+          "reasoning": "The review does not address plugin.py:47-50 or the bare ImportError catch misreporting broken dependencies.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load or bare Exception raises there.",
+          "reasoning": "The review does not address plugin.py:43-55 or the generic Exception with no exception chaining.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 7: 'An empty argument \u2026 raises IndexError' at doit_cmd.py:208-221, with quoted code 'if (arg[0] != \"-\") and (\"=\" in arg)'.",
+          "reasoning": "The review correctly identifies the empty-string IndexError at process_args and recommends 'if arg and not arg.startswith(\"-\")'. Matches ground truth defect and location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of DumpDB.execute() or dbm.open().",
+          "reasoning": "The review does not address cmd_dumpdb.py:46-50 or the missing context manager on dbm.open().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of CmdParse.parse_only() or getopt.GetoptError.",
+          "reasoning": "The review does not address cmdparse.py:318-324 or the overly broad Exception catch.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of CmdParse.parse_only() or exception chaining.",
+          "reasoning": "The review does not address cmdparse.py:321-324 or the missing 'raise ... from error' pattern.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PythonAction.execute() stream redirection or the try/finally gap.",
+          "reasoning": "The review does not address action.py:442-469, the sys.stdout/sys.stderr reassignment before the protecting try block, or the risk of permanent stream corruption.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 90.44536957200035,
+        "stderr": ""
+      }
+    },
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 2,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/lean-skill/run-2-review.md",
+      "total_issues": 21,
+      "detected": 5,
+      "missed": 16,
+      "recall": 0.238,
+      "valid_judgments": 21,
+      "findings_count": 6,
+      "unsupported_findings": [],
+      "unsupported_count": 0,
+      "novel_findings": [
+        {
+          "claim": "NO-GLOBAL-MUT: sys.stdout/sys.stderr replacement in PythonAction.execute is unsafe under MThreadRunner because concurrent Python actions can capture each other's output or restore streams in wrong order",
+          "file": "doit/action.py",
+          "symbol": "PythonAction.execute",
+          "evidence": "Review quotes the stream-swap pattern at lines 440-492 and notes 'MThreadRunner can execute multiple Python actions concurrently. Actions can therefore capture one another's output or restore streams in the wrong order.'"
+        },
+        {
+          "claim": "CONTROL-CALLER: Reader threads in CmdAction._print_process_output swallow exceptions; if a thread stops draining its pipe, the child process can block on a full pipe while the parent waits indefinitely, causing a deadlock",
+          "file": "doit/action.py",
+          "symbol": "CmdAction._print_process_output",
+          "evidence": "Review quotes thread start/join pattern at lines 159-182 and 237-254, explains exception suppression and deadlock risk from unread pipe buffers."
+        },
+        {
+          "claim": "HOIST-IO: Top-level import of pyflakes in dodo.py causes 'doit list' (and the test suite subprocess) to fail with exit code 3 in installations that lack pyflakes, even for commands unrelated to linting",
+          "file": "dodo.py",
+          "symbol": "_check_pyflakes",
+          "evidence": "Review quotes 'from pyflakes.api import checkPath' at line 7 and reports test_execute failure due to subprocess exiting with code 3."
+        }
+      ],
+      "novel_count": 3,
+      "quality": {
+        "usefulness": 2,
+        "specificity": 3,
+        "notes": "The review identified 5 of 21 reference issues (R-001, R-009, R-010, R-011, R-013) with accurate code citations and clear explanations. However, it missed 16 reference issues including several high-severity ones (R-024, R-008) and entire files (plugin.py, cmdparse.py, cmd_dumpdb.py, task.py, doit_cmd.py). The novel findings (threading safety of stream globals, reader-thread deadlock, dodo.py import coupling) are substantive and well-cited. The review traded breadth for depth, providing thorough analysis on the few issues it covered while leaving most of the codebase unexamined."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "SAFE-DEFAULT: 'If open() itself fails, db_file is unbound in finally, masking the original exception with UnboundLocalError.'",
+          "reasoning": "The review explicitly identifies the UnboundLocalError consequence at the same location (dependency.py:87-93, JsonDB.dump) and explains the root cause correctly.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of initial_workdir or loader.py:46-47 anywhere in the review.",
+          "reasoning": "The review covers get_module but only for sys.path and sys.modules issues. The overwrite of initial_workdir on every call is not mentioned.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "MODULE-COLLIDE quotes os.chdir but focuses only on the sys.modules cache collision, not on missing CWD restoration on import failure.",
+          "reasoning": "The review mentions os.chdir in passing but does not identify the missing try/finally to restore the prior CWD when importlib.import_module raises.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of sys.path leaking entries or cleanup in get_module.",
+          "reasoning": "MODULE-COLLIDE quotes sys.path.insert but the finding is about sys.modules collision, not the permanent leaking of path entries across repeated calls.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "dependency.py Dependency.get_value is not mentioned anywhere in the review.",
+          "reasoning": "No finding addresses the bare Exception raises with the FIXME comment in get_value.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "os.devnull handle leak in CmdAction.execute is not mentioned.",
+          "reasoning": "No finding covers the open(os.devnull) file-descriptor leak at action.py:225.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "doit_cmd.py and load_config_toml are not mentioned.",
+          "reasoning": "The assert-stripped-by-python-O defect in DoitConfig.load_config_toml is absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "NO-MUTARGS: 'Only pkwargs is copied; its nested env dictionary remains caller-owned. When buffering is enabled, execution adds or overwrites PYTHONUNBUFFERED in that original dictionary.'",
+          "reasoning": "Correct location (action.py:207-215), correct problem (shallow copy leaves env shared), matching the reference issue exactly.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "NO-MUTARGS: 'Use env is None rather than if not env, since an intentionally empty environment is valid.'",
+          "reasoning": "The review explicitly identifies the `if not env` vs `env is None` conflation at the same code location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "MODULE-COLLIDE: 'Loading /project-a/dodo.py and then /project-b/dodo.py in the same process will return the first cached dodo module.'",
+          "reasoning": "Exact match in location (loader.py:76-96, get_module) and problem (sys.modules cache collision for same-basename files).",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "load_tasks and IndexError from empty-string args not mentioned.",
+          "reasoning": "No finding addresses the IndexError at loader.py:193-195 when args contains an empty string.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "SAFE-DEFAULT: 'Opening with \"w\" truncates the existing dependency database before encoding and writing have succeeded. A serialization error... leaves an empty or partial database.'",
+          "reasoning": "Correct location (dependency.py:87-93) and correct description of the truncation-before-write data-loss defect.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "PythonAction.pm_pdb class attribute not mentioned.",
+          "reasoning": "No finding covers the class-level pm_pdb mutation in action.py:386.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "task.py Task.__init__ uptodate mutation not mentioned.",
+          "reasoning": "No finding addresses the in-place extend() on the caller's uptodate list.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "plugin.py PluginEntry.load not mentioned.",
+          "reasoning": "The bare ImportError catch that misreports broken dependencies as 'module not found' is absent.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "plugin.py PluginEntry.load not mentioned.",
+          "reasoning": "Generic Exception raises without chaining in PluginEntry.load not covered.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "doit_cmd.py DoitMain.process_args not mentioned.",
+          "reasoning": "IndexError from empty-string in cmd_args at doit_cmd.py:215-216 not covered.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "cmd_dumpdb.py DumpDB.execute not mentioned.",
+          "reasoning": "DBM file opened without context manager at cmd_dumpdb.py:46 not covered.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "cmdparse.py CmdParse.parse_only not mentioned.",
+          "reasoning": "Overly broad Exception catch in parse_only not covered.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "cmdparse.py CmdParse.parse_only not mentioned.",
+          "reasoning": "Missing `raise ... from error` exception chaining in parse_only not covered.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "NO-GLOBAL-MUT covers the same lines (action.py:440-492) but diagnoses a threading race between concurrent actions, not the specific defect that _prepare_kwargs() at line 469 executes after stream redirection but before the try block, leaving streams corrupted if it raises.",
+          "reasoning": "Different underlying problem at the same location. R-024 is about the ordering of _prepare_kwargs() relative to the try/finally; the review is about concurrent thread interference. Same code, different defect.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 93.34657313697971,
+        "stderr": ""
+      }
+    },
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 3,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/lean-skill/run-3-review.md",
+      "total_issues": 21,
+      "detected": 6,
+      "missed": 15,
+      "recall": 0.286,
+      "valid_judgments": 21,
+      "findings_count": 5,
+      "unsupported_findings": [],
+      "unsupported_count": 0,
+      "novel_findings": [
+        {
+          "claim": "DbmDB.set and SqliteDB.set silently discard previously persisted task metadata when a task exists in storage but has not been loaded into the in-memory cache, because they initialise from an empty dict rather than loading the existing record.",
+          "file": "doit/dependency.py",
+          "symbol": "DbmDB.set / SqliteDB.set",
+          "evidence": "Review quotes code starting a new empty dict `self._db[task_id] = {}` when the key is absent from the in-memory cache, then overwriting on dump; notes this differs from JsonDB behaviour and gives a concrete before/after example."
+        },
+        {
+          "claim": "Exceptions raised inside the _print_process_output worker threads are silently discarded because Thread.join() does not propagate them, so output-processing failures (decode errors, stream write failures) are never surfaced to CmdAction.execute().",
+          "file": "doit/action.py",
+          "symbol": "CmdAction.execute / _print_process_output",
+          "evidence": "Review quotes the thread creation and join calls and notes 'join() waits for those threads but does not propagate their exceptions, so execute() continues and reports only the subprocess return code.'"
+        }
+      ],
+      "novel_count": 2,
+      "quality": {
+        "usefulness": 3,
+        "specificity": 4,
+        "notes": "The review is well-structured and its five findings are specific, with quoted code and actionable fixes. It correctly identifies R-001, R-004 (partial), R-009, R-010, R-011, and R-013 \u2014 six of twenty-one reference issues, including both high-severity env-mutation bugs and the JSON dump UnboundLocalError. The two novel findings (DbmDB/SqliteDB cache-miss data loss, thread exception swallowing) are concrete and credible. However, the review misses fifteen reference issues entirely, including high-severity issues in PythonAction.execute (R-024), several resource-management and IndexError defects across loader.py, plugin.py, cmdparse.py, doit_cmd.py, and cmd_dumpdb.py, and the class-level mutation bug in R-014. Coverage is uneven: action.py and dependency.py are partially covered; loader.py is partially covered; all other files are missed."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "EXCEPT-PRESERVE: 'If open() fails... db_file is never assigned. The finally block then raises UnboundLocalError, masking the original filesystem exception.'",
+          "reasoning": "Exact match on location (dependency.py:87-93, JsonDB.dump), mechanism (open() failure leaves db_file unbound, finally raises UnboundLocalError), and quoted code.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of initial_workdir or the global variable being overwritten on each call.",
+          "reasoning": "The review discusses get_module() only for sys.path and sys.modules issues; the unconditional overwrite of the module-level initial_workdir is not raised.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "IMPORT-IDENTITY mentions sys.path cleanup via try/finally but says nothing about os.chdir not being restored.",
+          "reasoning": "The review does not identify that os.chdir(full_cwd) at line 93 is never undone if the subsequent import raises, leaving process CWD permanently changed.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": true,
+          "confidence": "medium",
+          "evidence": "IMPORT-IDENTITY: 'The inserted sys.path entries also remain process-wide, further making later imports dependent on earlier calls.' Suggested fix: 'Limit temporary sys.path changes with try/finally.'",
+          "reasoning": "The review identifies sys.path entries are never removed and recommends try/finally cleanup, matching the substance of R-004, though framed as a secondary point within the broader IMPORT-IDENTITY finding.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of Dependency.get_value(), bare Exception raises, or the FIXME comment at line 565.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of os.devnull being opened without a context manager or the leaked file descriptor.",
+          "reasoning": "CmdAction.execute is discussed for env mutation (R-009/R-010) but the devnull handle leak at line 225 is not raised.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of DoitConfig.load_config_toml or assert being stripped by python -O.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "NO-MUTARGS: 'Only the outer pkwargs dictionary is copied. A caller-provided env dictionary remains shared and is modified in place when buffering is enabled.' Quotes lines 206-215 exactly.",
+          "reasoning": "Exact match on location, mechanism (shallow copy leaves env dict shared), and mutation path (env['PYTHONUNBUFFERED'] = '1').",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "NO-MUTARGS: 'An explicitly supplied empty environment is also treated as absent because of `if not env`, causing it to be replaced with the complete parent environment.'",
+          "reasoning": "Exact match on the `if not env` conflation of None and {} at lines 212-215.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "IMPORT-IDENTITY: 'Loading /project-a/dodo.py followed by /project-b/dodo.py in the same process returns the already-cached project-a module.' Quotes lines 76-96 and identifies sys.modules cache collision.",
+          "reasoning": "Exact match on location (loader.py:79-96, get_module) and mechanism (importlib.import_module checks sys.modules, basename collision).",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of load_tasks(), the args loop, or IndexError from empty string in term[0].",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "medium",
+          "evidence": "EXCEPT-PRESERVE: 'direct writes can leave the dependency database truncated if serialization or writing fails.' Recommends writing to a temp file and atomically replacing the database.",
+          "reasoning": "The review identifies the truncation-before-encode-completes risk at the same location (dependency.py:87-93) and recommends the standard atomic-write fix, matching R-013's substance. The mechanism is described in the 'Why it matters' and fix sections rather than as the primary assertion.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PythonAction.pm_pdb class-level attribute or cmd_run.py class mutation.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of Task.__init__, uptodate list, or extend() mutating caller arguments.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load or ImportError vs ModuleNotFoundError distinction.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load raising generic Exception without chaining.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of DoitMain.process_args or IndexError from empty string in arg[0].",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of DumpDB.execute or dbm.open without a context manager.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of CmdParse.parse_only or overly broad Exception catch around getopt.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of missing exception chaining in CmdParse.parse_only.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of sys.stdout/sys.stderr redirection occurring before the try/finally that would restore them in PythonAction.execute.",
+          "reasoning": "This finding is entirely absent from the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 72.92501477402402,
+        "stderr": ""
+      }
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 1,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/regular/run-1-review.md",
+      "total_issues": 21,
+      "detected": 7,
+      "missed": 14,
+      "recall": 0.333,
+      "valid_judgments": 21,
+      "findings_count": 7,
+      "unsupported_findings": [
+        {
+          "claim": "THREAD-STDIO: MThreadRunner (runner.py:563) runs PythonAction instances concurrently, causing save/restore of sys.stdout/sys.stderr to interleave",
+          "why_unsupported": "The review cites runner.py:563 but quotes no code from runner.py. The concurrency claim depends on MThreadRunner's scheduler behavior, which is not evidenced by any quoted code in the review. The action.py stream-swap code shown is real, but the concurrent-execution premise is asserted without supporting evidence from the review's own quoted material."
+        }
+      ],
+      "unsupported_count": 1,
+      "novel_findings": [
+        {
+          "claim": "Parallel PythonAction instances running under MThreadRunner can interleave their sys.stdout/sys.stderr save/restore operations, routing output into wrong capture buffers and potentially leaving wrong streams installed",
+          "file": "doit/action.py",
+          "symbol": "PythonAction.execute",
+          "evidence": "Review cites action.py:440 stream replacement pattern and doit/runner.py:563 MThreadRunner as the concurrent executor; the thread-safety hazard from process-global stream mutation is raised as a separate concern from R-024."
+        },
+        {
+          "claim": "Exceptions raised inside the CmdAction reader threads (t_out, t_err) are not propagated through Thread.join(), so output-capture failures are silently discarded and the action result is determined solely from the child's return code",
+          "file": "doit/action.py",
+          "symbol": "CmdAction._print_process_output",
+          "evidence": "Review quotes the thread start/join sequence and the bare 'except Exception: process.terminate()' block, noting no exception-propagation mechanism exists."
+        },
+        {
+          "claim": "SqliteDB._sqlite3 registers global SQLite adapters and converters (for list, dict, and 'json' column type) that affect every SQLite connection in the hosting process, breaking embedding applications that use sqlite3 independently",
+          "file": "doit/dependency.py",
+          "symbol": "SqliteDB._sqlite3",
+          "evidence": "Review quotes sqlite3.register_adapter(list, ...), register_adapter(dict, ...), register_converter('json', ...) at dependency.py:253 and explains these are process-global registries."
+        }
+      ],
+      "novel_count": 3,
+      "quality": {
+        "usefulness": 3,
+        "specificity": 4,
+        "notes": "The review is well-written with precise code quotes and good mechanistic explanations for the issues it covers. STREAM-LEAK (R-024) and ENV-ALIAS (R-009/R-010) are handled with high fidelity. However, coverage is low: 7 of 20 reference issues detected, missing all of loader.py (R-002, R-003, R-004, R-011), plugin.py (R-016, R-017), cmdparse.py (R-020, R-021), and several others. The three novel findings (thread safety, reader thread exception propagation, global SQLite adapters) are substantive and specific, not vague advice. The THREAD-STDIO finding lacks supporting code evidence from runner.py but the underlying concern is plausible."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "MASKED-OPEN: 'If open() fails, db_file was never assigned, so the finally block raises UnboundLocalError, hiding the meaningful permission, path, or filesystem error.'",
+          "reasoning": "The review correctly identifies the unbound db_file problem at the right location (dependency.py:87, JsonDB.dump) with the correct mechanism.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of initial_workdir, get_module, or loader.py module-level variable overwriting.",
+          "reasoning": "The review does not address the global initial_workdir being overwritten on every get_module() call.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of os.chdir, CWD not restored, or the import-failure path in get_module.",
+          "reasoning": "The review does not cover the CWD restoration failure in get_module().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of sys.path leaking in get_module or loader.py sys.path manipulation.",
+          "reasoning": "The review does not address sys.path growing without cleanup in get_module().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of Dependency.get_value, bare Exception raises, or the FIXME comment in dependency.py.",
+          "reasoning": "The review does not cover the acknowledged FIXME bare Exception in get_value().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of os.devnull file handle leak or the open(os.devnull, 'w') call.",
+          "reasoning": "The review does not cover the unclosed devnull file handle in CmdAction.execute.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of assert stripped by python -O or DoitConfig.load_config_toml.",
+          "reasoning": "The review does not cover the assert-vs-if/raise defect in load_config_toml.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "ENV-ALIAS: 'A non-empty caller-supplied environment is modified in place because only the outer pkwargs dictionary is copied.'",
+          "reasoning": "The review correctly identifies the shallow-copy mutation problem at action.py:206, CmdAction.execute, matching the location and mechanism.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "ENV-ALIAS: 'an explicitly supplied empty environment (env={}) is treated as absent and replaced with the full parent environment.'",
+          "reasoning": "The review correctly identifies the 'if not env' conflation bug in the same finding as R-009.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of sys.modules cache collisions or importlib.import_module caching in get_module.",
+          "reasoning": "The review does not cover the basename-import / sys.modules collision defect.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "EMPTY-ARGV: 'doit/loader.py:193, load_tasks ... if term[0] != \\'\\'' ... IndexError: string index out of range'",
+          "reasoning": "The review correctly identifies the empty-string IndexError in load_tasks at the right location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "medium",
+          "evidence": "MASKED-OPEN suggestion: 'write to a sibling temporary file, flush it, and atomically replace the database' plus 'Directly truncating the database also leaves corrupted state if encoding or writing fails midway.'",
+          "reasoning": "The truncation-before-encode data-integrity defect is acknowledged in the fix rationale and suggestion, though the primary focus of MASKED-OPEN is the UnboundLocalError (R-001). The truncation concern is raised at the correct function and location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PythonAction.pm_pdb class attribute, cmd_run.py mutation, or concurrency on class-level state.",
+          "reasoning": "The review does not cover the class-attribute mutation race in pm_pdb.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of Task.__init__, uptodate list, or extend() mutating the caller's argument.",
+          "reasoning": "The review does not cover the in-place mutation of the caller's uptodate list.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load, ImportError vs ModuleNotFoundError, or misreporting broken dependencies.",
+          "reasoning": "The review does not cover the ImportError over-catch in PluginEntry.load.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of PluginEntry.load raising bare Exception or missing exception chaining.",
+          "reasoning": "The review does not cover the generic Exception raises in plugin.py.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "EMPTY-ARGV: 'doit/doit_cmd.py:215, DoitMain.process_args ... if (arg[0] != \\'-\\') and (\\'=\\' in arg) ... IndexError: string index out of range'",
+          "reasoning": "The review correctly identifies the empty-string IndexError in process_args at the right location.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of DumpDB.execute, dbm.open, or unreleased file locks.",
+          "reasoning": "The review does not cover the missing context manager on the DBM file in DumpDB.execute.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of CmdParse.parse_only, getopt.GetoptError, or overly broad Exception catch in cmdparse.py.",
+          "reasoning": "The review does not cover the bare Exception catch in parse_only.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No mention of missing 'raise ... from error' chaining in CmdParse.parse_only.",
+          "reasoning": "The review does not cover the missing exception chaining in parse_only.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "STREAM-LEAK: '_prepare_kwargs() runs after replacing sys.stdout and sys.stderr, but before entering the protected try/finally. Errors from inspect.signature(), argument binding, task-option access, or reserved-argument validation escape without restoring either stream.'",
+          "reasoning": "The review correctly identifies the stream-redirect-before-try defect at the right location (action.py:442, PythonAction.execute) with accurate mechanistic detail.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 70.1739693559939,
+        "stderr": ""
+      }
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 2,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/regular/run-2-review.md",
+      "total_issues": 21,
+      "detected": 4,
+      "missed": 17,
+      "recall": 0.19,
+      "valid_judgments": 21,
+      "findings_count": 5,
+      "unsupported_findings": [],
+      "unsupported_count": 0,
+      "novel_findings": [
+        {
+          "claim": "DbmDB.set() and SqliteDB.set() start from an empty dict for a task that exists in persistent storage but has not been read into the in-memory cache, causing subsequent dump() to erase previously stored fields for that task.",
+          "file": "doit/dependency.py",
+          "symbol": "DbmDB.set / SqliteDB.set",
+          "evidence": "STATE-CLOBBER quotes `if task_id not in self._db: self._db[task_id] = {}` (DbmDB lines 183-188) and `if task_id not in self._cache: self._cache[task_id] = {}` (SqliteDB lines 309-314), arguing that a cold set() discards all prior fields for that task."
+        },
+        {
+          "claim": "Exceptions from subprocess.Popen itself (missing executable, bad working directory, permission failure) escape CmdAction.execute without being wrapped in a TaskError, bypassing reporter formatting and --continue handling.",
+          "file": "doit/action.py",
+          "symbol": "CmdAction.execute",
+          "evidence": "SPAWN-ESCAPE quotes the bare Popen call at lines 227-235 with no surrounding try/except for OSError/ValueError, and notes that 'only command expansion is protected by the earlier try block'."
+        }
+      ],
+      "novel_count": 2,
+      "quality": {
+        "usefulness": 2,
+        "specificity": 3,
+        "notes": "The review found 4 of 20 reference issues (20%). It correctly identified the sys.modules cache collision (R-011), the JsonDB truncation hazard (R-013), the plugin ImportError misreporting (R-016), and the sys.path leak (R-004). The two novel findings (STATE-CLOBBER, SPAWN-ESCAPE) are specific and code-grounded. However, the review missed the majority of high-severity defects: the UnboundLocalError in JsonDB.dump finally (R-001), the env dict mutation via shallow copy (R-009), the sys.stdout/stderr permanent corruption in PythonAction.execute (R-024), the assert stripped by -O (R-008), and the devnull FD leak (R-007). Findings that were made are well-evidenced with code quotes, but coverage is too narrow for the scope of the codebase reviewed."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "TRUNCATE-FIRST covers the same function and lines but focuses only on file truncation before write completes. The UnboundLocalError from db_file being unbound in the finally clause when open() raises is never mentioned.",
+          "reasoning": "The review's TRUNCATE-FIRST finding addresses R-013 at the same location but a different defect. The finally-clause UnboundLocalError when open() fails is absent.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references initial_workdir or its unconditional overwrite in get_module.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding discusses os.chdir leaving process CWD changed when importlib.import_module raises.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": true,
+          "confidence": "medium",
+          "evidence": "CACHE-COLLISION: 'Repeated calls also leave duplicate paths in `sys.path`.' and 'Limit or restore temporary `sys.path` changes where possible.' at loader.py:76-96, get_module.",
+          "reasoning": "Same code location and same underlying problem (permanent sys.path growth without cleanup). The point is subordinate to R-011 in the finding but is explicitly stated.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references Dependency.get_value, the FIXME comment, or the bare Exception raises at lines 566/570.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "SPAWN-ESCAPE discusses the Popen call area but addresses uncaught OSError from Popen, not the unclosed os.devnull file handle assigned at line 225.",
+          "reasoning": "The devnull FD leak is a distinct defect from Popen error handling and is not mentioned.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references doit_cmd.py, DoitConfig.load_config_toml, or the assert that is stripped under python -O.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding discusses pkwargs shallow copy or mutation of the caller's env dict via the shared reference at action.py:207-215.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding addresses the 'if not env' guard that conflates None with an explicitly empty dict.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "CACHE-COLLISION: 'Loading is based only on the filename-derived module name. If two directories contain `dodo.py`, the second call can return the first module from `sys.modules`.' at loader.py:76-96, get_module, with matching fix suggestion (spec_from_file_location with unique name).",
+          "reasoning": "Same file, same function, same lines, same root cause and consequence.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references load_tasks or the IndexError from term[0] on an empty string.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "TRUNCATE-FIRST: 'Opening with `\"w\"` truncates the existing database before encoding and writing completes. Serialization errors, disk exhaustion, interruption, or process termination can leave an empty or partial dependency database.' at dependency.py:87-93, JsonDB.dump.",
+          "reasoning": "Same file, same function, same lines, and the same truncation-before-write-completes defect with an appropriate atomic-rename fix.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references PythonAction.pm_pdb as a class-level attribute or its mutation in cmd_run.py.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references Task.__init__, the uptodate parameter, or in-place mutation via extend().",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "IMPORT-MASK: 'catches every `ImportError` raised while executing the plugin module, including imports of missing transitive dependencies... The resulting message incorrectly claims that the plugin module itself was not found and discards the original context.' at plugin.py:43-50, PluginEntry.load.",
+          "reasoning": "Same file, same function, same lines, and the same misattribution of a transitive ImportError as module-not-found.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "medium",
+          "evidence": "IMPORT-MASK mentions discarding context but focuses only on the ImportError catch path (R-016). The attribute-not-found branch (lines 54-55) and the lack of `raise ... from error` chaining across both branches are not addressed.",
+          "reasoning": "R-017 requires noting that both failure branches raise bare Exception without chaining; the review addresses only the first branch and does not mention the attribute-not-found path.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references DoitMain.process_args or the IndexError from arg[0] on an empty string.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references cmd_dumpdb.py, DumpDB.execute, or the unclosed dbm handle.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references cmdparse.py, CmdParse.parse_only, or the overly broad Exception catch around getopt.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references missing exception chaining in CmdParse.parse_only.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding references PythonAction.execute, sys.stdout/sys.stderr redirection, or the missing try/finally that leaves streams permanently redirected when _prepare_kwargs raises.",
+          "reasoning": "Not mentioned anywhere in the review.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 89.4789431040117,
+        "stderr": ""
+      }
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 3,
+      "review_path": "experiments/results/codex-lean-ab-20260808/doit/codex/configured-default/regular/run-3-review.md",
+      "total_issues": 21,
+      "detected": 7,
+      "missed": 14,
+      "recall": 0.333,
+      "valid_judgments": 21,
+      "findings_count": 7,
+      "unsupported_findings": [],
+      "unsupported_count": 0,
+      "novel_findings": [
+        {
+          "claim": "KW-CLOBBER: _prepare_kwargs uses bind_partial(*args) with only positional arguments, so explicitly supplied keyword arguments (e.g. targets=...) are absent from bound_args.arguments and get silently overwritten by doit-generated metadata.",
+          "file": "doit/action.py",
+          "symbol": "_prepare_kwargs",
+          "evidence": "Quoted code shows 'if key not in bound_args.arguments: kwargs[key] = meta_args[key]()' after 'bound_args = func_sig.bind_partial(*args)' \u2014 kwargs-only arguments are excluded from the guard."
+        },
+        {
+          "claim": "PIPE-THREAD: Exceptions raised inside the output-reader threads (_print_process_output) are not propagated back to CmdAction.execute(); the task result is determined solely by subprocess return code even when reader threads fail.",
+          "file": "doit/action.py",
+          "symbol": "CmdAction.execute / _print_process_output",
+          "evidence": "Quoted code shows t_out/t_err threads joined with no mechanism to capture their exceptions; 'except Exception: process.terminate()...' inside the thread does not surface to the calling thread."
+        },
+        {
+          "claim": "TEST-ENV: The CLI test suite fails when pyflakes is absent because the test subprocess discovers the repository's dodo.py, which imports pyflakes at module import time, making test results dependent on the checkout environment.",
+          "file": "tests/test___main__.py",
+          "symbol": "test___main__ / dodo.py",
+          "evidence": "Review reports '1 failure, 882 passes, 8 skips' due to subprocess finding repo dodo.py which contains 'from pyflakes.api import checkPath'."
+        }
+      ],
+      "novel_count": 3,
+      "quality": {
+        "usefulness": 3,
+        "specificity": 4,
+        "notes": "The review is precise and well-evidenced where it fires: it cleanly captures 7 of 21 reference issues (R-001, R-004, R-009, R-010, R-011, R-013, R-019) with accurate code quotes and correct diagnoses. ENV-LEAK is especially thorough, catching both the shallow-copy mutation and the None-vs-empty conflation in a single finding. Coverage gaps are substantial: 14 reference issues go undetected, including the high-severity R-024 (stream redirect ordering), R-007 (devnull handle leak), R-008 (assert stripped by -O), and the entire plugin.py and cmdparse.py defect clusters. The three novel findings are concrete and plausible, with KW-CLOBBER being particularly specific. Overall the review is accurate but narrow in scope."
+      },
+      "judgments": [
+        {
+          "issue_id": "R-001",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 4 (JSON-TRUNCATE): 'If open() itself fails, db_file.close() raises UnboundLocalError, masking the original error.'",
+          "reasoning": "The review identifies the same code location (dependency.py:87-93, JsonDB.dump) and the same defect: open() failure leaves db_file unbound, causing UnboundLocalError in the finally clause that masks the original exception.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-002",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions initial_workdir or the global variable overwrite in get_module().",
+          "reasoning": "The review covers get_module() via IMPORT-COLLISION but does not address the unconditional overwrite of initial_workdir on every call.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-003",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions os.chdir() or the missing CWD restoration on import failure.",
+          "reasoning": "The review discusses sys.path leaks in get_module() but never identifies the missing try/finally around os.chdir() that would restore the working directory if importlib.import_module raises.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-004",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 3 (IMPORT-COLLISION): 'Each call permanently prepends entries to sys.path.' Quoted code: 'sys.path.insert(0, base_path)'.",
+          "reasoning": "The review identifies the same location (loader.py:76-96, get_module) and the same defect: sys.path entries accumulate without cleanup across successive calls.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-006",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions Dependency.get_value(), the FIXME comment, or the bare Exception raises at lines 566/570.",
+          "reasoning": "The review does not address the domain-exception issue in Dependency.get_value().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-007",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions os.devnull or the unclosed file handle in CmdAction.execute().",
+          "reasoning": "Finding 5 (PIPE-THREAD) discusses CmdAction.execute() thread handling but does not identify the leaked devnull file descriptor.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-008",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions doit_cmd.py, load_config_toml, or assert stripped by python -O.",
+          "reasoning": "The review does not cover DoitConfig.load_config_toml or the assert-based validation defect.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-009",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 2 (ENV-LEAK): 'When a nonempty env dictionary is supplied, PYTHONUNBUFFERED is inserted directly into that caller-owned dictionary.' Quoted code shows the shallow copy at line 207 followed by in-place mutation.",
+          "reasoning": "The review identifies action.py:206-215, names the shallow copy of pkwargs, and describes the consequence: the caller's env dict is permanently mutated with PYTHONUNBUFFERED. This matches R-009.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-010",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 2 (ENV-LEAK): 'An explicitly empty environment is instead replaced with the entire parent environment.' Suggests using 'env is None' instead of 'not env'.",
+          "reasoning": "The review identifies the same code (lines 212-215) and the same defect: 'if not env' conflates None with {}, causing an explicitly empty env to be replaced by os.environ.copy().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-011",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 3 (IMPORT-COLLISION): 'Two different files named dodo.py resolve to the same sys.modules[\"dodo\"] entry.' Quoted code: 'importlib.import_module(os.path.splitext(file_name)[0])'.",
+          "reasoning": "The review identifies loader.py:76-96 and the exact mechanism: import by basename allows sys.modules cache collisions for same-named files in different directories.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-012",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions load_tasks(), args iteration, or empty-string IndexError.",
+          "reasoning": "The review does not cover the load_tasks() function or the IndexError from term[0] on an empty string.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-013",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 4 (JSON-TRUNCATE): 'Opening with \"w\" truncates the valid database before serialization and writing have succeeded. A crash, encoding failure, or disk-full error leaves a corrupt dependency database.'",
+          "reasoning": "The review identifies dependency.py:87-93 and the truncation-before-encode defect, matching R-013's data-integrity concern exactly.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-014",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions PythonAction.pm_pdb or class-level attribute mutation.",
+          "reasoning": "The review does not cover the pm_pdb class attribute or its mutation in cmd_run.py.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-015",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions Task.__init__, uptodate, or extend().",
+          "reasoning": "The review does not address the in-place mutation of the caller's uptodate list in Task.__init__.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-016",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions PluginEntry.load or ImportError handling.",
+          "reasoning": "The review does not cover plugin.py or the broad ImportError catch that misreports broken dependencies as missing modules.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-017",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions PluginEntry.load or its generic Exception raises.",
+          "reasoning": "The review does not address the bare Exception raises in PluginEntry.load or the missing exception chaining.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-018",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions DoitMain.process_args or empty-string IndexError in cmd_args iteration.",
+          "reasoning": "The review does not cover doit_cmd.py:215-216 or the arg[0] IndexError on empty strings.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-019",
+          "detected": true,
+          "confidence": "high",
+          "evidence": "Finding 6 (DUMP-HANDLE): 'data = dbm.open(dep_file) ... The DBM object is left open on both normal completion and decoding/printing errors.' Suggests contextlib.closing or try/finally.",
+          "reasoning": "The review identifies cmd_dumpdb.py:40-50, DumpDB.execute(), the missing close/context manager, and the lock-contention consequence, matching R-019 precisely.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-020",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions CmdParse.parse_only() or the overly broad Exception catch.",
+          "reasoning": "The review does not cover cmdparse.py or the bare Exception catch that should be narrowed to getopt.GetoptError.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-021",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding mentions CmdParse.parse_only() or missing exception chaining with 'from error'.",
+          "reasoning": "The review does not address the missing 'raise ... from error' in CmdParseError construction.",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        },
+        {
+          "issue_id": "R-024",
+          "detected": false,
+          "confidence": "high",
+          "evidence": "No finding identifies that sys.stdout/sys.stderr are redirected before the try/finally that restores them, and that _prepare_kwargs() executes in the unprotected window.",
+          "reasoning": "Finding 5 (PIPE-THREAD) discusses output handling but addresses subprocess reader threads, not the sys.stdout/sys.stderr redirect ordering defect in PythonAction.execute().",
+          "judge_output_valid": true,
+          "issue_type": "validated-reference"
+        }
+      ],
+      "judge_metadata": {
+        "returncode": 0,
+        "duration_seconds": 84.95814867998706,
+        "stderr": ""
+      }
+    }
+  ],
+  "failures": []
+}

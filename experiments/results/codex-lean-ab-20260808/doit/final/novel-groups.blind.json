@@ -1,0 +1,79 @@
+[
+  {
+    "group_id": "G-001",
+    "title": "DbmDB.set / SqliteDB.set initialize empty cache on miss, discarding persisted task data on dump",
+    "claim": "DbmDB.set and SqliteDB.set initialize an empty dict for a task that exists in persistent storage but is absent from the in-memory cache, so a subsequent dump() silently overwrites the stored record with only the newly set key, erasing sibling dependency values.",
+    "file": "doit/dependency.py",
+    "symbol": "DbmDB.set / SqliteDB.set",
+    "member_ids": [
+      "N-001",
+      "N-005",
+      "N-010"
+    ]
+  },
+  {
+    "group_id": "G-002",
+    "title": "PythonAction.execute mutates global sys.stdout/sys.stderr unsafely under MThreadRunner",
+    "claim": "PythonAction.execute replaces process-global sys.stdout and sys.stderr to capture output, which is not thread-safe under MThreadRunner: concurrent Python actions can capture each other's output or restore the wrong streams.",
+    "file": "doit/action.py",
+    "symbol": "PythonAction.execute",
+    "member_ids": [
+      "N-002",
+      "N-007"
+    ]
+  },
+  {
+    "group_id": "G-003",
+    "title": "Exceptions in CmdAction reader threads are silently discarded and never propagated to execute()",
+    "claim": "Exceptions raised inside the _print_process_output reader threads (t_out, t_err) are not propagated back to CmdAction.execute() via Thread.join(), so output-processing failures are silently dropped; as a secondary consequence, a thread that stops draining its pipe can cause the child process to block on a full buffer, deadlocking the parent.",
+    "file": "doit/action.py",
+    "symbol": "CmdAction.execute / CmdAction._print_process_output",
+    "member_ids": [
+      "N-003",
+      "N-006",
+      "N-008",
+      "N-013"
+    ]
+  },
+  {
+    "group_id": "G-004",
+    "title": "Top-level pyflakes import in dodo.py breaks all doit commands and tests when pyflakes is absent",
+    "claim": "dodo.py imports pyflakes at module level, causing every doit invocation (and the CLI test suite subprocess) to fail with exit code 3 in environments where pyflakes is not installed, even for commands unrelated to linting.",
+    "file": "dodo.py",
+    "symbol": "_check_pyflakes",
+    "member_ids": [
+      "N-004",
+      "N-014"
+    ]
+  },
+  {
+    "group_id": "G-005",
+    "title": "SqliteDB._sqlite3 registers process-global SQLite adapters and converters",
+    "claim": "SqliteDB._sqlite3 calls sqlite3.register_adapter and sqlite3.register_converter for list, dict, and the 'json' column type; these registries are process-global, so they affect every SQLite connection in the host process and can break embedding applications that use sqlite3 independently.",
+    "file": "doit/dependency.py",
+    "symbol": "SqliteDB._sqlite3",
+    "member_ids": [
+      "N-009"
+    ]
+  },
+  {
+    "group_id": "G-006",
+    "title": "Exceptions from subprocess.Popen escape CmdAction.execute unwrapped",
+    "claim": "Exceptions raised by subprocess.Popen itself (missing executable, bad working directory, permission error) are not caught in CmdAction.execute, so they escape as raw OSError/ValueError instead of being wrapped in TaskError, bypassing reporter formatting and --continue handling.",
+    "file": "doit/action.py",
+    "symbol": "CmdAction.execute",
+    "member_ids": [
+      "N-011"
+    ]
+  },
+  {
+    "group_id": "G-007",
+    "title": "_prepare_kwargs binds only positional args, allowing doit metadata to silently overwrite explicit keyword arguments",
+    "claim": "_prepare_kwargs calls bind_partial(*args) with positional arguments only, so explicitly supplied keyword arguments (e.g. targets=...) are absent from bound_args.arguments and get silently overwritten when doit injects its metadata keys.",
+    "file": "doit/action.py",
+    "symbol": "_prepare_kwargs",
+    "member_ids": [
+      "N-012"
+    ]
+  }
+]

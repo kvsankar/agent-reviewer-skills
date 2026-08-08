@@ -1,0 +1,179 @@
+{
+  "runs": [
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 1,
+      "reference_matches": 8,
+      "frozen_reference_ids": [
+        "R-001",
+        "R-004",
+        "R-008",
+        "R-009",
+        "R-011",
+        "R-013",
+        "R-015",
+        "R-018"
+      ],
+      "frozen_reference_recall": 0.381,
+      "unsupported_findings": 0,
+      "novel_submitted": 1,
+      "novel_validated": 1,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-001"
+      ]
+    },
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 2,
+      "reference_matches": 5,
+      "frozen_reference_ids": [
+        "R-001",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-013"
+      ],
+      "frozen_reference_recall": 0.238,
+      "unsupported_findings": 0,
+      "novel_submitted": 3,
+      "novel_validated": 3,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-002",
+        "NV-003",
+        "NV-004"
+      ]
+    },
+    {
+      "label": "codex/configured-default/lean-skill",
+      "condition": "lean-skill",
+      "run": 3,
+      "reference_matches": 6,
+      "frozen_reference_ids": [
+        "R-001",
+        "R-004",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-013"
+      ],
+      "frozen_reference_recall": 0.286,
+      "unsupported_findings": 0,
+      "novel_submitted": 2,
+      "novel_validated": 2,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-001",
+        "NV-003"
+      ]
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 1,
+      "reference_matches": 7,
+      "frozen_reference_ids": [
+        "R-001",
+        "R-009",
+        "R-010",
+        "R-012",
+        "R-013",
+        "R-018",
+        "R-024"
+      ],
+      "frozen_reference_recall": 0.333,
+      "unsupported_findings": 1,
+      "novel_submitted": 3,
+      "novel_validated": 3,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-002",
+        "NV-003",
+        "NV-005"
+      ]
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 2,
+      "reference_matches": 4,
+      "frozen_reference_ids": [
+        "R-004",
+        "R-011",
+        "R-013",
+        "R-016"
+      ],
+      "frozen_reference_recall": 0.19,
+      "unsupported_findings": 0,
+      "novel_submitted": 2,
+      "novel_validated": 2,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-001",
+        "NV-006"
+      ]
+    },
+    {
+      "label": "codex/configured-default/regular",
+      "condition": "regular",
+      "run": 3,
+      "reference_matches": 7,
+      "frozen_reference_ids": [
+        "R-001",
+        "R-004",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-013",
+        "R-019"
+      ],
+      "frozen_reference_recall": 0.333,
+      "unsupported_findings": 0,
+      "novel_submitted": 3,
+      "novel_validated": 3,
+      "novel_invalid": 0,
+      "novel_uncertain": 0,
+      "novel_ids": [
+        "NV-003",
+        "NV-004",
+        "NV-007"
+      ]
+    }
+  ],
+  "conditions": {
+    "lean-skill": {
+      "runs": 3,
+      "avg_frozen_reference_recall": 0.302,
+      "total_reference_matches": 19,
+      "distinct_frozen_reference_matches": 9,
+      "total_novel_validated_run_hits": 6,
+      "distinct_novel_validated": 4,
+      "total_validated_run_hits": 25,
+      "avg_validated_per_run": 8.33,
+      "total_distinct_validated": 13,
+      "total_novel_invalid_run_hits": 0,
+      "total_unsupported": 0
+    },
+    "regular": {
+      "runs": 3,
+      "avg_frozen_reference_recall": 0.285,
+      "total_reference_matches": 18,
+      "distinct_frozen_reference_matches": 11,
+      "total_novel_validated_run_hits": 8,
+      "distinct_novel_validated": 7,
+      "total_validated_run_hits": 26,
+      "avg_validated_per_run": 8.67,
+      "total_distinct_validated": 18,
+      "total_novel_invalid_run_hits": 0,
+      "total_unsupported": 1
+    }
+  }
+}

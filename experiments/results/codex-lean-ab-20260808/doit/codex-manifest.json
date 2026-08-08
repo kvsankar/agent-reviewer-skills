@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-08-08T18:42:54.478055",
+  "subject": "codex",
+  "model": "configured-default",
+  "conditions": [
+    "regular",
+    "lean-skill"
+  ],
+  "runs": 3,
+  "repo": "/home/sankar/code/pydoit/doit",
+  "source": {
+    "repository_root": "/home/sankar/code/pydoit/doit",
+    "upstream": "git@github-kvsankar:pydoit/doit.git",
+    "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
+  },
+  "skill": "/home/sankar/code/kvsankar/claude-skills/experiments/skills/python-rhodes-reviewer-lean/SKILL.md",
+  "permissions": "Codex yolo mode in a disposable copy; this is not an OS security boundary",
+  "codex_version": "codex-cli 0.147.0"
+}

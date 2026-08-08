@@ -1,0 +1,176 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "api_error_status": null,
+  "duration_ms": 289948,
+  "duration_api_ms": 289770,
+  "ttft_ms": 2886,
+  "ttft_stream_ms": 2056,
+  "time_to_request_ms": 186,
+  "num_turns": 52,
+  "result": "Here is a summary of the seven findings, ordered by severity:\n\n---\n\n## Review: doit \u2014 discovery pass\n\n### B-001 \u00b7 high \u00b7 `JsonDB.dump` \u00b7 `doit/dependency.py:87\u201393`\n**Two bugs in one `try/finally`.**\n\n1. `open(self.name, 'w')` truncates the file immediately. If `codec.encode()` or `write()` then throws, the database on disk is left empty \u2014 permanently corrupted.\n2. If `open()` itself fails (e.g. permission denied), `db_file` is never bound; the `finally` clause raises `NameError`, masking the real OS error.\n\nFix: write to a `tempfile.mkstemp` file beside the target, then `os.replace()` atomically.\n\n---\n\n### B-002 \u00b7 medium \u00b7 `PythonAction.pm_pdb` \u00b7 `action.py:386`, `cmd_run.py:202`\n`pm_pdb = False` is a **class attribute** that `Run._execute()` overwrites with `PythonAction.pm_pdb = pdb` before every run. Under `MThreadRunner`, concurrent tasks share one value with no lock. The attribute also persists across sequential API calls.\n\nFix: pass `pm_pdb` as an instance attribute set by `create_action`, or carry it on the `Stream` config object.\n\n---\n\n### B-003 \u00b7 medium \u00b7 `get_module` \u00b7 `loader.py:46\u201393`\nThe function has three hidden global mutations: it writes `initial_workdir` (module-level global), calls `os.chdir()` without ever restoring CWD, and permanently extends `sys.path`. If `importlib.import_module()` raises, the CWD is left wrong for the rest of the process.\n\nFix: return `initial_workdir` to the caller; save/restore `sys.path` and CWD in a `try/except`.\n\n---\n\n### B-004 \u00b7 medium \u00b7 `_CMDLINE_VARS` \u00b7 `doit_cmd.py:29\u201344`\nA module-level `None` sentinel that doubles as the command-line variable registry. A pre-initialisation `get_var()` call silently returns `None` for every key; repeated `DoitMain().run()` calls in the same process share leftover state.\n\nFix: store the var-map on the `DoitMain` instance or use the prebound-method pattern (a small helper class instantiated once).\n\n---\n\n### B-005 \u00b7 medium \u00b7 `Dependency.get_value` \u00b7 `dependency.py:564\u2013570`\nRaises bare `Exception` (a FIXME comment acknowledges this). The codebase has a full exception hierarchy (`DependencyError` etc.). Callers in `runner.py` catch `Exception` and can't distinguish a \"no saved value\" condition from a programming error.\n\nFix: replace both `raise Exception(...)` with `raise DependencyError(...)`.\n\n---\n\n### B-006 \u00b7 low \u00b7 `CmdAction.execute` \u00b7 `action.py:225`\n`open(os.devnull, \"w\")` creates a file handle that is never closed. Python 3.3+ provides `subprocess.DEVNULL` precisely for this case.\n\nFix: `p_out = p_err = subprocess.DEVNULL`.\n\n---\n\n### B-007 \u00b7 medium \u00b7 `DoitConfig.load_config_toml` \u00b7 `doit_cmd.py:135`\n`assert plugin_type in self.PLUGIN_TYPES` validates user TOML input. Asserts are stripped by `python -O`. A typo in the user's `pyproject.toml` plugin type silently produces an unreachable config key instead of an error.\n\nFix: `if plugin_type not in self.PLUGIN_TYPES: raise InvalidDodoFile(...)`.",
+  "stop_reason": "end_turn",
+  "session_id": "8367d2f6-9e02-4526-8fd8-9cde3756310d",
+  "total_cost_usd": 1.4822587000000003,
+  "usage": {
+    "input_tokens": 29,
+    "cache_creation_input_tokens": 110317,
+    "cache_read_input_tokens": 1970409,
+    "output_tokens": 14081,
+    "server_tool_use": {
+      "web_search_requests": 0,
+      "web_fetch_requests": 0
+    },
+    "service_tier": "standard",
+    "cache_creation": {
+      "ephemeral_1h_input_tokens": 110317,
+      "ephemeral_5m_input_tokens": 0
+    },
+    "inference_geo": "not_available",
+    "iterations": [
+      {
+        "input_tokens": 1,
+        "output_tokens": 910,
+        "cache_read_input_tokens": 104312,
+        "cache_creation_input_tokens": 6005,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 6005
+        },
+        "type": "message"
+      }
+    ],
+    "speed": "standard"
+  },
+  "modelUsage": {
+    "claude-haiku-4-5-20251001": {
+      "inputTokens": 17862,
+      "outputTokens": 14,
+      "cacheReadInputTokens": 0,
+      "cacheCreationInputTokens": 0,
+      "webSearchRequests": 0,
+      "costUSD": 0.017932,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000
+    },
+    "claude-sonnet-4-6": {
+      "inputTokens": 29,
+      "outputTokens": 14081,
+      "cacheReadInputTokens": 1970409,
+      "cacheCreationInputTokens": 110317,
+      "webSearchRequests": 0,
+      "costUSD": 1.4643267000000002,
+      "contextWindow": 200000,
+      "maxOutputTokens": 32000
+    }
+  },
+  "permission_denials": [],
+  "structured_output": {
+    "repository_summary": "doit is a mature Python build-tool / task-runner (similar to make). The core architecture: a `loader` module reads task-creator functions from a user's `dodo.py`; a `control` module resolves dependency order; a `runner` executes tasks sequentially or in parallel (multiprocessing / threading); a `dependency` module persists task state across runs using one of three DB backends (dbm, json, sqlite). The codebase is about 4 500 lines of library code and a comparable test suite. Overall quality is high \u2014 the exception hierarchy, plugin system, and multi-backend DB abstraction are well-designed. The issues below are concrete defects rather than stylistic preferences.",
+    "scope_notes": "Full source review of all files under doit/ and tests/. Doc-sample files and non-Python assets were not analysed. The test suite uses unittest throughout; integration tests run real subprocesses. Only findings that are reproducible from the exact checked-out source are reported.",
+    "findings": [
+      {
+        "id": "B-001",
+        "title": "JsonDB.dump() truncates the DB file before encoding completes, and raises NameError when open() itself fails",
+        "severity": "high",
+        "confidence": "high",
+        "file": "doit/dependency.py",
+        "line_start": 87,
+        "line_end": 93,
+        "symbol": "JsonDB.dump",
+        "problem": "Two independent bugs in one try/finally block. (1) `open(self.name, 'w')` immediately truncates the on-disk file to zero bytes. If `self.codec.encode(self._db)` subsequently raises (e.g., a non-serialisable value slipped into the DB), the file is left empty and the database is permanently corrupted. (2) If `open()` itself fails (e.g., permission error, disk full), the name `db_file` is never bound; the `finally` clause then raises `NameError: name 'db_file' is not defined`, which replaces and masks the original OS error. Compare with `_load()` in the same class, which correctly opens the file before entering the try block.",
+        "source_evidence": "def dump(self):\n    try:\n        db_file = open(self.name, 'w')   # truncates immediately\n        db_file.write(self.codec.encode(self._db))\n    finally:\n        db_file.close()                  # NameError if open() raised",
+        "suggested_fix": "Write to a temporary file beside the target and rename atomically on success:\n\nimport tempfile, os\ndef dump(self):\n    dir_ = os.path.dirname(os.path.abspath(self.name))\n    fd, tmp_path = tempfile.mkstemp(dir=dir_)\n    try:\n        with os.fdopen(fd, 'w') as f:\n            f.write(self.codec.encode(self._db))\n        os.replace(tmp_path, self.name)\n    except:\n        os.unlink(tmp_path)\n        raise\n\nThis eliminates both bugs: the original file is only replaced after a successful write, and the file handle is managed by `with`.",
+        "why_it_matters": "The dependency DB is the sole persistent record of which tasks are up-to-date. Silently zeroing it forces every task to re-run on the next invocation \u2014 a subtle correctness failure that is hard to diagnose. The NameError masking bug makes the real failure (e.g., a permission error) invisible in error logs. REDUND-OK: production systems need defensive redundancy around critical persistent state."
+      },
+      {
+        "id": "B-002",
+        "title": "PythonAction.pm_pdb is a class-level attribute mutated at runtime, causing a race condition in MThreadRunner",
+        "severity": "medium",
+        "confidence": "high",
+        "file": "doit/action.py",
+        "line_start": 386,
+        "line_end": 386,
+        "symbol": "PythonAction.pm_pdb",
+        "problem": "`pm_pdb = False` is declared as a class attribute on `PythonAction`. `Run._execute()` sets it with `PythonAction.pm_pdb = pdb` (cmd_run.py:202) before each run. Because this modifies the class itself, all instances share one value. Under `MThreadRunner`, multiple tasks execute concurrently in different threads; if one thread's action checks `self.pm_pdb` at the same moment another invocation of `Run._execute()` is writing the class attribute (e.g., in a re-entrant API call), the threads observe an inconsistent value. Additionally, `pm_pdb` is never reset to `False` after the run, so a subsequent API call that does not explicitly set `pdb=False` inherits whatever the last run set.",
+        "source_evidence": "# action.py:386\npm_pdb = False  # class attribute\n\n# cmd_run.py:202 \u2014 mutates the class before every run\nPythonAction.pm_pdb = pdb",
+        "suggested_fix": "Move `pm_pdb` out of the class and pass it through the call stack, or store it on the `Runner`/`Stream` configuration object that is already passed to `task.execute(stream)`. A minimal fix is to make it an instance attribute set by `create_action`:\n\n# In create_action, accept an extra kwarg:\ndef create_action(action, task_ref, param_name, pm_pdb=False):\n    ...\n    if isinstance(action, ...) or hasattr(action, '__call__'):\n        a = PythonAction(action, task=task_ref)\n        a.pm_pdb = pm_pdb\n        return a\n\nThis honours FUNC-SHELL: configuration travels down through explicit parameters, not global class mutation.",
+        "why_it_matters": "Class-level mutation is a textbook NO-MUTABLE-GLOBAL violation. Under threading, the race is real: `MThreadRunner` (runner.py:563) uses daemon threads and dispatches multiple `execute_task` calls concurrently without any lock around the class attribute. A user running `doit -n 4 --pdb` may get inconsistent debugger behaviour."
+      },
+      {
+        "id": "B-003",
+        "title": "get_module() mutates the process CWD and a module-level global as invisible side effects",
+        "severity": "medium",
+        "confidence": "high",
+        "file": "doit/loader.py",
+        "line_start": 46,
+        "line_end": 93,
+        "symbol": "get_module",
+        "problem": "Two hidden global mutations: (1) `global initial_workdir; initial_workdir = os.getcwd()` writes to a module-level variable used by `doit.get_initial_workdir()`. Any user code that calls `get_module()` more than once (or via the API) observes whichever invocation ran last. (2) `os.chdir(full_cwd)` at line 93 changes the working directory for the entire process without restoring it. If `importlib.import_module()` raises (e.g., a SyntaxError in dodo.py), the CWD is left changed. Tests that run in sequence are affected: `tests/test___init__.py` must work around this. Furthermore, `sys.path.insert(0, base_path)` (and potentially a second insert at line 90) are never cleaned up; every call permanently lengthens `sys.path`.",
+        "source_evidence": "global initial_workdir\ninitial_workdir = os.getcwd()   # line 47 \u2014 module global mutation\n...\nsys.path.insert(0, base_path)   # line 79 \u2014 permanent sys.path growth\n...\nos.chdir(full_cwd)              # line 93 \u2014 process CWD mutation, not restored",
+        "suggested_fix": "Return `initial_workdir` as part of the function's return value instead of storing it in a global. Save and restore `sys.path` and CWD around the import:\n\ndef get_module(dodo_file, cwd=None, seek_parent=False):\n    original_cwd = os.getcwd()\n    original_path = sys.path[:]\n    try:\n        # ... path resolution logic ...\n        sys.path.insert(0, base_path)\n        os.chdir(full_cwd)\n        module = importlib.import_module(...)\n        return module, original_cwd  # return initial_workdir to caller\n    except:\n        sys.path[:] = original_path\n        os.chdir(original_cwd)\n        raise\n\nCallers store the returned `initial_workdir`. This is HOIST-IO applied to filesystem state: side effects are explicit and reversible.",
+        "why_it_matters": "An unrevertible `os.chdir()` inside a library function breaks any caller that relies on relative paths after the call returns. Tests that exercise multiple dodo files in the same process will corrupt each other's CWD. The perpetually growing `sys.path` can cause surprising import shadowing when paths from previous invocations are searched first. This is a direct NO-GLOBAL-MUT violation."
+      },
+      {
+        "id": "B-004",
+        "title": "_CMDLINE_VARS is a module-level mutable dict used as a global registry for command-line variables",
+        "severity": "medium",
+        "confidence": "high",
+        "file": "doit/doit_cmd.py",
+        "line_start": 29,
+        "line_end": 44,
+        "symbol": "_CMDLINE_VARS",
+        "problem": "`_CMDLINE_VARS` is a module-level name that starts as `None` and is reset to `{}` by `reset_vars()` which is called inside `DoitMain.process_args()`. `get_var()` contains an explicit `None`-guard with a comment explaining it is a workaround for Windows multiprocessing. The design means: (a) any call to `get_var()` before `reset_vars()` silently returns `None` for every key, masking configuration errors; (b) successive `DoitMain().run()` calls from the same process share state unless `reset_vars()` happens to be called in between; (c) the module-level sentinel makes the code hard to test in isolation.",
+        "source_evidence": "_CMDLINE_VARS = None          # line 29\ndef reset_vars():\n    global _CMDLINE_VARS\n    _CMDLINE_VARS = {}           # line 33\ndef get_var(name, default=None):\n    if _CMDLINE_VARS is None:   # workaround for Windows MP\n        return None\n    return _CMDLINE_VARS.get(name, default)",
+        "suggested_fix": "Store the variable map on the `DoitMain` instance and pass it explicitly to the command, or use the PREBOUND-METHOD pattern with a small helper class:\n\nclass _CmdlineVars:\n    def __init__(self):\n        self._store = {}\n    def reset(self): self._store = {}\n    def set(self, name, value): self._store[name] = value\n    def get(self, name, default=None): return self._store.get(name, default)\n\ncmdline_vars = _CmdlineVars()\n\nThis makes the state object injectable and testable without touching module globals. Aligns with PREBOUND-METHOD.",
+        "why_it_matters": "Module-level mutable state that is conditionally `None` is a classic source of ordering-dependent bugs. The Windows multiprocessing workaround (returning `None` for every key when not initialised) means that any user of `get_var()` in a subprocess silently gets wrong defaults with no diagnostic. NO-GLOBAL-MUT: mutable globals create tests that cannot safely run in parallel."
+      },
+      {
+        "id": "B-005",
+        "title": "Dependency.get_value() raises bare Exception, bypassing the established exception hierarchy",
+        "severity": "medium",
+        "confidence": "high",
+        "file": "doit/dependency.py",
+        "line_start": 564,
+        "line_end": 570,
+        "symbol": "Dependency.get_value",
+        "problem": "Two `raise Exception(...)` calls exist where `DependencyError` (already defined in exceptions.py) should be used. A FIXME comment in the code acknowledges this explicitly. The consequence is concrete: in `runner.py:164`, the exception handler is `except Exception as exception:` which catches both the bare `Exception` from here and any other unexpected errors. The caller cannot distinguish a legitimate 'task has no saved value' condition from a programming error without inspecting the message string.",
+        "source_evidence": "if not self._in(task_id):\n    # FIXME do not use generic exception\n    raise Exception(\"taskid '%s' has no computed value!\" % task_id)\n...\n    raise Exception(msg % (task_id, key_name))\n\n# runner.py:164 \u2014 handler that catches these:\nexcept Exception as exception:\n    msg = (\"ERROR getting value for argument\\n\" + str(exception))\n    self._handle_task_error(node, DependencyError(msg))",
+        "suggested_fix": "Replace the two bare `Exception` raises with `DependencyError` (or a new `MissingValue(DependencyError)` subclass for precision):\n\nfrom .exceptions import DependencyError\n\nif not self._in(task_id):\n    raise DependencyError(\"taskid '%s' has no computed value!\" % task_id)\n...\nraise DependencyError(msg % (task_id, key_name))\n\nThis resolves the acknowledged FIXME and aligns with EXCEPT-HIER: 'define custom exception hierarchy and raise it in business logic'.",
+        "why_it_matters": "Raising bare `Exception` means any downstream `except DependencyError` handler (in plugins or user code) will silently miss these failures. It also makes test assertions fragile \u2014 tests must assert on the message string instead of the exception type. The FIXME comment confirms the maintainers know this is wrong but it has not been addressed."
+      },
+      {
+        "id": "B-006",
+        "title": "File handle for os.devnull is opened but never closed in CmdAction.execute()",
+        "severity": "low",
+        "confidence": "high",
+        "file": "doit/action.py",
+        "line_start": 225,
+        "line_end": 225,
+        "symbol": "CmdAction.execute",
+        "problem": "When `task.io.capture` is `None` (neither `True` nor `False`), the code opens `/dev/null` for writing and passes the handle directly to `subprocess.Popen`. Neither the handle nor the subprocess pipe is ever explicitly closed in this branch. The handle is held open until garbage-collected. Under Python's reference-counting GC this is usually prompt, but under PyPy or if the task loop is tight it delays release of OS file descriptors.",
+        "source_evidence": "else:  # None\n    p_out = p_err = open(os.devnull, \"w\")  # handle never closed\n\n# spawn task process\nprocess = subprocess.Popen(\n    action, shell=self.shell,\n    stdout=p_out, stderr=p_err, ...)",
+        "suggested_fix": "Use `subprocess.DEVNULL` (available since Python 3.3) instead of manually opening `/dev/null`:\n\nelse:  # capture is None\n    p_out = p_err = subprocess.DEVNULL\n\nThis eliminates the manual file handle entirely. `subprocess.DEVNULL` is an integer constant; `Popen` handles it directly without allocating a file object.",
+        "why_it_matters": "Beyond the descriptor leak, using `subprocess.DEVNULL` is the documented idiomatic approach. The current code invents a workaround that Python's standard library already solves. On Windows, file handles are a scarcer resource than on Linux, so this matters more in cross-platform use."
+      },
+      {
+        "id": "B-007",
+        "title": "assert used to validate user-supplied TOML configuration, stripped under python -O",
+        "severity": "medium",
+        "confidence": "high",
+        "file": "doit/doit_cmd.py",
+        "line_start": 135,
+        "line_end": 135,
+        "symbol": "DoitConfig.load_config_toml",
+        "problem": "`assert plugin_type in self.PLUGIN_TYPES` validates a value read from a user's `pyproject.toml`. Python's `-O` (optimise) and `-OO` flags, as well as certain packaging workflows and some CI environments, strip all `assert` statements. Under those conditions, an invalid plugin type (e.g., a typo like `'comand'`) passes silently and the result is `toml_config['COMAND'] = plugins` \u2014 an unreachable key that causes the plugin to be silently ignored with no error message.",
+        "source_evidence": "for plugin_type, plugins in doit_toml.pop('plugins', {}).items():\n    assert plugin_type in self.PLUGIN_TYPES   # stripped by python -O\n    toml_config[plugin_type.upper()] = plugins",
+        "suggested_fix": "Replace the assert with an explicit check that raises `InvalidDodoFile`:\n\nfor plugin_type, plugins in doit_toml.pop('plugins', {}).items():\n    if plugin_type not in self.PLUGIN_TYPES:\n        raise InvalidDodoFile(\n            f\"Invalid plugin type '{plugin_type}' in TOML config. \"\n            f\"Must be one of: {self.PLUGIN_TYPES}\")\n    toml_config[plugin_type.upper()] = plugins\n\nThis is consistent with the rest of the codebase which uses explicit `raise InvalidDodoFile(...)` for config validation errors.",
+        "why_it_matters": "Using `assert` for input validation is a well-known Python anti-pattern. The Python documentation explicitly states asserts are for internal invariants, not external validation. A user who misspells a plugin type in their config will get no feedback \u2014 plugins simply won't load. The existing `InvalidDodoFile` exception exists precisely for this purpose and is already handled at the top of `DoitMain.run()`."
+      }
+    ]
+  },
+  "terminal_reason": "completed",
+  "fast_mode_state": "off",
+  "uuid": "f6ae3d47-65e6-499a-9f7b-8b7c7b4d5770"
+}

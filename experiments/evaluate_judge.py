@@ -1,360 +1,447 @@
 #!/usr/bin/env python3
-"""LLM-as-judge evaluation for non-security skills.
+"""Judge review outputs semantically with non-interactive Claude Code.
 
-For skills like Rhodes Python reviewer where ground truth matching is
-subjective (e.g., did the review catch "vague naming" even if it used
-different terminology?), we use an LLM to semantically assess whether
-each planted violation was detected in the review output.
-
-Usage:
-    python3 evaluate_judge.py --gt ground-truth/rhodes-synthetic.yaml \
-        --results-dir results/exp-rhodes/rhodes-synthetic/
+Each review is evaluated in one structured call against all ground-truth issues.
+The judge has no tools, no persisted session, and receives only the benchmark
+ground truth and the review text. This supports both the legacy
+``condition/run-N-review.md`` layout and nested ``subject/model/condition``
+layouts produced by the newer agent runners.
 """
 
+from __future__ import annotations
+
+import argparse
 import json
+import os
 import re
 import subprocess
-import sys
 import time
-import yaml
+from collections import defaultdict
 from pathlib import Path
+
+import yaml
+
+from agent_eval_common import command_version
+from experiment_runner import extract_findings
+
+
+JUDGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "judgments": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "issue_id": {"type": "string"},
+                    "detected": {"type": "boolean"},
+                    "confidence": {
+                        "type": "string",
+                        "enum": ["high", "medium", "low"],
+                    },
+                    "evidence": {"type": "string"},
+                    "reasoning": {"type": "string"},
+                },
+                "required": [
+                    "issue_id",
+                    "detected",
+                    "confidence",
+                    "evidence",
+                    "reasoning",
+                ],
+                "additionalProperties": False,
+            },
+        },
+        "unsupported_findings": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "claim": {"type": "string"},
+                    "why_unsupported": {"type": "string"},
+                },
+                "required": ["claim", "why_unsupported"],
+                "additionalProperties": False,
+            },
+        },
+        "novel_findings": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "claim": {"type": "string"},
+                    "file": {"type": "string"},
+                    "symbol": {"type": "string"},
+                    "evidence": {"type": "string"},
+                },
+                "required": ["claim", "file", "symbol", "evidence"],
+                "additionalProperties": False,
+            },
+        },
+        "quality": {
+            "type": "object",
+            "properties": {
+                "usefulness": {"type": "integer", "minimum": 1, "maximum": 5},
+                "specificity": {"type": "integer", "minimum": 1, "maximum": 5},
+                "notes": {"type": "string"},
+            },
+            "required": ["usefulness", "specificity", "notes"],
+            "additionalProperties": False,
+        },
+    },
+    "required": ["judgments", "unsupported_findings", "novel_findings", "quality"],
+    "additionalProperties": False,
+}
 
 
 def load_ground_truth(gt_path: Path) -> list[dict]:
-    """Load ground truth issues from YAML."""
-    with open(gt_path) as f:
-        gt = yaml.safe_load(f)
-    issues = []
-    for file_entry in gt.get("files", []):
-        for issue in file_entry.get("issues", []):
+    """Load planted YAML issues or a source-adjudicated JSON reference."""
+    if gt_path.suffix == ".json":
+        payload = json.loads(gt_path.read_text(encoding="utf-8"))
+        issues: list[dict] = []
+        for original in payload.get("findings", []):
+            issues.append(
+                {
+                    "id": original["reference_id"],
+                    "type": "validated-reference",
+                    "file": original.get("file"),
+                    "function": original.get("symbol"),
+                    "line_range": [
+                        original.get("line_start"),
+                        original.get("line_end"),
+                    ],
+                    "severity": original.get("severity"),
+                    "description": original.get("title"),
+                    "guideline": original.get("reasoning"),
+                    "source_evidence": original.get("source_evidence"),
+                }
+            )
+        return issues
+
+    with gt_path.open(encoding="utf-8") as stream:
+        ground_truth = yaml.safe_load(stream)
+    issues: list[dict] = []
+    for file_entry in ground_truth.get("files", []):
+        for original in file_entry.get("issues", []):
+            issue = dict(original)
             issue["file"] = file_entry["path"]
             issues.append(issue)
     return issues
 
 
-def load_review(results_dir: Path, condition: str, run: int = 1) -> str | None:
-    """Load review markdown from a condition directory."""
-    review_file = results_dir / condition / f"run-{run}-review.md"
-    if review_file.exists():
-        return review_file.read_text(encoding="utf-8")
-    return None
+def discover_reviews(results_dir: Path, conditions: set[str] | None = None) -> list[dict]:
+    """Find reviews recursively and assign stable subject/model/condition labels."""
+    reviews: list[dict] = []
+    pattern = re.compile(r"run-(\d+)-review\.md$")
+    for review_path in sorted(results_dir.rglob("run-*-review.md")):
+        match = pattern.match(review_path.name)
+        if not match:
+            continue
+        relative_parent = review_path.parent.relative_to(results_dir)
+        condition = review_path.parent.name
+        if conditions and condition not in conditions:
+            continue
+        reviews.append(
+            {
+                "path": review_path,
+                "label": "/".join(relative_parent.parts),
+                "condition": condition,
+                "run": int(match.group(1)),
+            }
+        )
+    return reviews
 
 
-def discover_runs(results_dir: Path, condition: str) -> list[int]:
-    """Find all run numbers for a condition."""
-    cond_dir = results_dir / condition
-    if not cond_dir.is_dir():
-        return []
-    runs = []
-    for f in sorted(cond_dir.glob("run-*-review.md")):
-        match = re.match(r"run-(\d+)-review\.md", f.name)
-        if match:
-            runs.append(int(match.group(1)))
-    return runs
+def build_judge_prompt(issues: list[dict], review_text: str) -> str:
+    """Build a self-contained, rubric-bound judging prompt."""
+    compact_issues = [
+        {
+            key: issue.get(key)
+            for key in (
+                "id",
+                "type",
+                "file",
+                "function",
+                "line_range",
+                "severity",
+                "description",
+                "guideline",
+                "source_evidence",
+            )
+        }
+        for issue in issues
+    ]
+    return f"""You are an impartial judge of a code-review benchmark.
 
+Evaluate whether the review detected every validated reference issue. A detection requires
+both the same code location or symbol and the same underlying problem. Exact
+mnemonic wording is unnecessary. Do not award credit for merely repeating a
+guideline without connecting it to the relevant code.
 
-def judge_single_issue(
-    issue: dict,
-    review_text: str,
-    model: str = "claude-sonnet-4-20250514",
-) -> dict:
-    """Ask LLM judge whether a specific issue was detected in the review.
+Also list concrete findings made by the review that are contradicted by, or
+have no support in, the review's own quoted code. Do not call a useful extra
+finding unsupported merely because it is absent from the planted ground truth.
 
-    Returns dict with: detected (bool), confidence (high/medium/low),
-    evidence (str), reasoning (str)
-    """
-    prompt = f"""You are an impartial judge evaluating whether a code review caught a specific issue.
+List every concrete review finding that does not match a reference issue under
+novel_findings. This is a routing decision, not a validity judgment: a later
+source-aware pass will inspect those claims. Do not place vague praise, general
+advice, or duplicate phrasings of a detected reference issue in novel_findings.
 
-## Ground Truth Issue
+Use short evidence excerpts. Return exactly one judgment for every issue ID and
+no invented IDs. Judge only the supplied text; you have no repository tools.
 
-- **ID**: {issue['id']}
-- **Type**: {issue['type']}
-- **Guideline**: {issue.get('guideline', 'N/A')}
-- **Description**: {issue['description']}
-- **Function**: {issue.get('function', 'N/A')}
-- **Lines**: {issue.get('line_range', 'N/A')}
+## Ground truth
 
-## Review Output
+{json.dumps(compact_issues, indent=2)}
+
+## Review to judge
 
 {review_text}
+"""
 
-## Your Task
 
-Determine whether the review **detected this specific issue**. The review does NOT need to use the exact same terminology or mnemonic ID. It counts as detected if the review:
-1. Identifies the same problematic code or function, AND
-2. Describes the same underlying problem (even in different words)
+def parse_claude_result(stdout: str) -> dict:
+    """Extract structured output from Claude Code's JSON result envelope."""
+    envelope = json.loads(stdout)
+    if isinstance(envelope, dict):
+        structured = envelope.get("structured_output")
+        if isinstance(structured, dict):
+            return structured
+        result = envelope.get("result")
+        if isinstance(result, dict):
+            return result
+        if isinstance(result, str):
+            try:
+                parsed = json.loads(result)
+                if isinstance(parsed, dict):
+                    return parsed
+            except json.JSONDecodeError:
+                fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", result, re.DOTALL)
+                if fenced:
+                    return json.loads(fenced.group(1))
+        if "judgments" in envelope:
+            return envelope
+    raise ValueError("Claude output did not contain structured judge data")
 
-For example, if the ground truth says "HOIST-IO: I/O mixed in business logic" and the review says "database queries should be separated from calculation logic", that counts as detected.
 
-Respond in this exact JSON format:
-```json
-{{
-  "detected": true/false,
-  "confidence": "high" | "medium" | "low",
-  "evidence": "Quote the specific part of the review that addresses this issue, or 'none' if not detected",
-  "reasoning": "Brief explanation of why you judged it as detected or not"
-}}
-```
-
-Respond ONLY with the JSON block, no other text."""
-
-    try:
-        env = {k: v for k, v in __import__("os").environ.items() if k != "CLAUDECODE"}
-        result = subprocess.run(
-            ["claude", "--print", "--model", model, "--tools", "", "--dangerously-skip-permissions"],
-            input=prompt,
-            capture_output=True,
-            text=True,
-            timeout=60,
-            env=env,
+def run_claude_judge(
+    *,
+    issues: list[dict],
+    review_text: str,
+    model: str,
+    timeout: int,
+) -> tuple[dict, dict]:
+    """Run Claude Code non-interactively with permissions bypassed and no tools."""
+    command = [
+        "claude",
+        "--print",
+        "--model",
+        model,
+        "--tools",
+        "",
+        "--dangerously-skip-permissions",
+        "--no-session-persistence",
+        "--output-format",
+        "json",
+        "--json-schema",
+        json.dumps(JUDGE_SCHEMA, separators=(",", ":")),
+    ]
+    env = {key: value for key, value in os.environ.items() if key != "CLAUDECODE"}
+    started = time.monotonic()
+    completed = subprocess.run(
+        command,
+        input=build_judge_prompt(issues, review_text),
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        env=env,
+        check=False,
+    )
+    metadata = {
+        "returncode": completed.returncode,
+        "duration_seconds": time.monotonic() - started,
+        "stderr": completed.stderr,
+    }
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"Claude judge failed ({completed.returncode}): {completed.stderr.strip()}"
         )
-        if result.returncode != 0:
-            return {
+    return parse_claude_result(completed.stdout), metadata
+
+
+def normalize_judgments(issues: list[dict], result: dict) -> list[dict]:
+    """Order judgments by ground truth and mark missing/duplicate judge output."""
+    by_id: dict[str, list[dict]] = defaultdict(list)
+    for judgment in result.get("judgments", []):
+        by_id[str(judgment.get("issue_id"))].append(judgment)
+
+    normalized: list[dict] = []
+    for issue in issues:
+        candidates = by_id.get(issue["id"], [])
+        if len(candidates) == 1:
+            judgment = dict(candidates[0])
+            judgment["judge_output_valid"] = True
+        else:
+            reason = "missing" if not candidates else "duplicate"
+            judgment = {
+                "issue_id": issue["id"],
                 "detected": False,
                 "confidence": "low",
                 "evidence": "none",
-                "reasoning": f"Judge call failed: {result.stderr[:200]}",
+                "reasoning": f"Invalid judge output: {reason} judgment",
+                "judge_output_valid": False,
             }
-
-        # Extract JSON from response - try multiple patterns
-        output = result.stdout.strip()
-
-        # Try code-fenced JSON first
-        fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", output, re.DOTALL)
-        if fenced:
-            try:
-                return json.loads(fenced.group(1))
-            except json.JSONDecodeError:
-                pass
-
-        # Try any JSON object (greedy to handle nested quotes)
-        json_match = re.search(r"\{.*\"detected\".*\}", output, re.DOTALL)
-        if json_match:
-            try:
-                return json.loads(json_match.group())
-            except json.JSONDecodeError:
-                pass
-
-        # Fallback: look for detected true/false in text
-        detected = bool(re.search(r'"detected"\s*:\s*true', output, re.IGNORECASE))
-        return {
-            "detected": detected,
-            "confidence": "low",
-            "evidence": "none",
-            "reasoning": f"Parsed from raw text: {output[:200]}",
-        }
-
-    except Exception as e:
-        return {
-            "detected": False,
-            "confidence": "low",
-            "evidence": "none",
-            "reasoning": f"Error: {e}",
-        }
-
-
-def evaluate_condition(
-    condition: str,
-    review_text: str,
-    gt_issues: list[dict],
-    model: str = "claude-sonnet-4-20250514",
-) -> dict:
-    """Evaluate all ground truth issues for a single condition."""
-    results = []
-    detected_count = 0
-
-    for i, issue in enumerate(gt_issues):
-        print(f"    Judging {issue['id']} ({issue['type']})...", end=" ", flush=True)
-        judgment = judge_single_issue(issue, review_text, model=model)
-        judgment["issue_id"] = issue["id"]
         judgment["issue_type"] = issue["type"]
-        results.append(judgment)
+        normalized.append(judgment)
+    return normalized
 
-        if judgment["detected"]:
-            detected_count += 1
-            print(f"DETECTED ({judgment['confidence']})")
-        else:
-            print(f"MISSED ({judgment['confidence']})")
 
-        time.sleep(1)  # rate limit
-
-    total = len(gt_issues)
-    recall = detected_count / total if total > 0 else 0
-
+def score_review(
+    *,
+    review: dict,
+    issues: list[dict],
+    model: str,
+    timeout: int,
+) -> dict:
+    review_text = review["path"].read_text(encoding="utf-8")
+    judged, metadata = run_claude_judge(
+        issues=issues,
+        review_text=review_text,
+        model=model,
+        timeout=timeout,
+    )
+    judgments = normalize_judgments(issues, judged)
+    detected = sum(bool(item["detected"]) for item in judgments)
+    valid = sum(bool(item["judge_output_valid"]) for item in judgments)
     return {
-        "condition": condition,
-        "total_issues": total,
-        "detected": detected_count,
-        "missed": total - detected_count,
-        "recall": round(recall, 3),
-        "judgments": results,
+        "label": review["label"],
+        "condition": review["condition"],
+        "run": review["run"],
+        "review_path": str(review["path"]),
+        "total_issues": len(issues),
+        "detected": detected,
+        "missed": len(issues) - detected,
+        "recall": round(detected / len(issues), 3) if issues else 0,
+        "valid_judgments": valid,
+        "findings_count": len(extract_findings(review_text)),
+        "unsupported_findings": judged.get("unsupported_findings", []),
+        "unsupported_count": len(judged.get("unsupported_findings", [])),
+        "novel_findings": judged.get("novel_findings", []),
+        "novel_count": len(judged.get("novel_findings", [])),
+        "quality": judged.get("quality", {}),
+        "judgments": judgments,
+        "judge_metadata": metadata,
     }
 
 
-def count_review_findings(review_text: str) -> int:
-    """Count the number of distinct findings/suggestions in a review."""
-    # Count mnemonic IDs (Rhodes style: #### MNEMONIC-ID: or **MNEMONIC-ID**)
-    pattern = re.compile(r"(?:#{2,4})\s+(?:\*\*)?([A-Z][A-Z0-9-]+)(?:\*\*)?[:\s]+")
-    ids = set()
-    for match in pattern.finditer(review_text):
-        mid = match.group(1)
-        if mid not in ("MNEMONIC", "ID", "NEXT"):  # skip template text
-            ids.add(mid)
-    return len(ids) if ids else review_text.count("####")
-
-
-def evaluate_all(
-    gt_path: Path,
-    results_dir: Path,
-    conditions: list[str] | None = None,
-    model: str = "claude-sonnet-4-20250514",
-) -> dict:
-    """Evaluate all conditions against ground truth.
-
-    Handles multiple runs per condition and aggregates results.
-    """
-    gt_issues = load_ground_truth(gt_path)
-    print(f"Ground truth: {len(gt_issues)} issues from {gt_path.name}")
-
-    if conditions is None:
-        conditions = sorted(
-            d.name for d in results_dir.iterdir()
-            if d.is_dir() and (d / "run-1-review.md").exists()
-        )
-
-    print(f"Conditions: {', '.join(conditions)}")
-
-    all_results = {}
-    for condition in conditions:
-        runs = discover_runs(results_dir, condition)
-        if not runs:
-            print(f"\n  [{condition}] No reviews found, skipping")
-            continue
-
-        print(f"\n  [{condition}] ({len(runs)} run(s))")
-        run_results = []
-
-        for run_num in runs:
-            review_text = load_review(results_dir, condition, run=run_num)
-            if not review_text:
-                continue
-
-            print(f"    --- Run {run_num} ---")
-            finding_count = count_review_findings(review_text)
-            result = evaluate_condition(condition, review_text, gt_issues, model=model)
-            result["run"] = run_num
-            result["total_findings_in_review"] = finding_count
-            run_results.append(result)
-
-        if not run_results:
-            continue
-
-        # Aggregate across runs
-        avg_recall = sum(r["recall"] for r in run_results) / len(run_results)
-        avg_detected = sum(r["detected"] for r in run_results) / len(run_results)
-
-        # Per-issue: count how many runs detected each issue
-        issue_detection_rates = {}
-        for issue in gt_issues:
-            count = 0
-            for r in run_results:
-                j = next((j for j in r["judgments"] if j["issue_id"] == issue["id"]), None)
-                if j and j["detected"]:
-                    count += 1
-            issue_detection_rates[issue["id"]] = {
-                "detected_in": count,
-                "total_runs": len(run_results),
-                "rate": count / len(run_results),
-            }
-
-        all_results[condition] = {
-            "total_issues": len(gt_issues),
-            "num_runs": len(run_results),
-            "avg_detected": round(avg_detected, 1),
-            "avg_recall": round(avg_recall, 3),
-            "per_run_recall": [r["recall"] for r in run_results],
-            "per_run_detected": [r["detected"] for r in run_results],
-            "issue_detection_rates": issue_detection_rates,
-            "runs": run_results,
+def aggregate(scored: list[dict]) -> dict:
+    """Aggregate repeated runs by their full nested label."""
+    grouped: dict[str, list[dict]] = defaultdict(list)
+    for result in scored:
+        grouped[result["label"]].append(result)
+    summary: dict[str, dict] = {}
+    for label, runs in sorted(grouped.items()):
+        summary[label] = {
+            "num_runs": len(runs),
+            "avg_recall": round(sum(run["recall"] for run in runs) / len(runs), 3),
+            "per_run_recall": [run["recall"] for run in runs],
+            "avg_unsupported": round(
+                sum(run["unsupported_count"] for run in runs) / len(runs), 2
+            ),
+            "avg_novel": round(
+                sum(run["novel_count"] for run in runs) / len(runs), 2
+            ),
+            "avg_usefulness": round(
+                sum(run["quality"].get("usefulness", 0) for run in runs) / len(runs),
+                2,
+            ),
         }
+    return summary
 
-    return all_results
 
-
-def print_report(all_results: dict, gt_issues: list[dict]):
-    """Print a summary report of judge evaluations."""
-    print("\n" + "=" * 70)
-    print("LLM-AS-JUDGE EVALUATION REPORT")
-    print("=" * 70)
-
-    # Summary table
-    cond_names = sorted(all_results.keys())
-    print(f"\n{'Condition':<20} {'Runs':>5} {'Avg Det':>8} {'Avg Recall':>10} {'Per-Run Recall'}")
-    print("-" * 80)
-    for cond in cond_names:
-        r = all_results[cond]
-        per_run = " | ".join(f"{x:.0%}" for x in r["per_run_recall"])
+def print_report(summary: dict) -> None:
+    print("\nCLAUDE JUDGE SUMMARY")
+    print(f"{'Subject/model/condition':<62} {'Runs':>4} {'Recall':>8} {'Unsup.':>7} {'Useful':>7}")
+    print("-" * 94)
+    for label, result in summary.items():
         print(
-            f"  {cond:<18} {r['num_runs']:>5} {r['avg_detected']:>8.1f} "
-            f"{r['avg_recall']:>9.1%}  [{per_run}]"
+            f"{label:<62} {result['num_runs']:>4} "
+            f"{result['avg_recall']:>7.1%} {result['avg_unsupported']:>7.2f} "
+            f"{result['avg_usefulness']:>7.2f}"
         )
 
-    # Per-issue detection matrix (shows rate across runs)
-    print(f"\n{'Issue':<12} {'Type':<16}", end="")
-    for c in cond_names:
-        label = c[:14]
-        print(f" {label:>14}", end="")
-    print()
-    print("-" * (28 + 15 * len(cond_names)))
 
-    for issue in gt_issues:
-        print(f"  {issue['id']:<10} {issue['type']:<16}", end="")
-        for c in cond_names:
-            if c in all_results:
-                rates = all_results[c]["issue_detection_rates"]
-                info = rates.get(issue["id"], {})
-                detected_in = info.get("detected_in", 0)
-                total_runs = info.get("total_runs", 0)
-                if total_runs == 0:
-                    print(f" {'N/A':>14}", end="")
-                elif detected_in == total_runs:
-                    print(f" {f'{detected_in}/{total_runs} ALL':>14}", end="")
-                elif detected_in == 0:
-                    print(f" {f'0/{total_runs}  -':>14}", end="")
-                else:
-                    print(f" {f'{detected_in}/{total_runs}':>14}", end="")
-            else:
-                print(f" {'N/A':>14}", end="")
-        print()
-
-
-def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description="LLM-as-judge evaluation")
-    parser.add_argument("--gt", type=Path, required=True, help="Ground truth YAML")
-    parser.add_argument("--results-dir", type=Path, required=True, help="Results directory")
-    parser.add_argument("--conditions", nargs="+", help="Specific conditions to evaluate")
-    parser.add_argument("--model", default="claude-sonnet-4-20250514", help="Judge model")
-    parser.add_argument("--output", "-o", type=Path, help="Output JSON file")
-
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Judge code-review outputs with Claude Code")
+    parser.add_argument(
+        "--gt",
+        type=Path,
+        required=True,
+        help="Frozen source-adjudicated JSON reference or legacy ground-truth YAML",
+    )
+    parser.add_argument("--results-dir", type=Path, required=True)
+    parser.add_argument("--conditions", nargs="+", help="Filter by final condition directory")
+    parser.add_argument("--model", default="sonnet", help="Claude judge model or alias")
+    parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--limit", type=int, help="Judge only the first N reviews")
+    parser.add_argument("--output", "-o", type=Path)
     args = parser.parse_args()
 
-    all_results = evaluate_all(
-        gt_path=args.gt,
-        results_dir=args.results_dir,
-        conditions=args.conditions,
-        model=args.model,
+    issues = load_ground_truth(args.gt)
+    reviews = discover_reviews(
+        args.results_dir,
+        set(args.conditions) if args.conditions else None,
     )
+    if args.limit is not None:
+        reviews = reviews[: args.limit]
+    if not reviews:
+        raise SystemExit(f"No run-*-review.md files found under {args.results_dir}")
 
-    gt_issues = load_ground_truth(args.gt)
-    print_report(all_results, gt_issues)
+    print(f"Ground truth: {len(issues)} issues; reviews: {len(reviews)}")
+    scored: list[dict] = []
+    failures: list[dict] = []
+    for index, review in enumerate(reviews, start=1):
+        print(
+            f"[{index}/{len(reviews)}] {review['label']} run {review['run']}...",
+            end=" ",
+            flush=True,
+        )
+        try:
+            result = score_review(
+                review=review,
+                issues=issues,
+                model=args.model,
+                timeout=args.timeout,
+            )
+        except Exception as exc:
+            print(f"FAILED: {exc}")
+            failures.append({"review": str(review["path"]), "error": str(exc)})
+            continue
+        scored.append(result)
+        print(
+            f"recall={result['recall']:.1%} unsupported={result['unsupported_count']} "
+            f"usefulness={result['quality'].get('usefulness', 'N/A')}"
+        )
 
-    # Save results
+    summary = aggregate(scored)
+    print_report(summary)
+    output = {
+        "judge": {
+            "cli": "claude",
+            "cli_version": command_version("claude"),
+            "model": args.model,
+            "tools": [],
+        },
+        "ground_truth": str(args.gt),
+        "results_dir": str(args.results_dir),
+        "summary": summary,
+        "runs": scored,
+        "failures": failures,
+    }
     output_path = args.output or (args.results_dir / "judge-evaluation.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(all_results, indent=2), encoding="utf-8")
-    print(f"\nDetailed results saved to {output_path}")
+    output_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
+    print(f"\nDetailed results written to {output_path}")
 
 
 if __name__ == "__main__":

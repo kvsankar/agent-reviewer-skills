@@ -137,8 +137,17 @@ def extract_findings(review_text: str) -> list[dict]:
     Looks for mnemonic IDs like SQL-INJECT, XSS-PREVENT, etc.
     """
     findings = []
-    # Match ### or #### followed by mnemonic ID
-    pattern = re.compile(r"(?:#{2,4})\s+(?:\*\*)?([A-Z][A-Z0-9-]+)(?:\*\*)?[:\s]+(.+?)(?:\n|$)")
+    # Match headings with an optional list number/emoji before the mnemonic.
+    # Local models commonly use underscores or headings such as
+    # "## 1️⃣ LOG_CFG – Logging configuration at import time".
+    pattern = re.compile(
+        r"(?:#{2,4})\s+"
+        r"(?:[Ii]ssue\s+\d+\s*:\s*)?"
+        r"(?:\d+\S*\s+)?"
+        r"(?:\*\*|`)?([A-Z][A-Z0-9_-]{2,})(?:\*\*|`)?"
+        r"(?:\s*[:–—-]\s*|\s+)"
+        r"(.+?)(?:\n|$)"
+    )
 
     for match in pattern.finditer(review_text):
         findings.append({
@@ -147,7 +156,7 @@ def extract_findings(review_text: str) -> list[dict]:
         })
 
     # Also catch **MNEMONIC-ID** inline references
-    inline_pattern = re.compile(r"\*\*([A-Z][A-Z0-9-]{2,})\*\*")
+    inline_pattern = re.compile(r"\*\*([A-Z][A-Z0-9_-]{2,})\*\*")
     inline_ids = set(f["id"] for f in findings)
     for match in inline_pattern.finditer(review_text):
         mid = match.group(1)

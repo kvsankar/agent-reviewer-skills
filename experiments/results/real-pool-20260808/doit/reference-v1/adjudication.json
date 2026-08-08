@@ -1,0 +1,697 @@
+{
+  "adjudications": [
+    {
+      "reference_id": "R-001",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "JsonDB.dump() leaves db_file unbound when open() raises, masking the original exception",
+      "file": "doit/dependency.py",
+      "line_start": 87,
+      "line_end": 93,
+      "symbol": "JsonDB.dump",
+      "member_ids": [
+        "C-002",
+        "C-038"
+      ],
+      "source_evidence": "Line 89: `try:`, line 90: `db_file = open(self.name, 'w')`, line 93: `finally: db_file.close()`. If `open()` at line 90 raises (e.g. PermissionError), `db_file` is never bound. The `finally` clause then raises `UnboundLocalError: name 'db_file' is not defined`, which replaces the original OS exception in the exception chain.",
+      "reasoning": "This is a concrete, reproducible defect. Any OS-level failure on open() (disk full, permissions, etc.) produces a misleading secondary UnboundLocalError that hides the root cause. The fix requires initializing `db_file = None` before the try, or using a context manager."
+    },
+    {
+      "reference_id": "R-002",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "get_module() overwrites the module-level initial_workdir on every call",
+      "file": "doit/loader.py",
+      "line_start": 46,
+      "line_end": 47,
+      "symbol": "get_module",
+      "member_ids": [
+        "C-004",
+        "C-021"
+      ],
+      "source_evidence": "Lines 46-47: `global initial_workdir; initial_workdir = os.getcwd()`. The module-level variable (defined at line 17) is meant to record 'Directory path from where doit was executed', but is unconditionally overwritten on each call. A second call with a different working directory silently clobbers the first value.",
+      "reasoning": "Actionable in library and test scenarios where get_module() is called more than once per interpreter session. The variable name ('initial') implies it should only be captured once, but the implementation makes it last-write-wins. Low severity because standard CLI usage calls it once."
+    },
+    {
+      "reference_id": "R-003",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "get_module() changes process CWD with os.chdir but does not restore it if the subsequent import fails",
+      "file": "doit/loader.py",
+      "line_start": 93,
+      "line_end": 96,
+      "symbol": "get_module",
+      "member_ids": [
+        "C-005",
+        "C-023"
+      ],
+      "source_evidence": "Line 93: `os.chdir(full_cwd)` executes unconditionally. Line 96: `return importlib.import_module(...)` can raise (SyntaxError, ImportError, any exception from module top-level code). There is no try/finally around line 93 to restore the prior CWD on failure.",
+      "reasoning": "If the import fails, the process-wide CWD is left at `full_cwd` for the remainder of the interpreter session. All subsequent relative-path operations are affected. A try/finally restoring `os.getcwd()` captured before line 93 would fix this."
+    },
+    {
+      "reference_id": "R-004",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "get_module() permanently inserts entries into sys.path on every call without cleanup",
+      "file": "doit/loader.py",
+      "line_start": 79,
+      "line_end": 90,
+      "symbol": "get_module",
+      "member_ids": [
+        "C-006",
+        "C-015",
+        "C-022"
+      ],
+      "source_evidence": "Line 79: `sys.path.insert(0, base_path)`. Lines 86-90: if `cwd` is provided, `sys.path.insert(0, full_cwd)` as well. Neither insertion is ever removed. In test suites or library usage where get_module() is called repeatedly with different dodo files, sys.path grows without bound and earlier base_path entries shadow modules in later calls.",
+      "reasoning": "Each call leaks at least one sys.path entry, which can cause import-name shadowing for modules with the same name in different directories. The effect compounds across successive calls. A try/finally removing the inserted paths would be the appropriate fix."
+    },
+    {
+      "reference_id": "R-005",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "_CMDLINE_VARS module global causes state corruption under concurrent or successive runs",
+      "file": "doit/doit_cmd.py",
+      "line_start": 29,
+      "line_end": 44,
+      "symbol": "_CMDLINE_VARS",
+      "member_ids": [
+        "C-007",
+        "C-058"
+      ],
+      "source_evidence": "Line 29: `_CMDLINE_VARS = None`. Line 213 in `process_args`: `reset_vars()` is called before any new variables are set. The `None` check in `get_var` (lines 38-40) is explicitly documented as a 'work-around for Windows multi-processing'.",
+      "reasoning": "The None sentinel is intentional and documented. Successive runs are correctly handled because `process_args()` always calls `reset_vars()` first. The race-condition claim requires concurrent calls to `DoitMain.run()`, which is not a standard doit usage pattern. The design is known and deliberate."
+    },
+    {
+      "reference_id": "R-006",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "Dependency.get_value() raises bare Exception instead of a domain-specific error type",
+      "file": "doit/dependency.py",
+      "line_start": 558,
+      "line_end": 571,
+      "symbol": "Dependency.get_value",
+      "member_ids": [
+        "C-008",
+        "C-029"
+      ],
+      "source_evidence": "Line 565: `# FIXME do not use generic exception`. Lines 566, 570: `raise Exception(...)` in both error branches. The FIXME comment is the codebase's own acknowledgement of the defect.",
+      "reasoning": "Callers cannot distinguish a missing-task error from a missing-key error without string-parsing, and neither can be caught specifically. A dedicated exception type (e.g. a subclass of the existing DatabaseException) is needed. The FIXME makes this an acknowledged, actionable defect."
+    },
+    {
+      "reference_id": "R-007",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "CmdAction.execute() opens os.devnull but never closes the file handle",
+      "file": "doit/action.py",
+      "line_start": 224,
+      "line_end": 235,
+      "symbol": "CmdAction.execute",
+      "member_ids": [
+        "C-009",
+        "C-027",
+        "C-037"
+      ],
+      "source_evidence": "Line 225: `p_out = p_err = open(os.devnull, 'w')`. The returned file object is passed to `subprocess.Popen` as stdout/stderr (lines 231-232). Popen duplicates the FD into the child process but does not close the Python-side file object. There is no `close()` call and no context manager on this path.",
+      "reasoning": "Each task execution with `capture_io=None` leaks one file descriptor. Under CPython, refcount-based GC typically closes it promptly, but this is an implementation detail. Under PyPy or with many short-lived tasks, the process can exhaust its FD limit. Using a context manager or explicitly closing the devnull handle is the correct fix."
+    },
+    {
+      "reference_id": "R-008",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "DoitConfig.load_config_toml validates plugin_type with assert, which is stripped by python -O",
+      "file": "doit/doit_cmd.py",
+      "line_start": 135,
+      "line_end": 135,
+      "symbol": "DoitConfig.load_config_toml",
+      "member_ids": [
+        "C-010",
+        "C-020"
+      ],
+      "source_evidence": "Line 135: `assert plugin_type in self.PLUGIN_TYPES`. Under `python -O` or `python -OO`, all assert statements are removed. An unknown plugin_type from the TOML file then silently passes this check and is stored in `toml_config[plugin_type.upper()]`, producing undefined behavior downstream.",
+      "reasoning": "This is a concrete correctness defect. The fix is to replace the assert with an explicit `if/raise` using a descriptive error message."
+    },
+    {
+      "reference_id": "R-009",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "CmdAction.execute() mutates the caller's original env dict via shallow copy of pkwargs",
+      "file": "doit/action.py",
+      "line_start": 206,
+      "line_end": 215,
+      "symbol": "CmdAction.execute",
+      "member_ids": [
+        "C-012",
+        "C-025",
+        "C-035"
+      ],
+      "source_evidence": "Line 207: `subprocess_pkwargs = self.pkwargs.copy()` is a shallow copy, so `subprocess_pkwargs['env']` and `self.pkwargs['env']` reference the same dict object. Line 210: `env = subprocess_pkwargs['env']` captures this shared reference. Line 215: `env['PYTHONUNBUFFERED'] = '1'` modifies the dict in place when `self.buffering` is truthy, permanently altering the caller's original dictionary.",
+      "reasoning": "Any code that reuses a CmdAction or shares the env dict across actions will observe the spurious PYTHONUNBUFFERED key. The fix is `env = subprocess_pkwargs['env'].copy()` (or a deep copy of pkwargs) before mutating."
+    },
+    {
+      "reference_id": "R-010",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "CmdAction.execute() conflates an explicitly empty env dict {} with no env via 'if not env'",
+      "file": "doit/action.py",
+      "line_start": 212,
+      "line_end": 215,
+      "symbol": "CmdAction.execute",
+      "member_ids": [
+        "C-013",
+        "C-026",
+        "C-036"
+      ],
+      "source_evidence": "Lines 212-215: `if self.buffering: if not env: env = os.environ.copy()`. The condition `not env` is True for both `None` (env not provided) and `{}` (explicitly empty environment). A caller who passes `env={}` to spawn a subprocess with a clean environment will instead receive a copy of the full parent environment.",
+      "reasoning": "The correct guard is `if env is None` to distinguish the 'not supplied' case from the 'explicitly empty' case. This is a real behavioral defect for callers who intentionally supply an empty environment."
+    },
+    {
+      "reference_id": "R-011",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "get_module() imports dodo files by basename, causing sys.modules cache collisions for same-named files in different directories",
+      "file": "doit/loader.py",
+      "line_start": 79,
+      "line_end": 96,
+      "symbol": "get_module",
+      "member_ids": [
+        "C-014",
+        "C-024",
+        "C-039"
+      ],
+      "source_evidence": "Line 79: `sys.path.insert(0, base_path)`. Line 96: `return importlib.import_module(os.path.splitext(file_name)[0])`. `importlib.import_module` checks `sys.modules` first. If `/project-a/dodo.py` was already imported (as module 'dodo'), a subsequent call for `/project-b/dodo.py` returns the cached module from sys.modules even though `base_path` was updated in sys.path.",
+      "reasoning": "This is a concrete defect in library and test usage where get_module() is called more than once per interpreter. The fix is to use importlib machinery that bypasses the sys.modules cache (e.g. importlib.util.spec_from_file_location with a unique module name)."
+    },
+    {
+      "reference_id": "R-012",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "load_tasks() raises IndexError when args contains an empty string",
+      "file": "doit/loader.py",
+      "line_start": 192,
+      "line_end": 195,
+      "symbol": "load_tasks",
+      "member_ids": [
+        "C-019",
+        "C-040"
+      ],
+      "source_evidence": "Lines 193-195: `for index, term in enumerate(args): if term[0] != '-': arg_pos[term] = index`. If any element of `args` is the empty string `''`, `term[0]` raises `IndexError: string index out of range` instead of a controlled diagnostic error.",
+      "reasoning": "An empty string in args is a legitimate misuse that should produce a clear error message. The IndexError propagates as an internal traceback confusing to the user. A guard `if term and term[0] != '-'` fixes this."
+    },
+    {
+      "reference_id": "R-013",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "JsonDB.dump() truncates the database file before encoding completes, leaving it empty on serialization failure",
+      "file": "doit/dependency.py",
+      "line_start": 87,
+      "line_end": 93,
+      "symbol": "JsonDB.dump",
+      "member_ids": [
+        "C-001"
+      ],
+      "source_evidence": "Line 90: `db_file = open(self.name, 'w')` truncates the file to zero bytes immediately. Line 91: `db_file.write(self.codec.encode(self._db))` \u2014 if `self.codec.encode()` raises (e.g. non-serializable value), the file is left empty and the database is permanently lost.",
+      "reasoning": "This is a data-integrity defect. The standard fix is to write to a temporary file and rename it atomically, or to encode into a string first and only open the file for writing after encoding succeeds."
+    },
+    {
+      "reference_id": "R-014",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "PythonAction.pm_pdb is a class-level attribute mutated per-run in cmd_run.py",
+      "file": "doit/action.py",
+      "line_start": 386,
+      "line_end": 386,
+      "symbol": "PythonAction.pm_pdb",
+      "member_ids": [
+        "C-003"
+      ],
+      "source_evidence": "action.py line 386: `pm_pdb = False` (class attribute). cmd_run.py line 202: `PythonAction.pm_pdb = pdb` modifies the class, affecting all instances. All PythonAction instances in all threads see the same value. If two Run._execute() calls overlap (e.g. in test harnesses), the attribute has a race condition.",
+      "reasoning": "The attribute is per-run configuration that belongs on the instance or as a parameter. Class mutation is a design flaw. In concurrent test scenarios, the wrong pm_pdb value may be observed. Severity is low because concurrent Run._execute() calls are rare in practice."
+    },
+    {
+      "reference_id": "R-015",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "Task.__init__ mutates the caller's uptodate list in-place via extend()",
+      "file": "doit/task.py",
+      "line_start": 230,
+      "line_end": 234,
+      "symbol": "Task.__init__",
+      "member_ids": [
+        "C-011"
+      ],
+      "source_evidence": "Line 230: `uptodate = uptodate if uptodate else []`. If the caller passes a non-empty list, `uptodate` is the same object. Line 233-234: `if self.getargs: uptodate.extend(self._init_getargs())` mutates that list in place, adding result_dep entries. A caller who reuses the same uptodate list across multiple task definitions accumulates extra entries.",
+      "reasoning": "This is a genuine mutation-of-caller-argument bug. The fix is `uptodate = list(uptodate) if uptodate else []` to always work on a copy."
+    },
+    {
+      "reference_id": "R-016",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "PluginEntry.load catches bare ImportError, misreporting a broken dependency inside a found module as 'module not found'",
+      "file": "doit/plugin.py",
+      "line_start": 47,
+      "line_end": 50,
+      "symbol": "PluginEntry.load",
+      "member_ids": [
+        "C-016"
+      ],
+      "source_evidence": "Lines 47-50: `except ImportError: raise Exception('Plugin {} module `{}` not found.')`. If the target module exists but one of its imports raises ImportError (e.g. a missing dependency), this is caught and reported as if the module itself was not found, discarding the actual error chain.",
+      "reasoning": "A user seeing 'module not found' for a module that is actually installed will waste time debugging. The fix is to catch only `ModuleNotFoundError` (Python 3.6+) or check `e.name` against `module_name` to distinguish a missing module from a broken one, and raise with `from error` to preserve the chain."
+    },
+    {
+      "reference_id": "R-017",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "PluginEntry.load raises generic Exception for both module-not-found and attribute-not-found failures",
+      "file": "doit/plugin.py",
+      "line_start": 43,
+      "line_end": 55,
+      "symbol": "PluginEntry.load",
+      "member_ids": [
+        "C-017"
+      ],
+      "source_evidence": "Lines 49-50: `raise Exception('Plugin {} module...')`. Lines 54-55: `raise Exception('Plugin {}:{} module...')`. Both failure branches raise a bare `Exception` with no exception chaining (`from`), so callers cannot programmatically distinguish the two failure modes and the original traceback is discarded.",
+      "reasoning": "A dedicated PluginLoadError (or similar) would allow callers to distinguish plugin load failures from other errors without parsing messages. The lack of `raise ... from error` chains means the root cause is lost. This is an actionable API quality defect."
+    },
+    {
+      "reference_id": "R-018",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "DoitMain.process_args raises IndexError when cmd_args contains an empty string",
+      "file": "doit/doit_cmd.py",
+      "line_start": 215,
+      "line_end": 216,
+      "symbol": "DoitMain.process_args",
+      "member_ids": [
+        "C-018"
+      ],
+      "source_evidence": "Lines 215-216: `for arg in cmd_args: if (arg[0] != '-') and ('=' in arg):`. If any element of `cmd_args` is `''`, `arg[0]` raises `IndexError: string index out of range`. An empty string is a plausible input from shell interpolation or API call.",
+      "reasoning": "This is a concrete crash on a reachable code path. A guard `if arg and arg[0] != '-'` corrects the behavior."
+    },
+    {
+      "reference_id": "R-019",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "DumpDB.execute() opens the DBM file without a context manager, risking unreleased file locks",
+      "file": "doit/cmd_dumpdb.py",
+      "line_start": 46,
+      "line_end": 50,
+      "symbol": "DumpDB.execute",
+      "member_ids": [
+        "C-028"
+      ],
+      "source_evidence": "Line 46: `data = dbm.open(dep_file)`. The returned object is iterated but never explicitly closed. Some DBM backends hold exclusive file locks until the database is closed. If an exception occurs during iteration or if the GC is delayed, the lock persists, preventing other commands from opening the same DB.",
+      "reasoning": "The fix is `with dbm.open(dep_file) as data:`. This is a concrete resource-management defect with observable consequences (lock contention) on some DBM backends."
+    },
+    {
+      "reference_id": "R-020",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "CmdParse.parse_only() catches bare Exception instead of getopt.GetoptError",
+      "file": "doit/cmdparse.py",
+      "line_start": 318,
+      "line_end": 324,
+      "symbol": "CmdParse.parse_only",
+      "member_ids": [
+        "C-030"
+      ],
+      "source_evidence": "Lines 318-324: `try: opts, args = getopt.getopt(...) except Exception as error: raise CmdParseError(msg)`. Catching `Exception` instead of `getopt.GetoptError` means any programming error in `self.get_short()` or `self.get_long()` (e.g. a bug in option construction) is swallowed and reported as a user-facing parse error with a misleading message.",
+      "reasoning": "The overly broad catch converts internal bugs into misleading diagnostics and masks tracebacks that would help identify real defects. Narrowing to `getopt.GetoptError` is the correct fix."
+    },
+    {
+      "reference_id": "R-021",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "CmdParse.parse_only() does not chain the caught exception when raising CmdParseError",
+      "file": "doit/cmdparse.py",
+      "line_start": 321,
+      "line_end": 324,
+      "symbol": "CmdParse.parse_only",
+      "member_ids": [
+        "C-031"
+      ],
+      "source_evidence": "Line 324: `raise CmdParseError(msg)` without `from error`. The original getopt error is discarded from the exception chain, so `__cause__` is None. Callers and debuggers lose the low-level context (which option triggered the failure, etc.).",
+      "reasoning": "Using `raise CmdParseError(msg) from error` preserves the causal chain and is a concrete improvement to diagnostics. Low severity since the message string usually contains enough context."
+    },
+    {
+      "reference_id": "R-022",
+      "verdict": "invalid",
+      "severity": "medium",
+      "title": "DbmDB.set() initialises an empty dict for uncached task_id, silently overwriting persistent data on dump",
+      "file": "doit/dependency.py",
+      "line_start": 183,
+      "line_end": 188,
+      "symbol": "DbmDB.set",
+      "member_ids": [
+        "C-032"
+      ],
+      "source_evidence": "Lines 185-188: `if task_id not in self._db: self._db[task_id] = {}`. In save_success(), the first _set() call creates an empty cache entry, then subsequent _set() calls for _values_, result:, checker:, and each file dep all add to that same dict. By the time _get() is called for each dep (to check previous state), task_id IS already in _db, so the old persistent data from _dbm is never loaded.",
+      "reasoning": "The design of save_success() rebuilds the complete record every time a task runs: it sets every field that belongs in the record. The 'lost' persistent data is exactly the data being replaced by the new execution's results. The only real consequence is that the MD5 timestamp-skip optimization is bypassed (MD5s are recomputed even when the timestamp hasn't changed), which is a performance issue, not data corruption. No dependency state that should be preserved is actually silently discarded."
+    },
+    {
+      "reference_id": "R-023",
+      "verdict": "invalid",
+      "severity": "medium",
+      "title": "SqliteDB.set() initialises an empty dict for uncached task_id, silently overwriting persistent data on dump",
+      "file": "doit/dependency.py",
+      "line_start": 309,
+      "line_end": 314,
+      "symbol": "SqliteDB.set",
+      "member_ids": [
+        "C-033"
+      ],
+      "source_evidence": "Lines 311-314: same pattern as DbmDB.set. In the SqliteDB dump (lines 326-332), `INSERT OR REPLACE` replaces the full row with only what is in _cache. However, save_success() rebuilds the complete record for the task.",
+      "reasoning": "Same reasoning as R-022: save_success() intentionally replaces the full record for a task that just ran. The only material consequence is losing the MD5 timestamp-skip optimization when the first set() precedes any get() for that task. No correctness issue exists."
+    },
+    {
+      "reference_id": "R-024",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "PythonAction.execute() redirects sys.stdout/sys.stderr before the try/finally that would restore them",
+      "file": "doit/action.py",
+      "line_start": 442,
+      "line_end": 469,
+      "symbol": "PythonAction.execute",
+      "member_ids": [
+        "C-034"
+      ],
+      "source_evidence": "Lines 451/459: `sys.stdout = out_writer` and `sys.stderr = err_writer` execute outside any try block. Line 469: `kwargs = self._prepare_kwargs()` executes after the redirection but before the `try:` at line 472 whose `finally` restores the streams. If `_prepare_kwargs()` raises InvalidTask (e.g. a reserved argument name has a default value), the finally at line 481 is never reached and sys.stdout/sys.stderr are left permanently corrupted.",
+      "reasoning": "This is a concrete, reproducible defect: any function that uses 'task', 'targets', 'dependencies', or 'changed' as argument names with defaults will trigger InvalidTask from _prepare_kwargs(), leaving the process I/O broken. The fix is to move the _prepare_kwargs() call before stream redirection, or wrap the entire block in a try/finally."
+    },
+    {
+      "reference_id": "R-025",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Many classes and methods lack proper docstrings",
+      "file": "doit/action.py",
+      "line_start": 17,
+      "line_end": 23,
+      "symbol": "normalize_callable",
+      "member_ids": [
+        "C-041"
+      ],
+      "source_evidence": "normalize_callable has a one-line docstring. Many other methods also lack comprehensive docstrings.",
+      "reasoning": "Missing or minimal docstrings are a documentation quality concern, not a functional defect or maintainability risk concrete enough to be actionable as a code finding. The existing docstring correctly describes the function's behavior."
+    },
+    {
+      "reference_id": "R-026",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "get_file_md5 uses javadoc-style @param/@return tags",
+      "file": "doit/dependency.py",
+      "line_start": 27,
+      "line_end": 32,
+      "symbol": "get_file_md5",
+      "member_ids": [
+        "C-042"
+      ],
+      "source_evidence": "Lines 29-31: `@param path: (string) file path` and `@return: (string) md5` using epydoc/javadoc syntax.",
+      "reasoning": "Docstring style is a subjective convention preference. The docstring is functionally complete and clearly describes the parameters. No behavior or correctness issue exists."
+    },
+    {
+      "reference_id": "R-027",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Magic number 128 used as block-size multiplier in get_file_md5",
+      "file": "doit/dependency.py",
+      "line_start": 35,
+      "line_end": 35,
+      "symbol": "get_file_md5",
+      "member_ids": [
+        "C-043"
+      ],
+      "source_evidence": "Line 35: `block_size = 128 * md5.block_size`. The multiplier 128 is a conventional efficiency factor for file reads.",
+      "reasoning": "This is a widely-used Python idiom for chunked MD5 reading. The multiplier value is not arbitrary\u2014it produces a practically efficient read size\u2014and does not affect correctness. This is a negligible style preference."
+    },
+    {
+      "reference_id": "R-028",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Error message construction in check_attr uses old-style % formatting",
+      "file": "doit/task.py",
+      "line_start": 441,
+      "line_end": 444,
+      "symbol": "check_attr",
+      "member_ids": [
+        "C-044"
+      ],
+      "source_evidence": "Line 441: `msg = \"Task '%s' attribute '%s' must be \" % (task, attr)`. Uses %-formatting rather than f-strings.",
+      "reasoning": "Formatting style is a subjective preference with no behavioral impact. Both styles are fully supported in the target Python versions. Not an actionable defect."
+    },
+    {
+      "reference_id": "R-029",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "_init_uptodate method is overly complex with nested conditionals",
+      "file": "doit/task.py",
+      "line_start": 298,
+      "line_end": 323,
+      "symbol": "Task._init_uptodate",
+      "member_ids": [
+        "C-045"
+      ],
+      "source_evidence": "Lines 298-323: the method handles bool, None, callable, tuple, and str branches for uptodate items.",
+      "reasoning": "Handling multiple distinct input types requires branching. The structure is flat (no deep nesting) and each branch is clearly annotated. This is a subjective complexity preference, not a concrete defect or meaningful maintainability risk."
+    },
+    {
+      "reference_id": "R-030",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "expand_action() hardcodes STRING_FORMAT = 'old' inside the method body",
+      "file": "doit/action.py",
+      "line_start": 273,
+      "line_end": 324,
+      "symbol": "CmdAction.expand_action",
+      "member_ids": [
+        "C-046"
+      ],
+      "source_evidence": "Line 120: `STRING_FORMAT = 'old'` is a class-level attribute. Inside expand_action() (lines 318-324), `self.STRING_FORMAT` is only read, never assigned. There is no `self.STRING_FORMAT = 'old'` assignment anywhere inside the method body.",
+      "reasoning": "The claim is factually incorrect. The STRING_FORMAT attribute is set at class level and can be changed by subclasses or per-instance before calling expand_action(). No assignment inside the method overrides it."
+    },
+    {
+      "reference_id": "R-031",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "DbmDB.in_() method appears to be defined twice",
+      "file": "doit/dependency.py",
+      "line_start": 218,
+      "line_end": 220,
+      "symbol": "DbmDB.in_",
+      "member_ids": [
+        "C-047"
+      ],
+      "source_evidence": "Lines 218-220: a single definition of `in_()` exists in DbmDB: `def in_(self, task_id): return self._in_dbm(task_id) or task_id in self.dirty`. No second definition exists in the class body.",
+      "reasoning": "The claim is factually incorrect. There is exactly one definition of in_() in DbmDB. The finding cannot be substantiated from this source revision."
+    },
+    {
+      "reference_id": "R-032",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Comment in get_state describes what the code does rather than why",
+      "file": "doit/dependency.py",
+      "line_start": 413,
+      "line_end": 421,
+      "symbol": "MD5Checker.get_state",
+      "member_ids": [
+        "C-048"
+      ],
+      "source_evidence": "Lines 416-417: `# time optimization. if dep is already saved with current # timestamp skip calculating md5`. The comment names the purpose (time optimization) and the mechanism.",
+      "reasoning": "The comment clearly explains both what happens and why (performance optimization). The claim that it only restates the condition is inaccurate. Comment quality is also subjective and not an actionable defect."
+    },
+    {
+      "reference_id": "R-033",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Tests inject command-line arguments via patch.object(sys, 'argv'), indicating over-coupling",
+      "file": "tests/test_doit_cmd.py",
+      "line_start": 1,
+      "line_end": 1,
+      "symbol": "test_run",
+      "member_ids": [
+        "C-049"
+      ],
+      "source_evidence": "Test file uses patch.object(sys, 'argv', ...) in some test cases.",
+      "reasoning": "This is an observation about test design, not a defect in the production source code. The claim about 'over-coupling' is architectural preference. Not an actionable finding against this codebase."
+    },
+    {
+      "reference_id": "R-034",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "get_module() mixes file system I/O with module loading logic",
+      "file": "doit/loader.py",
+      "line_start": 37,
+      "line_end": 96,
+      "symbol": "get_module",
+      "member_ids": [
+        "C-050"
+      ],
+      "source_evidence": "get_module() performs path resolution, sys.path manipulation, os.chdir, and importlib.import_module in one function.",
+      "reasoning": "This is a refactoring suggestion describing a design preference for separation of concerns. It does not identify a concrete functional defect. The function has worked this way by design and the mixing is intentional to ensure the correct environment is set up before import."
+    },
+    {
+      "reference_id": "R-035",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "doit/__init__.py uses assert to suppress a pyflakes warning",
+      "file": "doit/__init__.py",
+      "line_start": 45,
+      "line_end": 45,
+      "symbol": "__init__.py imports",
+      "member_ids": [
+        "C-051"
+      ],
+      "source_evidence": "Line 45: `assert load_ipython_extension  # silence pyflakes`. Under `-O`, the assert is stripped, but `load_ipython_extension` is still imported (line 35) and available in the module's namespace.",
+      "reasoning": "The assert's sole purpose is to reference the imported name so pyflakes doesn't report it as unused. Since load_ipython_extension is always a truthy function object, the assert never raises. Under -O, the pyflakes suppression is removed, but there is no runtime behavior change. This is a style concern, not a defect."
+    },
+    {
+      "reference_id": "R-036",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "DoitConfig initialises configuration eagerly at construction time",
+      "file": "doit/doit_cmd.py",
+      "line_start": 54,
+      "line_end": 57,
+      "symbol": "DoitConfig",
+      "member_ids": [
+        "C-052"
+      ],
+      "source_evidence": "DoitConfig.__init__ initializes _toml=None and config as defaultdict but does not load files. File loading happens in loads() which is called from DoitMain.__init__.",
+      "reasoning": "Config loading at construction time of DoitMain is a deliberate design choice. It is not lazy (i.e., it runs before any command is dispatched), but this is the intended behavior. The claim of 'failures occurring at initialization' is a mischaracterization\u2014errors there are appropriate and expected."
+    },
+    {
+      "reference_id": "R-037",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Tests use temporary files and real DB implementations instead of in-memory stubs",
+      "file": "tests/test_dependency.py",
+      "line_start": 1,
+      "line_end": 1,
+      "symbol": "testProcessRun",
+      "member_ids": [
+        "C-053"
+      ],
+      "source_evidence": "Tests create temporary files for DB backends.",
+      "reasoning": "Test design is not a production source defect. Using real backends in tests provides accurate coverage of actual behavior. The preference for in-memory stubs is an architectural opinion, not a defect."
+    },
+    {
+      "reference_id": "R-038",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Tests use patch to mock MRunner.available, indicating tight coupling",
+      "file": "tests/test_runner.py",
+      "line_start": 1,
+      "line_end": 1,
+      "symbol": "MRunner tests",
+      "member_ids": [
+        "C-054"
+      ],
+      "source_evidence": "Tests use patch.object(runner.MRunner, 'available', ...) to control availability checking.",
+      "reasoning": "This is a test design observation, not a production code defect. Patching is a standard test technique. The claim about 'testability' is an architectural preference, not a concrete defect in the source."
+    },
+    {
+      "reference_id": "R-039",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "DoitMain.run() mixes argument processing, command dispatch, and error handling",
+      "file": "doit/doit_cmd.py",
+      "line_start": 232,
+      "line_end": 310,
+      "symbol": "DoitMain.run",
+      "member_ids": [
+        "C-055"
+      ],
+      "source_evidence": "DoitMain.run() performs loader option parsing, global variable extraction, command selection, and error handling in one method.",
+      "reasoning": "This is a refactoring suggestion about separation of concerns. The method is the established entry point for all doit commands and its structure is intentional. Not an actionable defect."
+    },
+    {
+      "reference_id": "R-040",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "flat_generator function lacks an underscore prefix to indicate it is internal",
+      "file": "doit/loader.py",
+      "line_start": 23,
+      "line_end": 33,
+      "symbol": "flat_generator",
+      "member_ids": [
+        "C-056"
+      ],
+      "source_evidence": "Line 23: `def flat_generator(gen, gen_doc=''):` \u2014 no leading underscore.",
+      "reasoning": "Python naming conventions use underscores as a signal, not enforcement. Whether flat_generator is part of the public API is a design decision not verifiable as a defect without more context. This is a style preference."
+    },
+    {
+      "reference_id": "R-041",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "isinstance checks for str/PurePath targets could be simplified",
+      "file": "doit/task.py",
+      "line_start": 284,
+      "line_end": 295,
+      "symbol": "Task._init_targets",
+      "member_ids": [
+        "C-057"
+      ],
+      "source_evidence": "Lines 288-294: two separate isinstance branches for str and PurePath, each appending `str(target)` (or just `target` for str).",
+      "reasoning": "The two branches produce different results (one appends the str directly, the other converts with str()). They cannot be trivially collapsed without changing behavior. This is a style suggestion based on a superficial reading."
+    },
+    {
+      "reference_id": "R-042",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "DoitMain.run() uses bare except Exception without logging, hiding diagnostic information",
+      "file": "doit/doit_cmd.py",
+      "line_start": 305,
+      "line_end": 310,
+      "symbol": "DoitMain.run",
+      "member_ids": [
+        "C-059"
+      ],
+      "source_evidence": "Lines 305-310: `except Exception: ... sys.stderr.write(traceback.format_exc())`. The full formatted traceback including all exception details is written to stderr.",
+      "reasoning": "The claim that diagnostic information is hidden is incorrect. `traceback.format_exc()` provides the complete exception chain and traceback. Whether this goes through the logging framework is a style preference, not a concrete defect."
+    },
+    {
+      "reference_id": "R-043",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Task.__init__ uses a multi-line if/else for a simple conditional assignment",
+      "file": "doit/task.py",
+      "line_start": 218,
+      "line_end": 221,
+      "symbol": "Task.__init__",
+      "member_ids": [
+        "C-060"
+      ],
+      "source_evidence": "Lines 218-221: `if actions is None: self._actions = [] else: self._actions = list(actions[:])`. Multi-line form vs ternary.",
+      "reasoning": "This is a stylistic preference. The multi-line form is readable and correct. Not an actionable defect."
+    },
+    {
+      "reference_id": "R-044",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "_init_uptodate() does not wrap per-item processing in try/except for error context",
+      "file": "doit/task.py",
+      "line_start": 298,
+      "line_end": 323,
+      "symbol": "Task._init_uptodate",
+      "member_ids": [
+        "C-061"
+      ],
+      "source_evidence": "Lines 303-304: `if hasattr(item, 'configure_task'): item.configure_task(self)` \u2014 any exception propagates without additional context. The built-in configure_task implementations (e.g. result_dep.configure_task at task.py:629) only append to lists and are extremely unlikely to raise.",
+      "reasoning": "The claim is speculative: the failure scenario requires a user-defined uptodate object whose configure_task raises an unexpected exception. This is not a concrete defect in the current code; adding a try/except would be a defensive improvement for a highly unlikely case. Not actionable as-is."
+    },
+    {
+      "reference_id": "R-045",
+      "verdict": "invalid",
+      "severity": "low",
+      "title": "Task class docstring uses javadoc-style @ivar tags",
+      "file": "doit/task.py",
+      "line_start": 107,
+      "line_end": 143,
+      "symbol": "Task",
+      "member_ids": [
+        "C-062"
+      ],
+      "source_evidence": "Lines 111-142: `@ivar name string`, `@ivar actions: list - L{BaseAction}`, etc., using epydoc/javadoc-style tags.",
+      "reasoning": "Docstring tag convention is a style preference. The information content is present and accurate. Not an actionable defect."
+    }
+  ],
+  "scope_notes": "All 45 candidate groups were examined against the actual source. Files read: doit/dependency.py, doit/loader.py, doit/action.py, doit/doit_cmd.py, doit/task.py, doit/plugin.py, doit/cmdparse.py, doit/cmd_dumpdb.py, doit/__init__.py, doit/cmd_run.py. Key invalidations: G-030 (no STRING_FORMAT assignment inside expand_action \u2014 claim is factually wrong), G-031 (DbmDB.in_() appears exactly once \u2014 duplication claim is wrong), G-022/G-023 (save_success() correctly rebuilds the full record on every run; the only impact of set-before-get is bypassing the MD5 timestamp-skip optimization, not data corruption), G-005 (reset_vars() is called at the start of every process_args(), making successive-run corruption impossible; None sentinel is explicitly documented). Groups G-025 through G-045 covering style, docstring format, comment quality, test design, and refactoring suggestions are all marked invalid as they do not represent concrete, actionable defects in the current revision."
+}

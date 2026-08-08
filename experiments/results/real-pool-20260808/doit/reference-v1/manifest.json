@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-08-08T13:30:11.331807",
+  "source": {
+    "repository_root": "/home/sankar/code/pydoit/doit",
+    "upstream": "git@github-kvsankar:pydoit/doit.git",
+    "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
+  },
+  "judge": {
+    "cli": "/home/sankar/.nvm/versions/node/v22.21.1/bin/claude",
+    "version": "2.1.177 (Claude Code)",
+    "model": "sonnet",
+    "effort": "high"
+  },
+  "origin_count": 10,
+  "candidate_count": 62,
+  "group_count": 45,
+  "reference_count": 21,
+  "workspace_delta": {
+    "created": [],
+    "removed": [],
+    "changed": []
+  },
+  "phase_seconds": {
+    "extraction": 803.664489799994,
+    "clustering": 221.94470867700875,
+    "adjudication": 654.5752243720053
+  }
+}

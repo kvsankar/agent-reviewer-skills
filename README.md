@@ -1,8 +1,20 @@
-# Claude Code Skills Collection
+# Reviewer Skills Experiment
 
-A curated collection of high-quality Claude Code skills for code review, requirements analysis, and software quality. Each skill focuses on a specific aspect of software development, providing detailed analysis and actionable recommendations.
+> [!NOTE]
+> **Experiment concluded (August 2026).** This repository tested whether large,
+> specialized reviewer prompts improve agentic code review. In the final
+> real-code comparison, a compact Rhodes-inspired skill did not materially
+> outperform an ordinary Codex review and found fewer distinct validated
+> defects. Small local models also showed no validated benefit in the tested
+> real-repository runs. The skills remain available as an experimental archive,
+> not as a demonstrated improvement over a capable coding agent.
 
-## 🎯 Available Skills (19 Total)
+This repository contains 23 Claude Code reviewer skills, the evaluation harness,
+and the evidence behind that conclusion. See the
+[experiment conclusion](docs/experiment-conclusion-2026-08-08.md) for the short
+version and limitations.
+
+## 🎯 Available Skills (23 Total)
 
 ### JavaScript/TypeScript Skills
 
@@ -118,7 +130,7 @@ Reviews React code for best practices, patterns, performance, accessibility, and
 
 ### Python Skills
 
-#### 8. **Rhodes Python Code Reviewer** ⭐ NEW
+#### 8. **Rhodes Python Code Reviewer**
 Reviews Python code using Brandon Rhodes' 70 coding principles from 15+ years of conference talks.
 
 **Focus Areas:**
@@ -289,6 +301,38 @@ Reviews relational database schemas for normalization, performance, and data int
 
 ---
 
+#### 20. **React Native Expo Reviewer**
+Reviews React Native and Expo applications for architecture, performance,
+platform behavior, and maintainability.
+
+**Use when:** Reviewing a React Native or Expo application
+
+---
+
+#### 21. **Appium Test Reviewer**
+Reviews Appium mobile-automation suites for reliability, synchronization,
+maintainability, and platform coverage.
+
+**Use when:** Reviewing Appium tests or diagnosing flaky mobile automation
+
+---
+
+#### 22. **Code Authenticity Reviewer**
+Reviews code and documentation for fabricated APIs, dependencies, citations,
+and other signs of unverified generated content.
+
+**Use when:** Checking AI-assisted work for unverifiable or invented details
+
+---
+
+#### 23. **Playwright Test Reviewer**
+Reviews Playwright end-to-end tests for user-visible assertions, stable locators,
+synchronization, isolation, and flake resistance.
+
+**Use when:** Reviewing Playwright tests or diagnosing flaky browser automation
+
+---
+
 ## 🚀 Installation
 
 ### Automated Installation (Recommended)
@@ -297,16 +341,16 @@ The easiest way to install all skills to both Windows and WSL:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
-cd claude-skills-public
+git clone git@github.com:kvsankar/claude-skills.git
+cd claude-skills
 
 # Run the installation script
 python install_skills.py
 ```
 
 This will automatically:
-- Install all 19 skills to `~/.claude/skills/` on Windows
-- Install all 19 skills to `~/.claude/skills/` on WSL (if available)
+- Install all 23 skills to `~/.claude/skills/` on Windows
+- Install all 23 skills to `~/.claude/skills/` on WSL (if available)
 - Handle existing installations by replacing them with the latest version
 
 ### Manual Installation
@@ -317,12 +361,12 @@ Copy the entire collection to your personal Claude directory:
 
 ```bash
 # Linux/Mac
-git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
-cp -r claude-skills-public/*-reviewer ~/.claude/skills/
+git clone git@github.com:kvsankar/claude-skills.git
+cp -r claude-skills/*-reviewer ~/.claude/skills/
 
 # Windows (PowerShell)
-git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
-Copy-Item -Recurse "claude-skills-public\*-reviewer" "$env:USERPROFILE\.claude\skills\"
+git clone git@github.com:kvsankar/claude-skills.git
+Copy-Item -Recurse "claude-skills\*-reviewer" "$env:USERPROFILE\.claude\skills\"
 ```
 
 #### Project Installation (For Teams)
@@ -333,7 +377,7 @@ Clone into your project's `.claude/skills/` directory:
 cd your-project
 mkdir -p .claude/skills
 cd .claude/skills
-git clone https://github.com/YOUR_USERNAME/claude-skills-public.git
+git clone git@github.com:kvsankar/claude-skills.git
 ```
 
 Then update your project's `.claude/settings.json`:
@@ -343,7 +387,7 @@ Then update your project's `.claude/settings.json`:
   "skills": [
     {
       "name": "python-security-privacy-reviewer",
-      "path": "./.claude/skills/claude-skills-public/python-security-privacy-reviewer"
+      "path": "./.claude/skills/claude-skills/python-security-privacy-reviewer"
     }
   ]
 }
@@ -413,44 +457,57 @@ Or invoke directly:
 "Use the database-schema-reviewer on this DDL script"
 ```
 
-## 🤖 Agentic Review Tool
+## 🧪 Evaluation Harness
 
-**NEW:** Automated code review tool that reviews GitHub repositories using Claude Code skills!
+The final evaluation used two complementary modes:
 
-Generate comprehensive markdown review reports for any public GitHub repository:
+- **Non-agentic:** controlled prompts sent directly to Ollama models on `tsmac`
+- **Agentic:** local Ollama models operate through the open-source Pi coding
+  agent; Codex provides a hosted agent baseline
+
+Claude Code first matches saved reviews against a frozen reference without
+repository tools. Findings outside that reference are then anonymized and passed
+to a separate source-aware adjudication step before final scoring.
+
+One source-aware Claude review seeds the candidate pool; it is not treated as
+ground truth. Findings from every subject are pooled, deduplicated, verified
+against the real source, and frozen as a versioned reference before scoring.
 
 ```bash
-# Navigate to review-tool directory
-cd review-tool
+# Direct, non-agentic local-model run
+python3 experiments/run_ollama.py \
+  --models devstral-small-2:latest qwen3-coder:30b \
+  --code experiments/repos/doit-repo/doit/action.py \
+  --output experiments/results/direct-real/doit
 
-# Set your API key
-export ANTHROPIC_API_KEY='your-key-here'
+# Agentic local-model run through Pi
+python3 experiments/run_pi_agentic.py \
+  --models devstral-small-2:latest qwen3-coder:30b \
+  --repo experiments/repos/doit-repo \
+  --output experiments/results/agentic-real/doit
 
-# Review a Django project
-uv run review.py --repo https://github.com/django/django --reviewer django-reviewer --output-dir reports
+# Hosted agentic baseline
+python3 experiments/run_codex_agentic.py \
+  --repo experiments/repos/doit-repo \
+  --output experiments/results/agentic-real/doit
 
-# Multiple reviewers at once
-uv run review.py --repo https://github.com/user/project \
-  --reviewer django-reviewer \
-  --reviewer python-security-privacy-reviewer \
-  --output-dir reports
+# Independent semantic judge
+python3 experiments/evaluate_judge.py \
+  --gt experiments/results/real-pool/doit/reference-v1/reference.json \
+  --results-dir experiments/results/agentic-real/doit
 ```
 
-**Features:**
-- 🔍 Automatically discovers and reviews relevant files
-- 📊 Generates detailed markdown reports with findings
-- 🎯 Supports all 19 reviewers
-- ⚡ Can run multiple reviewers in one command
-- 🛡️ Includes security, performance, and quality analysis
-- 📦 Uses uv for fast, modern Python management
+The decisive regular-versus-lean experiment produced 18 distinct validated
+defects for regular review and 13 for the skill-guided review, with nearly equal
+average validated findings per run. This is a small experiment, not a universal
+claim, but it provides no reason to continue investing in this skill collection
+as a review-quality product.
 
-**Perfect for:**
-- Demonstrating skill capabilities with real examples
-- Automated code review in CI/CD
-- Learning from popular open source projects
-- Security audits and pre-production checks
-
-👉 **See [review-tool/README.md](./review-tool/README.md) for complete documentation**
+See [Evaluation Harness](docs/evaluation-harness.md) for the design and
+[final results](experiments/results/codex-lean-ab-20260808/doit/final/summary.md)
+for the retained evidence. The old Docker-based
+[review tool](review-tool/README.md) is deprecated and kept only to reproduce
+historical results.
 
 ---
 
@@ -550,17 +607,19 @@ Prevents attackers from injecting malicious SQL...
 
 **📂 See more examples:** [sample_reviews/](review-tool/sample_reviews/) contains 16 complete reviews of real open source projects including [HTTPie](https://github.com/httpie/cli) and [Datasette](https://github.com/simonw/datasette).
 
-## 🤝 Contributing
+## 🤝 Repository Status
 
-Contributions are welcome! Please:
-1. Follow the existing skill structure
-2. Include comprehensive SOURCES.md with attribution
-3. Provide complete code examples
-4. Test skills thoroughly
+This is a completed experiment and is not under active feature development.
+Corrections to documentation, attribution, or reproducibility are welcome; new
+reviewer skills are outside the current scope.
 
 ## 📄 License
 
-This collection is provided as-is for use with Claude Code. Individual skills include detailed attribution to their sources in SOURCES.md files.
+No repository-wide open-source license is currently granted. The repository is
+published as source-available experimental history; individual skills include
+detailed attribution in their `SOURCES.md` files. Anyone wishing to reuse or
+redistribute the material should first obtain permission or wait for an explicit
+license.
 
 ## 🙏 Acknowledgments
 
@@ -574,9 +633,9 @@ These skills build upon the work of many contributors to software engineering be
 
 The **Rhodes Python Code Reviewer** skill summarizes 70 coding principles from Brandon Rhodes' 15+ years of conference presentations (2010-2024) and his [Python Patterns Guide](https://python-patterns.guide/). This skill was released with Brandon Rhodes' permission. We are grateful for his decades of contributions to Python education.
 
-- **Website:** https://rhodesmill.org/brandon/
-- **Talks:** https://rhodesmill.org/brandon/talks/
-- **Python Patterns:** https://python-patterns.guide/
+- **Website:** [rhodesmill.org/brandon](https://rhodesmill.org/brandon/)
+- **Talks:** [rhodesmill.org/brandon/talks](https://rhodesmill.org/brandon/talks/)
+- **Python Patterns:** [python-patterns.guide](https://python-patterns.guide/)
 
 ### Additional Acknowledgments
 
@@ -618,4 +677,4 @@ For issues or questions:
 
 ---
 
-**Quality reviews for better software projects.**
+**An experiment in prompt-based code review, retained with its negative result.**

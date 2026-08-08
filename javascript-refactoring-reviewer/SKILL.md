@@ -104,7 +104,7 @@ Use the 50+ guidelines embedded below. All guidelines include:
 
 **Key Requirements:**
 - Start each suggestion with **Intent + MNEMONIC ID** (e.g., **READABILITY: EXTRACT-FUNC**)
-- Show actual code blocks with ```javascript or ```typescript syntax
+- Show actual fenced code blocks tagged `javascript` or `typescript`
 - Provide concrete "before and after" examples
 - Explain the "why" - connect to code quality benefits
 - Mention the code smell or anti-pattern being addressed
@@ -3273,7 +3273,7 @@ function createUser(overrides: Partial<User> = {}): User {
 | **MISSING-DESTRUCTURE** | Destructuring for object/array access | Repeated property access |
 | **MISSING-TEMPLATE-LIT** | Template literals for strings | String concatenation |
 | **MISSING-OPTIONAL-CHAIN** | Optional chaining (`?.`) | Manual null checks |
-| **MISSING-NULLISH-COAL** | Nullish coalescing (`??`) | `||` for defaults (breaks on 0, '') |
+| **MISSING-NULLISH-COAL** | Nullish coalescing (`??`) | `\|\|` for defaults (breaks on 0, '') |
 | **MISSING-ARRAY-METHODS** | `map`/`filter`/`reduce` | Imperative `for` loops |
 | **MISSING-ASYNC-AWAIT** | async/await for promises | Callback chains or `.then()` chains |
 

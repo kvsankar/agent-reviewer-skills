@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-08-08T12:16:46.526381",
+  "subject": "pi-ollama",
+  "host": "tsmac",
+  "models": [
+    "devstral-small-2:latest",
+    "qwen3-coder:30b"
+  ],
+  "conditions": [
+    "zero-shot",
+    "ids-only",
+    "hybrid"
+  ],
+  "runs": 1,
+  "repo": "/home/sankar/code/pydoit/doit",
+  "source": {
+    "repository_root": "/home/sankar/code/pydoit/doit",
+    "upstream": "git@github-kvsankar:pydoit/doit.git",
+    "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
+  },
+  "skill": "/home/sankar/code/kvsankar/claude-skills/python-rhodes-reviewer/SKILL.md",
+  "tools": [
+    "read",
+    "bash",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "permissions": "Pi has no approval prompts; each run uses a disposable copy",
+  "pi_version": "0.79.10"
+}
