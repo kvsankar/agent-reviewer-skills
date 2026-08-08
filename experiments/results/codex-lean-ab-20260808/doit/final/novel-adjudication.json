@@ -1,0 +1,117 @@
+{
+  "adjudications": [
+    {
+      "reference_id": "R-001",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "DbmDB.set and SqliteDB.set initialize empty in-memory dict without loading persisted data, causing dump() to silently erase sibling keys",
+      "file": "doit/dependency.py",
+      "line_start": 183,
+      "line_end": 188,
+      "symbol": "DbmDB.set",
+      "member_ids": [
+        "N-001",
+        "N-005",
+        "N-010"
+      ],
+      "source_evidence": "DbmDB.set (lines 183-188): `if task_id not in self._db: self._db[task_id] = {}` initialises a bare empty dict without loading from `_dbm`. dump() (lines 176-180) then writes `self._db[task_id]` back to `_dbm`, overwriting the entire stored record. SqliteDB.set (lines 309-314) has the identical pattern: empty dict on cache miss; dump() uses `INSERT OR REPLACE` (lines 327-329) replacing the full row. The concrete trigger is cmd_ignore.py line 30: `self.dep_manager.ignore(tasks[to_ignore])` calls `_set(task.name, 'ignore:', '1')` with no prior `_get` or `get_status` call. For any previously-executed task the entire stored record (file hashes, result, values, deps list) is replaced by `{'ignore:': '1'}` on the next dump().",
+      "reasoning": "The bug is concrete and mechanical: `set()` on either backend skips loading persisted data before initialising the in-memory entry, so the first `set()` call on a task that is present in storage but absent from the cache destroys all sibling keys at the next dump(). The `Ignore` command (cmd_ignore.py:30) calls ignore() with no preceding get/get_status, making this a real, reproducible data-loss path. For DbmDB, get() (lines 201-215) loads from _dbm only when task_id is absent from _db; once set() has created the empty entry, subsequent get() calls return from the incomplete in-memory dict, so the persistent data is never merged."
+    },
+    {
+      "reference_id": "R-002",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "PythonAction.execute replaces process-global sys.stdout/sys.stderr without synchronization, corrupting output capture under MThreadRunner",
+      "file": "doit/action.py",
+      "line_start": 429,
+      "line_end": 493,
+      "symbol": "PythonAction.execute",
+      "member_ids": [
+        "N-002",
+        "N-007"
+      ],
+      "source_evidence": "Lines 444 and 453 save the current sys.stdout/sys.stderr into locals; lines 451 and 459 replace the process-global sys.stdout and sys.stderr with Writer instances; lines 484-485 restore them from the locals. MThreadRunner (runner.py:563-577) runs tasks as daemon threads that all call task.execute() \u2192 action.execute() concurrently. With two concurrent PythonActions: Thread A saves real stdout, Thread B saves Thread A's out_writer as its 'old_stdout', Thread A's print output is captured by Thread B's out_writer because Thread B's assignment clobbers the global before Thread A writes, and restoration stomps each other. sys.stdout and sys.stderr have no thread-local semantics.",
+      "reasoning": "The manipulation of sys.stdout and sys.stderr at lines 451/459/484/485 is non-atomic and unguarded. Under MThreadRunner the DaemonThread children all share the same process address space and thus the same sys.stdout/sys.stderr globals. Interleaved assignments cause output from Task A to appear in Task B's captured output and vice-versa; the final restoration may leave sys.stdout pointing at a Writer whose StringIO has already been discarded. This is a concrete, deterministic race condition whenever two PythonAction tasks execute concurrently."
+    },
+    {
+      "reference_id": "R-003",
+      "verdict": "valid",
+      "severity": "medium",
+      "title": "Exceptions raised inside _print_process_output reader threads are silently discarded after Thread.join(); a write failure also stops pipe draining and can deadlock process.wait()",
+      "file": "doit/action.py",
+      "line_start": 159,
+      "line_end": 247,
+      "symbol": "CmdAction.execute / CmdAction._print_process_output",
+      "member_ids": [
+        "N-003",
+        "N-006",
+        "N-008",
+        "N-013"
+      ],
+      "source_evidence": "Lines 169-176 of _print_process_output catch decode exceptions, call process.terminate(), drain input_, then re-raise. The re-raise propagates in the thread context only. Lines 240-247 of execute() do t_out.join() / t_err.join(): Thread.join() never re-raises exceptions from the joined thread. execute() therefore continues normally, checks process.returncode (non-zero because of SIGTERM), and returns TaskFailed with just the signal return code, silently discarding the actual decode error. Secondary: exceptions in `capture.write(line)` or `realtime.write(line)` / `realtime.flush()` (lines 179-182) are not caught at all; an unhandled exception there exits the thread without draining the pipe and without calling input_.read(). After t_out.join() returns, process.wait() at line 254 will deadlock if the child is blocked writing to a full pipe whose read-end is still open (process.stdout is held by the process object).",
+      "reasoning": "Python's Thread.join() does not propagate exceptions; the re-raise in the decode-error handler (line 176) terminates the thread with an unhandled exception that disappears. execute() sees a TaskFailed with a signal exit code but no information about the actual failure. For write errors on lines 179-182 there is no exception handler at all, so the thread exits mid-loop with the pipe potentially un-drained. Since process.stdout is still open (held by the Popen object), the child's write end of the pipe is not broken; the child can block forever filling the buffer, and process.wait() hangs."
+    },
+    {
+      "reference_id": "R-004",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "Top-level `from pyflakes.api import checkPath` in dodo.py causes ImportError and breaks all doit invocations in environments where pyflakes is absent",
+      "file": "dodo.py",
+      "line_start": 7,
+      "line_end": 7,
+      "symbol": "_check_pyflakes",
+      "member_ids": [
+        "N-004",
+        "N-014"
+      ],
+      "source_evidence": "Line 7 of dodo.py: `from pyflakes.api import checkPath`. This is a module-level import executed whenever doit loads dodo.py. checkPath is only used inside `_check_pyflakes` (line 24). In any environment where pyflakes is not installed the import raises ImportError before any task definition is processed, causing every `doit` invocation against this dodo file to fail with exit code 3, including `doit ut` and the CLI test subprocesses.",
+      "reasoning": "The fix is to move the import inside the `_check_pyflakes` function (deferred import). At module scope the import is unconditional and fatal on missing pyflakes, even for commands like `doit ut` or `doit list` that have no relation to linting. This breaks the developer workflow entirely in clean environments or CI pipelines that install only the test dependencies."
+    },
+    {
+      "reference_id": "R-005",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "SqliteDB._sqlite3 registers process-global sqlite3 adapters and converters, polluting every sqlite3 connection in the host process",
+      "file": "doit/dependency.py",
+      "line_start": 267,
+      "line_end": 269,
+      "symbol": "SqliteDB._sqlite3",
+      "member_ids": [
+        "N-009"
+      ],
+      "source_evidence": "Lines 267-269 of SqliteDB._sqlite3(): `sqlite3.register_adapter(list, self.codec.encode)`, `sqlite3.register_adapter(dict, self.codec.encode)`, `sqlite3.register_converter(\"json\", converter)`. Python's sqlite3 adapter/converter registries are process-global (CPython _sqlite/microprotocols.c). These calls are made on every SqliteDB instantiation. Any application that embeds doit and also uses sqlite3 will have its `list` and `dict` adapters and its \"json\" column converter overwritten with doit's JSON codec.",
+      "reasoning": "The registrations are idempotent for doit's own connections but affect all sqlite3 connections in the process. For a standalone tool this is harmless, but when doit is used as a library the silent global mutation can corrupt the embedding application's sqlite3 column marshalling. The converter is a closure over `self.codec` created at `SqliteDB` construction time, so re-instantiating SqliteDB also rotates which codec is active for all connections."
+    },
+    {
+      "reference_id": "R-006",
+      "verdict": "valid",
+      "severity": "high",
+      "title": "subprocess.Popen call in CmdAction.execute is not wrapped in try-except, so OSError/ValueError escapes as a raw exception instead of TaskError",
+      "file": "doit/action.py",
+      "line_start": 228,
+      "line_end": 235,
+      "symbol": "CmdAction.execute",
+      "member_ids": [
+        "N-011"
+      ],
+      "source_evidence": "Lines 228-235 of CmdAction.execute(): `process = subprocess.Popen(action, shell=self.shell, stdout=p_out, stderr=p_err, env=env, **subprocess_pkwargs)` with no surrounding try-except. When `shell=False` (used for list actions per create_action lines 540-541) and the executable does not exist or is not executable, Popen raises FileNotFoundError (OSError subclass) or PermissionError. This exception propagates through task.execute() (task.py:473) and runner.execute_task() (runner.py:180) into run_tasks() where `base_fail = self.execute_task(node.task)` at line 224 is also unwrapped. The exception crashes run_tasks() entirely instead of returning a TaskError, bypassing reporter formatting and the --continue flag.",
+      "reasoning": "CmdAction.execute() is documented to return TaskError or TaskFailed on failure and None on success; it never raises. Popen failures break this contract. In the single-process Runner the uncaught exception aborts run_tasks() mid-loop, leaving remaining tasks unexecuted even under --continue. The MRunner/MThreadRunner subprocess loop catches all Exceptions (runner.py:556) so the bug only manifests in the base Runner, but that is the most common execution path."
+    },
+    {
+      "reference_id": "R-007",
+      "verdict": "valid",
+      "severity": "low",
+      "title": "_prepare_kwargs calls bind_partial with positional args only, so explicitly supplied keyword arguments are not protected and can be silently overwritten by doit metadata or task options",
+      "file": "doit/action.py",
+      "line_start": 62,
+      "line_end": 97,
+      "symbol": "_prepare_kwargs",
+      "member_ids": [
+        "N-012"
+      ],
+      "source_evidence": "Line 62: `bound_args = func_sig.bind_partial(*args)` \u2014 only positional arguments are bound. The docstring comment on line 39 says 'have not been passed (as a regular arg or as keyword arg)' indicating the intent is to guard both. At lines 79-80: `if key not in bound_args.arguments: kwargs[key] = meta_args[key]()` \u2014 bound_args.arguments contains only positionally-bound names, so a kwarg like `{'targets': my_list}` passed in the action tuple is not present in bound_args.arguments, and the guard is True; the meta_arg value overwrites the user-supplied kwarg silently. At lines 91-92 the same pattern repeats for task opt_args. By contrast, for **kwargs functions (line 95) the code correctly checks `key not in kwargs`.",
+      "reasoning": "The fix is `func_sig.bind_partial(*args, **kwargs)` so that explicitly provided keyword arguments appear in bound_args.arguments and are excluded from injection. The inconsistency is observable: for a function `def f(targets): ...` invoked as `(f, [], {'targets': custom})`, the user's custom targets list is unconditionally replaced by `list(task.targets)` with no warning. The same applies to opt_args for regular named parameters."
+    }
+  ],
+  "scope_notes": "All seven candidate groups were adjudicated from direct source inspection of doit/dependency.py, doit/action.py, doit/runner.py, doit/task.py, doit/cmd_ignore.py, and dodo.py. No findings were split or merged relative to the preliminary groupings. Every member_id appears exactly once."
+}

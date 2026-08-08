@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lean Rhodes Reviewer"
+  short_description: "Concise mnemonic-led Python code review"
+  default_prompt: "Use $python-rhodes-reviewer-lean to review this Python repository for concrete issues."

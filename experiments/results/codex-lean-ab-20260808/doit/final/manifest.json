@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-08-08T19:24:15.865328",
+  "source": {
+    "repository_root": "/home/sankar/code/pydoit/doit",
+    "upstream": "git@github-kvsankar:pydoit/doit.git",
+    "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
+  },
+  "frozen_reference": "results/real-pool-20260808/doit/reference-v1/reference.json",
+  "judge": {
+    "cli": "claude",
+    "version": "2.1.177 (Claude Code)",
+    "model": "sonnet"
+  },
+  "candidate_count": 14,
+  "group_count": 7,
+  "workspace_delta": {
+    "created": [],
+    "removed": [],
+    "changed": []
+  },
+  "phase_seconds": {
+    "clustering": 0,
+    "adjudication": 577.4550760030106
+  }
+}

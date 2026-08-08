@@ -1,0 +1,114 @@
+[
+  {
+    "candidate_id": "N-001",
+    "title": "DbmDB.set and SqliteDB.set initialize an empty cache entry on miss instead of loading persisted task data, causing a subsequent dump() to overwrite the stored record with only the newly set key, silently deleting sibling dependency values.",
+    "claim": "DbmDB.set and SqliteDB.set initialize an empty cache entry on miss instead of loading persisted task data, causing a subsequent dump() to overwrite the stored record with only the newly set key, silently deleting sibling dependency values.",
+    "file": "doit/dependency.py",
+    "symbol": "DbmDB.set / SqliteDB.set",
+    "evidence": "Finding 1 quotes: 'if task_id not in self._db: self._db[task_id] = {}' and 'if task_id not in self._cache: self._cache[task_id] = {}' at lines 183 and 309, and argues that a set() before get() after reopening the DB erases the persisted record on the next dump()."
+  },
+  {
+    "candidate_id": "N-002",
+    "title": "NO-GLOBAL-MUT: sys.stdout/sys.stderr replacement in PythonAction.execute is unsafe under MThreadRunner because concurrent Python actions can capture each other's output or restore streams in wrong order",
+    "claim": "NO-GLOBAL-MUT: sys.stdout/sys.stderr replacement in PythonAction.execute is unsafe under MThreadRunner because concurrent Python actions can capture each other's output or restore streams in wrong order",
+    "file": "doit/action.py",
+    "symbol": "PythonAction.execute",
+    "evidence": "Review quotes the stream-swap pattern at lines 440-492 and notes 'MThreadRunner can execute multiple Python actions concurrently. Actions can therefore capture one another's output or restore streams in the wrong order.'"
+  },
+  {
+    "candidate_id": "N-003",
+    "title": "CONTROL-CALLER: Reader threads in CmdAction._print_process_output swallow exceptions; if a thread stops draining its pipe, the child process can block on a full pipe while the parent waits indefinitely, causing a deadlock",
+    "claim": "CONTROL-CALLER: Reader threads in CmdAction._print_process_output swallow exceptions; if a thread stops draining its pipe, the child process can block on a full pipe while the parent waits indefinitely, causing a deadlock",
+    "file": "doit/action.py",
+    "symbol": "CmdAction._print_process_output",
+    "evidence": "Review quotes thread start/join pattern at lines 159-182 and 237-254, explains exception suppression and deadlock risk from unread pipe buffers."
+  },
+  {
+    "candidate_id": "N-004",
+    "title": "HOIST-IO: Top-level import of pyflakes in dodo.py causes 'doit list' (and the test suite subprocess) to fail with exit code 3 in installations that lack pyflakes, even for commands unrelated to linting",
+    "claim": "HOIST-IO: Top-level import of pyflakes in dodo.py causes 'doit list' (and the test suite subprocess) to fail with exit code 3 in installations that lack pyflakes, even for commands unrelated to linting",
+    "file": "dodo.py",
+    "symbol": "_check_pyflakes",
+    "evidence": "Review quotes 'from pyflakes.api import checkPath' at line 7 and reports test_execute failure due to subprocess exiting with code 3."
+  },
+  {
+    "candidate_id": "N-005",
+    "title": "DbmDB.set and SqliteDB.set silently discard previously persisted task metadata when a task exists in storage but has not been loaded into the in-memory cache, because they initialise from an empty dict rather than loading the existing record.",
+    "claim": "DbmDB.set and SqliteDB.set silently discard previously persisted task metadata when a task exists in storage but has not been loaded into the in-memory cache, because they initialise from an empty dict rather than loading the existing record.",
+    "file": "doit/dependency.py",
+    "symbol": "DbmDB.set / SqliteDB.set",
+    "evidence": "Review quotes code starting a new empty dict `self._db[task_id] = {}` when the key is absent from the in-memory cache, then overwriting on dump; notes this differs from JsonDB behaviour and gives a concrete before/after example."
+  },
+  {
+    "candidate_id": "N-006",
+    "title": "Exceptions raised inside the _print_process_output worker threads are silently discarded because Thread.join() does not propagate them, so output-processing failures (decode errors, stream write failures) are never surfaced to CmdAction.execute().",
+    "claim": "Exceptions raised inside the _print_process_output worker threads are silently discarded because Thread.join() does not propagate them, so output-processing failures (decode errors, stream write failures) are never surfaced to CmdAction.execute().",
+    "file": "doit/action.py",
+    "symbol": "CmdAction.execute / _print_process_output",
+    "evidence": "Review quotes the thread creation and join calls and notes 'join() waits for those threads but does not propagate their exceptions, so execute() continues and reports only the subprocess return code.'"
+  },
+  {
+    "candidate_id": "N-007",
+    "title": "Parallel PythonAction instances running under MThreadRunner can interleave their sys.stdout/sys.stderr save/restore operations, routing output into wrong capture buffers and potentially leaving wrong streams installed",
+    "claim": "Parallel PythonAction instances running under MThreadRunner can interleave their sys.stdout/sys.stderr save/restore operations, routing output into wrong capture buffers and potentially leaving wrong streams installed",
+    "file": "doit/action.py",
+    "symbol": "PythonAction.execute",
+    "evidence": "Review cites action.py:440 stream replacement pattern and doit/runner.py:563 MThreadRunner as the concurrent executor; the thread-safety hazard from process-global stream mutation is raised as a separate concern from R-024."
+  },
+  {
+    "candidate_id": "N-008",
+    "title": "Exceptions raised inside the CmdAction reader threads (t_out, t_err) are not propagated through Thread.join(), so output-capture failures are silently discarded and the action result is determined solely from the child's return code",
+    "claim": "Exceptions raised inside the CmdAction reader threads (t_out, t_err) are not propagated through Thread.join(), so output-capture failures are silently discarded and the action result is determined solely from the child's return code",
+    "file": "doit/action.py",
+    "symbol": "CmdAction._print_process_output",
+    "evidence": "Review quotes the thread start/join sequence and the bare 'except Exception: process.terminate()' block, noting no exception-propagation mechanism exists."
+  },
+  {
+    "candidate_id": "N-009",
+    "title": "SqliteDB._sqlite3 registers global SQLite adapters and converters (for list, dict, and 'json' column type) that affect every SQLite connection in the hosting process, breaking embedding applications that use sqlite3 independently",
+    "claim": "SqliteDB._sqlite3 registers global SQLite adapters and converters (for list, dict, and 'json' column type) that affect every SQLite connection in the hosting process, breaking embedding applications that use sqlite3 independently",
+    "file": "doit/dependency.py",
+    "symbol": "SqliteDB._sqlite3",
+    "evidence": "Review quotes sqlite3.register_adapter(list, ...), register_adapter(dict, ...), register_converter('json', ...) at dependency.py:253 and explains these are process-global registries."
+  },
+  {
+    "candidate_id": "N-010",
+    "title": "DbmDB.set() and SqliteDB.set() start from an empty dict for a task that exists in persistent storage but has not been read into the in-memory cache, causing subsequent dump() to erase previously stored fields for that task.",
+    "claim": "DbmDB.set() and SqliteDB.set() start from an empty dict for a task that exists in persistent storage but has not been read into the in-memory cache, causing subsequent dump() to erase previously stored fields for that task.",
+    "file": "doit/dependency.py",
+    "symbol": "DbmDB.set / SqliteDB.set",
+    "evidence": "STATE-CLOBBER quotes `if task_id not in self._db: self._db[task_id] = {}` (DbmDB lines 183-188) and `if task_id not in self._cache: self._cache[task_id] = {}` (SqliteDB lines 309-314), arguing that a cold set() discards all prior fields for that task."
+  },
+  {
+    "candidate_id": "N-011",
+    "title": "Exceptions from subprocess.Popen itself (missing executable, bad working directory, permission failure) escape CmdAction.execute without being wrapped in a TaskError, bypassing reporter formatting and --continue handling.",
+    "claim": "Exceptions from subprocess.Popen itself (missing executable, bad working directory, permission failure) escape CmdAction.execute without being wrapped in a TaskError, bypassing reporter formatting and --continue handling.",
+    "file": "doit/action.py",
+    "symbol": "CmdAction.execute",
+    "evidence": "SPAWN-ESCAPE quotes the bare Popen call at lines 227-235 with no surrounding try/except for OSError/ValueError, and notes that 'only command expansion is protected by the earlier try block'."
+  },
+  {
+    "candidate_id": "N-012",
+    "title": "KW-CLOBBER: _prepare_kwargs uses bind_partial(*args) with only positional arguments, so explicitly supplied keyword arguments (e.g. targets=...) are absent from bound_args.arguments and get silently overwritten by doit-generated metadata.",
+    "claim": "KW-CLOBBER: _prepare_kwargs uses bind_partial(*args) with only positional arguments, so explicitly supplied keyword arguments (e.g. targets=...) are absent from bound_args.arguments and get silently overwritten by doit-generated metadata.",
+    "file": "doit/action.py",
+    "symbol": "_prepare_kwargs",
+    "evidence": "Quoted code shows 'if key not in bound_args.arguments: kwargs[key] = meta_args[key]()' after 'bound_args = func_sig.bind_partial(*args)' \u2014 kwargs-only arguments are excluded from the guard."
+  },
+  {
+    "candidate_id": "N-013",
+    "title": "PIPE-THREAD: Exceptions raised inside the output-reader threads (_print_process_output) are not propagated back to CmdAction.execute(); the task result is determined solely by subprocess return code even when reader threads fail.",
+    "claim": "PIPE-THREAD: Exceptions raised inside the output-reader threads (_print_process_output) are not propagated back to CmdAction.execute(); the task result is determined solely by subprocess return code even when reader threads fail.",
+    "file": "doit/action.py",
+    "symbol": "CmdAction.execute / _print_process_output",
+    "evidence": "Quoted code shows t_out/t_err threads joined with no mechanism to capture their exceptions; 'except Exception: process.terminate()...' inside the thread does not surface to the calling thread."
+  },
+  {
+    "candidate_id": "N-014",
+    "title": "TEST-ENV: The CLI test suite fails when pyflakes is absent because the test subprocess discovers the repository's dodo.py, which imports pyflakes at module import time, making test results dependent on the checkout environment.",
+    "claim": "TEST-ENV: The CLI test suite fails when pyflakes is absent because the test subprocess discovers the repository's dodo.py, which imports pyflakes at module import time, making test results dependent on the checkout environment.",
+    "file": "tests/test___main__.py",
+    "symbol": "test___main__ / dodo.py",
+    "evidence": "Review reports '1 failure, 882 passes, 8 skips' due to subprocess finding repo dodo.py which contains 'from pyflakes.api import checkPath'."
+  }
+]

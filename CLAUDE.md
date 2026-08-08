@@ -4,12 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a collection of 23 Claude Code skills for code review, requirements analysis, and software quality. Each skill is a specialized reviewer that provides detailed analysis with concrete examples, mnemonic IDs, and actionable recommendations.
+This is a concluded experiment containing 23 Claude Code skills for code review,
+requirements analysis, and software quality. The final real-code evaluation did
+not show a material advantage over ordinary Codex review. Preserve the skills
+and harness for reproducibility; do not expand the collection as an active
+product. See `docs/experiment-conclusion-2026-08-08.md`.
 
 The repository consists of:
 - **23 skill directories** (`*-reviewer/`) containing SKILL.md, README.md, and SOURCES.md
 - **Installation script** (`install_skills.py`) for automated deployment to Windows/WSL
-- **Review tool** (`review-tool/`) for automated GitHub repository reviews using the Claude Agent SDK
+- **Evaluation harness** (`experiments/`) for direct Ollama, Pi agentic, Codex
+  baseline, and Claude judge runs
+- **Deprecated review tool** (`review-tool/`) retained for historical
+  reproducibility
 
 ## Repository Structure
 
@@ -19,12 +26,13 @@ claude-skills/
 │   ├── SKILL.md            # Skill definition and review guidelines
 │   ├── README.md           # User documentation
 │   └── SOURCES.md          # Attribution and references
-├── review-tool/            # Agentic review tool
-│   ├── review-cli.py       # Python wrapper
-│   ├── review.py           # Core review logic
-│   ├── tags.yaml           # Reviewer tag definitions
-│   ├── Dockerfile
-│   └── docker-compose.yml
+├── experiments/            # Current two-track evaluation harness
+│   ├── run_ollama.py       # Direct, non-agentic Ollama runner
+│   ├── run_pi_agentic.py   # Pi + Ollama agentic runner
+│   ├── run_codex_agentic.py # Codex agentic baseline
+│   ├── evaluate_judge.py   # Tool-free frozen-reference matcher
+│   └── adjudicate_novel_findings.py # Source-aware novel finding judge
+├── review-tool/            # Deprecated Docker/Agent SDK harness
 └── install_skills.py       # Cross-platform installer
 ```
 
@@ -76,30 +84,37 @@ cp -r *-reviewer ~/.claude/skills/
 Copy-Item -Recurse "*-reviewer" "$env:USERPROFILE\.claude\skills\"
 ```
 
-### Review Tool
+### Evaluation Harness
 
 ```bash
-# Navigate to review tool
-cd review-tool
+# One source-aware Claude seed review (candidate findings, not ground truth)
+python3 experiments/run_claude_baseline.py \
+  --repo experiments/repos/doit-repo \
+  --output experiments/results/real-pool/doit
 
-# Basic review (OAuth + Agentic - default)
-./review-cli.py --repo <URL> --reviewer python
+# Direct non-agentic benchmark on tsmac Ollama
+python3 experiments/run_ollama.py --models qwen3-coder:30b \
+  --code experiments/repos/doit-repo/doit/action.py \
+  --output experiments/results/direct-real/doit
 
-# Multiple reviewers using tags
-./review-cli.py --repo <URL> --reviewer python    # All 8 Python reviewers
-./review-cli.py --repo <URL> --reviewer javascript # All 8 JS reviewers
-./review-cli.py --repo <URL> --reviewer mobile     # React Native + Appium
-./review-cli.py --repo <URL> --reviewer complete   # All 23 reviewers
+# Agentic local-model benchmark through Pi
+python3 experiments/run_pi_agentic.py --models qwen3-coder:30b \
+  --repo experiments/repos/doit-repo \
+  --output experiments/results/agentic-real/doit
 
-# Batch mode (small repos only)
-./review-cli.py --repo <URL> --reviewer python --mode batch
+# Codex agentic baseline
+python3 experiments/run_codex_agentic.py \
+  --repo experiments/repos/doit-repo \
+  --output experiments/results/agentic-real/doit
 
-# API key mode
-export ANTHROPIC_API_KEY='sk-ant-...'
-./review-cli.py --repo <URL> --reviewer python --auth apikey
+# Claude Code semantic judge
+python3 experiments/evaluate_judge.py \
+  --gt experiments/results/real-pool/doit/reference-v1/reference.json \
+  --results-dir experiments/results/agentic-real/doit
 
-# List available reviewers
-./review-cli.py --list-reviewers
+# Harness regression tests
+PYTHONPATH=experiments python3 -m unittest discover \
+  -s experiments -p 'test_*.py' -v
 ```
 
 ### Quality Tools
@@ -137,46 +152,31 @@ Skills are self-contained with no external dependencies. All guidelines are embe
 1. Primary: Query `%USERPROFILE%` via `cmd.exe`, convert with `wslpath`
 2. Fallback: Scan `/mnt/` drives for `.claude` directory
 
-### Review Tool Architecture
+### Evaluation Harness Architecture
 
-**Two-tier design:**
+The current harness uses matched prompt conditions across two tracks:
 
-1. **review-cli.py** (Python wrapper)
-   - Validates arguments and prerequisites
-   - Sets up `.env` with `USER_ID` and `GROUP_ID` for permission handling
-   - Launches Docker container with proper volume mounts
+1. `run_ollama.py` sends the complete code fixture directly to Ollama. This
+   isolates instruction-following and review quality without tools.
+2. `run_pi_agentic.py` lets the same local models explore a disposable repository
+   through Pi in non-interactive mode. It records JSONL events and tool use.
+3. `run_codex_agentic.py` runs the same task with `codex exec --yolo` as the
+   hosted agentic baseline.
+4. `evaluate_judge.py` runs Claude Code non-interactively with no tools and a
+   JSON schema to match each review against a frozen reference.
+5. `adjudicate_novel_findings.py` anonymizes unmatched findings and uses a
+   separate source-aware Claude pass before recalculating the overall findings.
 
-2. **review.py** (Container script)
-   - Clones repository
-   - Loads skill definitions from `/skills` mount
-   - Two modes:
-     - **Agentic** (default): Claude explores repo with bash tools (ls, cat, grep)
-     - **Batch**: Discovers 50 most recent files matching patterns
-   - Uses Claude Agent SDK for API calls
-   - Generates markdown reports in `/app/reviews`
-
-**Volume mounts:**
-- `~/.claude` → `/home/appuser/.claude` (OAuth credentials)
-- `../` → `/skills` (all skill SKILL.md files)
-- `./reviews` → `/app/reviews` (output)
-- `./review.py` → `/app/review.py` (live code - no rebuild needed)
-
-**Authentication:**
-- OAuth (default): Uses `~/.claude/.credentials.json` from Claude Code
-- API Key: Uses `ANTHROPIC_API_KEY` environment variable
-
-**Reviewer tags** (tags.yaml):
-- Tags expand to multiple reviewers (e.g., `python` → 8 reviewers)
-- Each reviewer runs independently with fresh context
-- Prevents cross-contamination between reviews
-- Mobile tags: `mobile`, `react-native`, `expo`, `appium`
+The Docker and Claude Agent SDK implementation in `review-tool/` is deprecated.
+Do not add new evaluation features there. See `docs/evaluation-harness.md`.
 
 ### Key Files
 
 - `.markdownlint.json` - Markdown linting rules (used by pre-commit)
 - `.pre-commit-config.yaml` - Pre-commit hook configuration
 - `.claude/settings.json` - Claude Code project settings
-- `review-tool/tags.yaml` - Reviewer tag-to-reviewer mappings
+- `docs/evaluation-harness.md` - Current benchmark design and operating guide
+- `review-tool/` - Deprecated historical harness
 
 ## Claude Code Token Limits
 
@@ -234,26 +234,28 @@ When creating or modifying SKILL.md files:
    - `SKILL.md` - Review prompt and guidelines
    - `README.md` - User documentation
    - `SOURCES.md` - Attribution
-3. Update `review-tool/review.py`:
-   - Add to `REVIEWERS` dict with patterns and description
-4. Optionally update `review-tool/tags.yaml` to include in tags
-5. Run `python install_skills.py` to install
+3. Add or update an evaluation fixture and ground-truth YAML when measurable
+   coverage is required
+4. Run `python install_skills.py` to install
 
 ### Modifying Skills
 
 - **SKILL.md changes:** Take effect immediately (skills are read at runtime)
-- **Review tool changes:** Take effect immediately (mounted as volume)
-- **Dockerfile changes:** Require rebuild: `docker-compose build --no-cache`
+- **Evaluation harness changes:** Run the regression tests before a benchmark
+- **Deprecated review tool changes:** Avoid unless reproducing a historical run
 
 ### Testing Skills
 
 ```bash
-# Test individual skill via review tool
-cd review-tool
-./review-cli.py --repo <test-repo-url> --reviewer <skill-name>
+# Test evaluation plumbing without model calls
+PYTHONPATH=experiments python3 -m unittest discover \
+  -s experiments -p 'test_*.py' -v
 
-# Check output in reviews/ directory
-ls -l reviews/
+# Run a one-model, one-condition smoke before a matrix
+python3 experiments/run_ollama.py \
+  --models qwen3-coder:30b --conditions zero-shot --runs 1 \
+  --code experiments/repos/doit-repo/doit/action.py \
+  --output experiments/results/smoke-real/doit
 ```
 
 ## Important Conventions
@@ -273,13 +275,19 @@ ls -l reviews/
 - Industry best practices from authoritative sources (OWASP, PEP 8, Jest docs, etc.)
 - Severity ratings for all findings (CRITICAL, HIGH, MEDIUM, LOW)
 
-### Review Tool Design
+### Evaluation Design
 
-- **Agentic mode is default:** Handles repos of any size, more thorough
-- **Batch mode:** Faster but may fail on large repos with "prompt too long"
-- **Fresh context per reviewer:** Each review is independent
-- **No rebuild workflow:** Code changes via volume mounts
-- **User-owned files:** Container runs as user's UID/GID
+- Keep non-agentic and agentic results separate; they answer different questions.
+- Use only code from immutable revisions of real production repositories. Do not
+  use benchmark-authored, synthetic, or planted-defect fixtures.
+- Do not use deliberately vulnerable training applications as primary evidence;
+  their issue distributions are intentionally contrived.
+- Use matched models, prompt conditions, fixtures, and run counts where possible.
+- Treat deterministic ground truth as primary and the Claude judge as semantic
+  interpretation, not truth by fiat.
+- Agentic runs use fresh disposable repository copies and ephemeral sessions.
+- Yolo permission bypass is not a security boundary; use only trusted fixtures
+  and prompts unless an external sandbox is added.
 
 ## Troubleshooting
 
@@ -294,40 +302,37 @@ ls -l reviews/
 - Verify WSL 2 is installed: `wsl --list --verbose`
 - Check `/proc/version` contains "microsoft" or "wsl"
 
-### Review Tool Issues
+### Evaluation Harness Issues
 
-**"Docker not found":**
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-```
-
-**"Claude credentials not found":**
-```bash
-claude login
-ls ~/.claude/.credentials.json  # Should exist
-```
-
-**Permission errors on reviews:**
-```bash
-sudo chown -R $(id -u):$(id -g) reviews/
-```
-
-**"Prompt too long" in batch mode:**
-- Switch to agentic mode (default): `./review-cli.py --repo URL --reviewer NAME`
-- Or reduce repo size
+- If `tsmac` is unreachable, verify the SSH host alias and that Ollama is running.
+- If Pi cannot find a model, verify the model tag with `ollama list` on `tsmac`.
+- If agent output is empty, inspect the saved JSONL events and stderr in the run
+  JSON before retrying.
+- If the Claude judge fails, verify `claude --print` works outside a Claude Code
+  parent session.
 
 ## Repository Maintenance
 
-This repository is designed for minimal maintenance:
+This repository is an experimental archive requiring minimal maintenance:
 
 - Skills are independent - updates don't affect others
-- Review tool uses volume mounts - no rebuild for code changes
+- Evaluation runners are plain Python scripts and need no container rebuild
 - Installation script is cross-platform - works on Windows and WSL
-- All dependencies in container - no host setup needed
+- The deprecated Docker harness remains only for historical reproduction
 
-When updating skills, focus on:
+If correcting an existing skill, focus on:
 1. Accuracy of guidelines (match authoritative sources)
 2. Quality of examples (complete, runnable code)
 3. Attribution (SOURCES.md must be current)
 4. User documentation (README.md clarity)
+
+<!-- claude-insights:start -->
+## Working with Claude
+
+These working agreements come from a `/insights` analysis of past sessions. Keep them in mind on every task in this repo.
+
+- When pre-commit or pre-push hooks fail, fix the underlying issues (line length, trailing whitespace, lint errors) properly. Do NOT skip hooks, amend silently, or work around them. Never run `git init`, rewrite history (rebase, force push), or skip flaky tests without explicit permission.
+- When asked to fix a problem, diagnose the root cause before proposing a fix. Do not jump to surface-level changes (e.g., flipping a port without understanding the networking, attributing a CSS bug to line-height without investigating).
+- If two approaches have failed for the same problem, stop and present options to the user instead of trying a third. Don't thrash.
+- Never fabricate documentation content. If you don't know what a doc actually says, read the file first.
+<!-- claude-insights:end -->

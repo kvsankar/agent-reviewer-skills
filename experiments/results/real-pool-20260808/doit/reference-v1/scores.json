@@ -1,0 +1,187 @@
+{
+  "B1": {
+    "label": "claude/sonnet/baseline-1",
+    "kind": "baseline",
+    "submitted_canonical_candidates": 10,
+    "validated_findings": 9,
+    "invalid_findings": 1,
+    "uncertain_findings": 0,
+    "precision": 0.9,
+    "coverage": 0.429,
+    "reference_ids": [
+      "R-001",
+      "R-002",
+      "R-003",
+      "R-004",
+      "R-006",
+      "R-007",
+      "R-008",
+      "R-013",
+      "R-014"
+    ],
+    "unique_reference_ids": [
+      "R-013",
+      "R-014"
+    ],
+    "unique_validated_discoveries": 2
+  },
+  "X1": {
+    "label": "codex/configured-default/hybrid",
+    "kind": "subject",
+    "submitted_canonical_candidates": 10,
+    "validated_findings": 10,
+    "invalid_findings": 0,
+    "uncertain_findings": 0,
+    "precision": 1.0,
+    "coverage": 0.476,
+    "reference_ids": [
+      "R-004",
+      "R-008",
+      "R-009",
+      "R-010",
+      "R-011",
+      "R-012",
+      "R-015",
+      "R-016",
+      "R-017",
+      "R-018"
+    ],
+    "unique_reference_ids": [
+      "R-015",
+      "R-016",
+      "R-017",
+      "R-018"
+    ],
+    "unique_validated_discoveries": 4
+  },
+  "X2": {
+    "label": "codex/configured-default/ids-only",
+    "kind": "subject",
+    "submitted_canonical_candidates": 11,
+    "validated_findings": 11,
+    "invalid_findings": 0,
+    "uncertain_findings": 0,
+    "precision": 1.0,
+    "coverage": 0.524,
+    "reference_ids": [
+      "R-002",
+      "R-003",
+      "R-004",
+      "R-006",
+      "R-007",
+      "R-009",
+      "R-010",
+      "R-011",
+      "R-019",
+      "R-020",
+      "R-021"
+    ],
+    "unique_reference_ids": [
+      "R-019",
+      "R-020",
+      "R-021"
+    ],
+    "unique_validated_discoveries": 3
+  },
+  "X3": {
+    "label": "codex/configured-default/zero-shot",
+    "kind": "subject",
+    "submitted_canonical_candidates": 9,
+    "validated_findings": 7,
+    "invalid_findings": 2,
+    "uncertain_findings": 0,
+    "precision": 0.778,
+    "coverage": 0.333,
+    "reference_ids": [
+      "R-001",
+      "R-007",
+      "R-009",
+      "R-010",
+      "R-011",
+      "R-012",
+      "R-024"
+    ],
+    "unique_reference_ids": [
+      "R-024"
+    ],
+    "unique_validated_discoveries": 1
+  },
+  "X4": {
+    "label": "pi-ollama/devstral-small-2_latest/hybrid",
+    "kind": "subject",
+    "submitted_canonical_candidates": 0,
+    "validated_findings": 0,
+    "invalid_findings": 0,
+    "uncertain_findings": 0,
+    "precision": 0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  },
+  "X5": {
+    "label": "pi-ollama/devstral-small-2_latest/ids-only",
+    "kind": "subject",
+    "submitted_canonical_candidates": 0,
+    "validated_findings": 0,
+    "invalid_findings": 0,
+    "uncertain_findings": 0,
+    "precision": 0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  },
+  "X6": {
+    "label": "pi-ollama/devstral-small-2_latest/zero-shot",
+    "kind": "subject",
+    "submitted_canonical_candidates": 8,
+    "validated_findings": 0,
+    "invalid_findings": 8,
+    "uncertain_findings": 0,
+    "precision": 0.0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  },
+  "X7": {
+    "label": "pi-ollama/qwen3-coder_30b/hybrid",
+    "kind": "subject",
+    "submitted_canonical_candidates": 4,
+    "validated_findings": 0,
+    "invalid_findings": 4,
+    "uncertain_findings": 0,
+    "precision": 0.0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  },
+  "X8": {
+    "label": "pi-ollama/qwen3-coder_30b/ids-only",
+    "kind": "subject",
+    "submitted_canonical_candidates": 5,
+    "validated_findings": 0,
+    "invalid_findings": 5,
+    "uncertain_findings": 0,
+    "precision": 0.0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  },
+  "X9": {
+    "label": "pi-ollama/qwen3-coder_30b/zero-shot",
+    "kind": "subject",
+    "submitted_canonical_candidates": 5,
+    "validated_findings": 0,
+    "invalid_findings": 5,
+    "uncertain_findings": 0,
+    "precision": 0.0,
+    "coverage": 0.0,
+    "reference_ids": [],
+    "unique_reference_ids": [],
+    "unique_validated_discoveries": 0
+  }
+}

@@ -1,9 +1,9 @@
-# Cloned repos (large, can be re-cloned)
-repos/pygoat/
-repos/dvna/
-repos/doit-repo/
-repos/gtts-repo/
-repos/auditlog-repo/
+# Cloned repos or local symlinks (large, can be re-cloned)
+repos/pygoat
+repos/dvna
+repos/doit-repo
+repos/gtts-repo
+repos/auditlog-repo
 
 # Python cache
 __pycache__/
@@ -11,3 +11,20 @@ __pycache__/
 # Raw review outputs (large, regenerable)
 results/exp*/*/run-*.json
 results/exp*/*/prompt.md
+
+# Scratch and superseded evaluation runs
+results/agentic-pilot-*/
+results/ollama-pilot*/
+results/smoke-test/
+results/exp-rhodes/
+results/exp-rhodes-v2/
+
+# Large raw agent transcripts from the retained 2026-08-08 experiments
+results/real-pool-20260808/**/run-*-events.jsonl
+results/real-pool-20260808/**/run-[0-9].json
+results/codex-lean-ab-20260808/**/run-*-events.jsonl
+results/codex-lean-ab-20260808/**/run-[0-9].json
+
+# Labels are kept blind during adjudication and are not public evidence
+results/**/candidate-map.private.json
+results/**/novel-candidate-map.private.json

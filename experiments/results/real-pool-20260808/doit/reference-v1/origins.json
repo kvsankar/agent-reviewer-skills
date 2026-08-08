@@ -1,0 +1,62 @@
+[
+  {
+    "origin_id": "B1",
+    "kind": "baseline",
+    "path": "experiments/results/real-pool-20260808/doit/claude/sonnet/baseline-1/review.md",
+    "label": "claude/sonnet/baseline-1"
+  },
+  {
+    "origin_id": "X1",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/codex/configured-default/hybrid/run-1-review.md",
+    "label": "codex/configured-default/hybrid"
+  },
+  {
+    "origin_id": "X2",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/codex/configured-default/ids-only/run-1-review.md",
+    "label": "codex/configured-default/ids-only"
+  },
+  {
+    "origin_id": "X3",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/codex/configured-default/zero-shot/run-1-review.md",
+    "label": "codex/configured-default/zero-shot"
+  },
+  {
+    "origin_id": "X4",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/devstral-small-2_latest/hybrid/run-1-review.md",
+    "label": "pi-ollama/devstral-small-2_latest/hybrid"
+  },
+  {
+    "origin_id": "X5",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/devstral-small-2_latest/ids-only/run-1-review.md",
+    "label": "pi-ollama/devstral-small-2_latest/ids-only"
+  },
+  {
+    "origin_id": "X6",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/devstral-small-2_latest/zero-shot/run-1-review.md",
+    "label": "pi-ollama/devstral-small-2_latest/zero-shot"
+  },
+  {
+    "origin_id": "X7",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/qwen3-coder_30b/hybrid/run-1-review.md",
+    "label": "pi-ollama/qwen3-coder_30b/hybrid"
+  },
+  {
+    "origin_id": "X8",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/qwen3-coder_30b/ids-only/run-1-review.md",
+    "label": "pi-ollama/qwen3-coder_30b/ids-only"
+  },
+  {
+    "origin_id": "X9",
+    "kind": "subject",
+    "path": "experiments/results/real-pool-20260808/doit/pi-ollama/qwen3-coder_30b/zero-shot/run-1-review.md",
+    "label": "pi-ollama/qwen3-coder_30b/zero-shot"
+  }
+]

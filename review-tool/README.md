@@ -1,5 +1,14 @@
 # Claude Code Skills Review Tool
 
+> [!WARNING]
+> **Deprecated:** this Docker and Claude Agent SDK harness is retained for
+> reproducibility of historical reviews only. New evaluations use direct Ollama
+> calls for non-agentic tests, Pi for local-model agentic tests, Codex as the
+> hosted agentic baseline, and separate tool-free matching and source-aware
+> Claude adjudication passes. See the
+> [Experiment Conclusion](../docs/experiment-conclusion-2026-08-08.md) and
+> [Evaluation Harness](../docs/evaluation-harness.md).
+
 AI-powered code review using Claude with specialized review skills. No API keys needed - uses your Claude Code subscription.
 
 ## Quick Start

@@ -236,17 +236,21 @@ MFA significantly reduces account takeover risk even if passwords are compromise
 
 ### Privacy Categories
 
-9. **PII Handling** (8)
-   - PII-IDENTIFY, PII-MINIMIZE, PII-ENCRYPT, PII-LOG, PII-MASK, PII-ACCESS, PII-TRANSFER, PII-CLASSIFY
+#### 9. PII Handling (8)
 
-10. **Consent & Transparency** (5)
-    - CONSENT-EXPLICIT, CONSENT-GRANULAR, CONSENT-LOG, PURPOSE-LIMIT, PRIVACY-NOTICE
+- PII-IDENTIFY, PII-MINIMIZE, PII-ENCRYPT, PII-LOG, PII-MASK, PII-ACCESS, PII-TRANSFER, PII-CLASSIFY
 
-11. **Data Lifecycle** (6)
-    - DATA-RETENTION, DATA-DELETE, DATA-PORTABILITY, DATA-ANONYMIZE, DATA-PSEUDONYMIZE, DATA-BACKUP
+#### 10. Consent & Transparency (5)
 
-12. **Monitoring & Compliance** (4)
-    - AUDIT-TRAIL, BREACH-DETECT, PRIVACY-IMPACT, DATA-INVENTORY
+- CONSENT-EXPLICIT, CONSENT-GRANULAR, CONSENT-LOG, PURPOSE-LIMIT, PRIVACY-NOTICE
+
+#### 11. Data Lifecycle (6)
+
+- DATA-RETENTION, DATA-DELETE, DATA-PORTABILITY, DATA-ANONYMIZE, DATA-PSEUDONYMIZE, DATA-BACKUP
+
+#### 12. Monitoring & Compliance (4)
+
+- AUDIT-TRAIL, BREACH-DETECT, PRIVACY-IMPACT, DATA-INVENTORY
 
 All 60+ guidelines with complete code examples are embedded in skill.md.
 
@@ -326,9 +330,9 @@ This skill helps ensure compliance with:
 ## Sources and Attribution
 
 This skill is based on public standards and best practices:
-- OWASP Top 10 (https://owasp.org/Top10/)
-- CWE Top 25 (https://cwe.mitre.org/top25/)
-- GDPR (https://gdpr.eu/)
+- [OWASP Top 10](https://owasp.org/Top10/)
+- [CWE Top 25](https://cwe.mitre.org/top25/)
+- [GDPR](https://gdpr.eu/)
 - Python Security Best Practices
 - Cloud Security Alliance Guidelines
 

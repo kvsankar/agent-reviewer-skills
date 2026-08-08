@@ -399,13 +399,13 @@ No single testing approach fits all scenarios. Learn when to use:
 ## Sources and Attribution
 
 All guidelines are based on:
-- **Jest Documentation** - https://jestjs.io/
-- **Vitest Documentation** - https://vitest.dev/
-- **Testing Library** - https://testing-library.com/
+- **Jest Documentation** - [jestjs.io](https://jestjs.io/)
+- **Vitest Documentation** - [vitest.dev](https://vitest.dev/)
+- **Testing Library** - [testing-library.com](https://testing-library.com/)
 - **Kent C. Dodds** - Testing JavaScript, Common Testing Mistakes
 - **Martin Fowler** - Test Pyramid, Mocks Aren't Stubs
 - **Yoni Goldberg** - JavaScript Testing Best Practices
-- **Cypress Documentation** - https://www.cypress.io/
+- **Cypress Documentation** - [cypress.io](https://www.cypress.io/)
 
 See [SOURCES.md](./SOURCES.md) for detailed attribution and references.
 
