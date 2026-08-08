@@ -60,9 +60,8 @@ retrospectives/
 # OS
 Thumbs.db
 
-# Claude Code local settings
-.claude/settings.local.json
-.claude/hooks/
+# Claude Code repository-local state
+.claude/
 
 # Review tool
 reports/
