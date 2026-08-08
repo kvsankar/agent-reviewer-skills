@@ -1,7 +1,8 @@
 ---
 name: python-performance-reviewer
+license: MIT
 description: Review Python code for performance issues and optimization opportunities. Use when user asks to optimize code, improve performance, reduce memory usage, speed up execution, profile code, or address scalability concerns. Keywords - performance, optimization, speed, memory, profiling, scalability, benchmarking, slow, bottleneck, efficiency.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

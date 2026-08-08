@@ -329,7 +329,7 @@ See [SOURCES.md](./SOURCES.md) for detailed attribution and references.
 
 ## License
 
-This skill is provided as-is for use with Claude Code. The Zen of Python (PEP 20) is in the public domain. Code examples and guidelines are based on established Python best practices.
+This skill is licensed under MIT. The Zen of Python (PEP 20) is in the public domain. Code examples and guidelines are based on established Python best practices.
 
 ---
 

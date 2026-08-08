@@ -1,7 +1,8 @@
 ---
-name: functional-python-reviewer
+name: python-functional-reviewer
+license: MIT
 description: Review Python code using functional programming principles and best practices. Use when user asks to review code for functional patterns, check for pure functions, immutability, higher-order functions, or wants feedback on functional programming style, generators, comprehensions, or functools/itertools usage. Keywords - functional, FP, pure function, immutability, generator, map, filter, reduce, comprehension.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

@@ -1,7 +1,8 @@
 ---
 name: javascript-format-refactoring-reviewer
+license: MIT
 description: Fix JavaScript/TypeScript ESLint/Prettier issues through refactoring instead of wrapping lines. Use when ESLint complains about line length, complexity, or formatting. Keywords - JavaScript format, TypeScript format, ESLint, line too long, complexity, refactoring, JSX formatting.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

@@ -391,7 +391,7 @@ See [SOURCES.md](./SOURCES.md) for detailed attribution and references.
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public documentation, style guides, and established refactoring patterns.
+This skill is licensed under MIT. It is based on public documentation, style guides, and established refactoring patterns.
 
 ---
 

@@ -403,7 +403,7 @@ The SOURCES.md file provides detailed attribution for all 70 guidelines, includi
 
 ## License
 
-This skill compilation is provided for educational and code quality improvement purposes. The sources referenced (Refactoring Guru with attribution, clean-code-python MIT license, public Python best practices) are used according to their respective licenses.
+This skill is licensed under MIT. The sources referenced (Refactoring Guru with attribution, clean-code-python under MIT, and public Python best practices) remain under their respective licenses.
 
 ---
 

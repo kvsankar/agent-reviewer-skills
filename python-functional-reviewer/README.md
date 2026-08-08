@@ -233,7 +233,7 @@ This skill compiles functional programming principles from publicly available ed
 - Code examples: Many represent common functional programming patterns and idioms
 - This skill: Created for educational purposes to help developers learn FP principles
 
-All contributors retain their original copyrights. This compilation is provided for educational use.
+All contributors retain their original copyrights. This skill is licensed under MIT.
 
 ## Customization
 

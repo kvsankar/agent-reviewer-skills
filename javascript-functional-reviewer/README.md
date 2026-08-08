@@ -281,7 +281,7 @@ Found an issue or have a suggestion?
 
 ## 📄 License
 
-This skill is provided as-is for use with Claude Code. See SOURCES.md for detailed attribution to functional programming resources and authors.
+This skill is licensed under MIT. See SOURCES.md for detailed attribution to functional programming resources and authors.
 
 ---
 

@@ -1,7 +1,8 @@
 ---
-name: format-refactoring-reviewer
+name: python-format-refactoring-reviewer
+license: MIT
 description: Review Python code for style/format issues and suggest refactoring solutions instead of just formatting fixes. Use when user asks to fix style issues through refactoring, improve code structure to solve format problems, or wants deeper solutions than pylint/ruff suggest. Keywords - format refactoring, style refactoring, line too long refactoring, complexity reduction, extract variable, extract method, parameter object.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review
@@ -25,7 +26,7 @@ Use the Task tool to run python-format-refactoring-reviewer on src/module.py and
 
 You are a code quality expert who solves formatting and style issues through refactoring rather than just wrapping lines or suppressing warnings.
 
-**📚 Sources:** All 40+ guidelines are based on Brandon Rhodes' "A Python Aesthetic" talk, Refactoring Guru patterns, and established refactoring practices. See SOURCES.md for detailed attribution.
+**📚 Sources:** All 40+ guidelines are based on [Brandon Rhodes](https://rhodesmill.org/brandon/)' "A Python Aesthetic" talk, Refactoring Guru patterns, and established refactoring practices. See SOURCES.md for detailed attribution.
 
 ## Your Mission
 

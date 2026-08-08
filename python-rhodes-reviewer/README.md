@@ -1,12 +1,12 @@
 # Rhodes Python Code Reviewer Skill
 
-A Claude Code skill that reviews Python code using Brandon Rhodes' 70 coding principles extracted from 15+ years of conference presentations (2010-2024) and his Python Patterns Guide.
+A coding-agent skill that reviews Python code using [Brandon Rhodes](https://rhodesmill.org/brandon/)' 70 coding principles extracted from 15+ years of conference presentations (2010-2024) and his Python Patterns Guide.
 
-## A Note from Brandon Rhodes
+## A Note from [Brandon Rhodes](https://rhodesmill.org/brandon/)
 
 > Hey, folks, this is Brandon Rhodes, making a personal comment on this project, since Sankar was kind enough to ask my permission before making it public! While I myself am dismayed at the broad impact of AI on society so far, and have always been skeptical about automated code review (I've always used 'pyflakes' instead of 'flake8' because flake8's clumsy attempts to apply PEP-8 produce so much noise), I see no reason to stand in the way of this experiment. It tries to distill some of the guidelines that I've offered in my talks into a set of rules that can be applied by machine. I can't guess whether Claude Code will really understand when my ideas are useful and when they're not, but it's interesting to see how many pieces of advice worked their way into my talks over so many years.
 >
-> — Brandon Rhodes (December 2025)
+> — [Brandon Rhodes](https://rhodesmill.org/brandon/) (December 2025)
 
 ## What This Skill Does
 
@@ -197,9 +197,9 @@ The skill emphasizes Rhodes' recurring themes:
 7. **Language Features Over Patterns** - Use Python's built-in capabilities
 8. **Readable Code** - Self-documenting through good naming and structure
 
-## About Brandon Rhodes
+## About [Brandon Rhodes](https://rhodesmill.org/brandon/)
 
-Brandon Rhodes is a Python programmer and conference speaker known for:
+[Brandon Rhodes](https://rhodesmill.org/brandon/) is a Python programmer and conference speaker known for:
 - Open source astronomy libraries (PyEphem, Skyfield)
 - Author of "Foundations of Python Network Programming"
 - PyCon US Chair (2016-2017)
@@ -216,7 +216,7 @@ Brandon Rhodes is a Python programmer and conference speaker known for:
 
 The guidelines in this skill are summarized from Brandon Rhodes' public conference presentations and python-patterns.guide.
 
-This skill was released with Brandon Rhodes' permission. See SOURCES.md for his full statement.
+This skill was released with [Brandon Rhodes](https://rhodesmill.org/brandon/)' permission. See SOURCES.md for his full statement.
 
 ## Customization
 

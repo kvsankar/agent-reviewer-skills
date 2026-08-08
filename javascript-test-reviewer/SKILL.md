@@ -1,7 +1,8 @@
 ---
 name: javascript-test-reviewer
+license: MIT
 description: Review JavaScript/TypeScript tests for quality, completeness, and effectiveness. Shows multiple testing strategies. Use when reviewing tests with Jest, Vitest, Mocha, Testing Library, or Cypress. Keywords - JavaScript tests, TypeScript tests, Jest, Vitest, test quality, testing strategies, React testing, component tests, E2E tests.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

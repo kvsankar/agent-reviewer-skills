@@ -1,7 +1,8 @@
 ---
 name: database-schema-reviewer
+license: MIT
 description: Review relational database schemas for normalization, performance, indexing, data types, and best practices. Supports MySQL, PostgreSQL, MS SQL Server, and generic SQL. Use when reviewing database designs, DDL scripts, schema migrations, or optimizing database performance. Keywords - database schema, normalization, indexing, foreign keys, MySQL, PostgreSQL, SQL Server, DDL, database design, performance.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

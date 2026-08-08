@@ -5,7 +5,8 @@ session-by-session activity.
 
 ## October-November 2025: Origins and expansion
 
-- Began on 30 October by researching Brandon Rhodes' teaching material,
+- Began on 30 October by researching
+  [Brandon Rhodes](https://rhodesmill.org/brandon/)' teaching material,
   extracting Python design guidance, assigning short mnemonic IDs, and packaging
   the result as a Claude Code reviewer skill.
 - Used the early Rhodes and functional Python skills as practical review aids,
@@ -27,7 +28,8 @@ session-by-session activity.
   findings with the skills' static before-and-after examples.
 - Started an embedding-based guideline retrieval prototype after identifying
   dynamic selection and quantitative benchmarking as gaps.
-- Published the Rhodes Python reviewer with Brandon Rhodes' permission.
+- Published the Rhodes Python reviewer with
+  [Brandon Rhodes](https://rhodesmill.org/brandon/)' permission.
 - Added React Native/Expo and Appium reviewers in January, bringing the
   collection to 23.
 

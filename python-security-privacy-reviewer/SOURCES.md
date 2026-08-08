@@ -379,7 +379,7 @@ If you find errors or outdated information in this skill:
 - **OpenSSF Guide**: CC-BY-4.0
 
 ### This Skill
-This skill compilation is provided for educational purposes. It synthesizes publicly available security and privacy standards into a practical code review tool.
+This skill is licensed under MIT. It synthesizes publicly available security and privacy standards into a practical code review tool; source materials remain under their respective licenses.
 
 **Created**: November 1, 2025
 **Last Updated**: November 1, 2025

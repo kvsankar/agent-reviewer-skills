@@ -1,7 +1,8 @@
 ---
 name: javascript-performance-reviewer
+license: MIT
 description: Reviews JavaScript/TypeScript code for performance optimization opportunities. Covers algorithm complexity, data structures, memory management, DOM operations, async patterns, bundling, and profiling. Keywords - performance, optimization, speed, memory, profiling, JavaScript, TypeScript, React, Node.js, bundling.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

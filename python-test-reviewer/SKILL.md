@@ -1,7 +1,8 @@
 ---
 name: python-test-reviewer
+license: MIT
 description: Review Python tests for quality, completeness, and effectiveness. Shows multiple testing strategies for the same code with trade-offs. Use when user asks to review tests, improve test quality, suggest test strategies, or learn testing approaches. Keywords - test review, testing strategies, pytest, test quality, test coverage, test patterns, AAA pattern, mocking, fixtures, parametrize.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

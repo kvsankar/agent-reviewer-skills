@@ -274,7 +274,7 @@ This skill synthesizes knowledge from:
 
 ## License and Usage
 
-This skill is provided for use with Claude Code. All references to external documentation, tools, and resources remain under their respective licenses:
+This skill is licensed under MIT. All references to external documentation, tools, and resources remain under their respective licenses:
 
 - Django Documentation: BSD License
 - Django REST Framework: BSD License

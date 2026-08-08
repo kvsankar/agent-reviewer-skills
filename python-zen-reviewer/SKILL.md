@@ -1,7 +1,8 @@
 ---
-name: zen-of-python-reviewer
+name: python-zen-reviewer
+license: MIT
 description: Review Python code against the Zen of Python (PEP 20) principles to ensure Pythonic, readable, and maintainable code. Use when user asks to review code for Pythonic style, check against Zen of Python, improve Python idioms, or ensure code follows Python philosophy. Keywords - Zen of Python, Pythonic, PEP 20, Python philosophy, Python style, idiomatic Python, beautiful code, explicit.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

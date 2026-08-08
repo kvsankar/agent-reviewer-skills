@@ -486,7 +486,7 @@ When you see these code smells:
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public refactoring catalogs, design principles, and JavaScript best practices.
+This skill is licensed under MIT. It is based on public refactoring catalogs, design principles, and JavaScript best practices.
 
 ---
 

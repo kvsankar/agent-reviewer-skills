@@ -1,7 +1,8 @@
 ---
 name: django-reviewer
+license: MIT
 description: Comprehensive review of Django projects for production readiness, security, performance, scalability, and best practices. Use when reviewing Django code, architecture, settings, models, views, or deployment configuration for large-scale applications. Keywords - Django, DRF, REST API, production, security, performance, scalability, models, views, settings.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

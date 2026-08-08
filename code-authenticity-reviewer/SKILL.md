@@ -1,7 +1,8 @@
 ---
 name: code-authenticity-reviewer
+license: MIT
 description: Detect fabricated, hallucinated, or unearned code assertions. Use when reviewing AI-generated code, checking for magic constants, disconnected inputs/outputs, brittle tests, phantom references, or unsubstantiated claims. Keywords - fabrication, hallucination, magic constants, brittle tests, fake results, authenticity, LLM-generated code.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## IMPORTANT: How to Run This Review

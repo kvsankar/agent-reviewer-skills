@@ -1,10 +1,10 @@
 # Sources and Attribution
 
-## A Note from Brandon Rhodes
+## A Note from [Brandon Rhodes](https://rhodesmill.org/brandon/)
 
 > Hey, folks, this is Brandon Rhodes, making a personal comment on this project, since Sankar was kind enough to ask my permission before making it public! While I myself am dismayed at the broad impact of AI on society so far, and have always been skeptical about automated code review (I've always used 'pyflakes' instead of 'flake8' because flake8's clumsy attempts to apply PEP-8 produce so much noise), I see no reason to stand in the way of this experiment. It tries to distill some of the guidelines that I've offered in my talks into a set of rules that can be applied by machine. I can't guess whether Claude Code will really understand when my ideas are useful and when they're not, but it's interesting to see how many pieces of advice worked their way into my talks over so many years.
 >
-> — Brandon Rhodes (December 2025)
+> — [Brandon Rhodes](https://rhodesmill.org/brandon/) (December 2025)
 
 ## Primary Sources
 
@@ -57,7 +57,7 @@ All 70 guidelines in this skill are extracted from Brandon Rhodes' public educat
 
 ## Reference Links
 
-- **Brandon Rhodes' Website:** https://rhodesmill.org/brandon/
+- **[Brandon Rhodes' Website](https://rhodesmill.org/brandon/)**
 - **Conference Talks:** https://rhodesmill.org/brandon/talks/
 - **Python Patterns Guide:** https://python-patterns.guide/
 - **GitHub:** https://github.com/brandon-rhodes

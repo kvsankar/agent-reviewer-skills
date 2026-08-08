@@ -1,7 +1,8 @@
 ---
-name: react-native-expo-reviewer
+name: javascript-react-native-expo-reviewer
+license: MIT
 description: Review React Native code developed with Expo for best practices, performance, and common pitfalls. Use when reviewing Expo apps, React Native components, navigation, state management, native modules, or mobile-specific patterns. Keywords - React Native, Expo, mobile, iOS, Android, navigation, performance, native modules.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## IMPORTANT: How to Run This Review

@@ -1,7 +1,8 @@
 ---
 name: appium-test-reviewer
+license: MIT
 description: Review Appium test code for mobile automation best practices, reliability, and maintainability. Use when reviewing Appium tests, mobile E2E tests, page objects for mobile, locator strategies, or mobile test architecture. Keywords - Appium, mobile testing, iOS automation, Android automation, WebDriver, page object, mobile E2E, UI automation, XCUITest, UIAutomator2, accessibility ID, mobile gestures.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## How to Run This Review

@@ -1,7 +1,8 @@
 ---
-name: functional-javascript-reviewer
+name: javascript-functional-reviewer
+license: MIT
 description: Review JavaScript code using functional programming principles and best practices. Use when user asks to review JavaScript/TypeScript for functional patterns, check for pure functions, immutability, array methods, function composition, or wants feedback on functional programming style. Keywords - functional, FP, pure function, immutability, map, filter, reduce, compose, curry, side effects, array methods.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

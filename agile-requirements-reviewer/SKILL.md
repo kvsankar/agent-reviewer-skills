@@ -1,7 +1,8 @@
 ---
 name: agile-requirements-reviewer
+license: MIT
 description: Review software specifications, user stories, and use cases using agile requirements best practices. Use when user asks to review requirements, user stories, specifications, use cases, acceptance criteria, or wants feedback on requirement quality, consistency, completeness, or staying in problem domain. Keywords - requirements, user story, use case, acceptance criteria, specification, INVEST, problem domain, consistency, completeness, agile requirements.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

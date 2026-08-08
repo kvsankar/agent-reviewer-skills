@@ -1,7 +1,8 @@
 ---
-name: refactoring-reviewer
+name: python-refactoring-reviewer
+license: MIT
 description: Review Python code for refactoring opportunities to improve readability, maintainability, testability, and performance. Use when user asks to refactor code, improve code quality, detect code smells, apply design patterns, make code more Pythonic, or enhance code structure. Keywords - refactor, refactoring, code smell, clean code, improve, simplify, SOLID, DRY, maintainability, readability.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

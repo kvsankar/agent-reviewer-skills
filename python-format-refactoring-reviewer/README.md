@@ -8,13 +8,13 @@ This skill transforms Claude into a format/style refactoring expert who:
 - **Solves style issues through refactoring** - not just formatting
 - **Goes beyond pylint/ruff** - suggests structural improvements
 - **Eliminates root causes** - not just symptoms
-- **Applies Brandon Rhodes' principles** - format follows structure
+- **Applies [Brandon Rhodes](https://rhodesmill.org/brandon/)' principles** - format follows structure
 - **Provides refactoring patterns** - for each style issue
 - **Shows before/after examples** - with proper refactoring
 
 ## Philosophy
 
-> **"Don't fight the linter—refactor so it has nothing to complain about."** - Brandon Rhodes
+> **"Don't fight the linter—refactor so it has nothing to complain about."** - [Brandon Rhodes](https://rhodesmill.org/brandon/)
 
 When pylint says "line too long", don't just wrap it. Extract a variable or method so the line naturally fits.
 
@@ -320,7 +320,7 @@ See [SOURCES.md](./SOURCES.md) for detailed attribution and references.
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public talks, documentation, and established refactoring patterns.
+This skill is licensed under MIT. It is based on public talks, documentation, and established refactoring patterns.
 
 ---
 

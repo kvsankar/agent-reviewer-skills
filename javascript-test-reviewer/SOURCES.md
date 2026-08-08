@@ -634,7 +634,7 @@ All examples were then:
 ### Code Examples
 - **Original examples:** Created for this skill
 - **Inspired by:** Authoritative sources listed above
-- **License:** Provided as-is for educational use with Claude Code
+- **Skill license:** MIT
 
 ---
 

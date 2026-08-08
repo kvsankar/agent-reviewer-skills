@@ -22,13 +22,14 @@ capable agent asked to perform an ordinary code review.
 ### Origins and practical use: late 2025
 
 The work began in late October 2025 with an effort to extract Python design
-guidance from Brandon Rhodes' talks and teaching material. The guidance was
-organized into short, pronounceable mnemonic IDs, supported by explanations and
-examples, and packaged as a Claude Code reviewer skill. The same approach was
-then extended to other review concerns and languages. The working hypothesis
-was that placing this curated material in the context of the frontier coding
-models available then would produce better agentic reviews than relying on the
-models' default review behavior.
+guidance from [Brandon Rhodes](https://rhodesmill.org/brandon/)' talks and
+teaching material. The guidance was organized into short, pronounceable
+mnemonic IDs, supported by explanations and examples, and packaged as a Claude
+Code reviewer skill. The same approach was then extended to other review
+concerns and languages. The working hypothesis was that placing this curated
+material in the context of the frontier coding models available then would
+produce better agentic reviews than relying on the models' default review
+behavior.
 
 The skills were used as working review aids, not originally built as a formal
 benchmark. They were also used to review examples in one another. By January
@@ -122,7 +123,7 @@ README intentionally does not repeat its detailed guidelines or examples.
 | [Python testing](python-test-reviewer/README.md) | Test design, confidence, and strategies |
 | [Python security and privacy](python-security-privacy-reviewer/README.md) | OWASP, privacy, and secure coding |
 | [Python performance](python-performance-reviewer/README.md) | Profiling, algorithms, I/O, and memory |
-| [Rhodes Python](python-rhodes-reviewer/README.md) | Brandon Rhodes-inspired architecture guidance |
+| [Rhodes Python](python-rhodes-reviewer/README.md) | [Brandon Rhodes](https://rhodesmill.org/brandon/)-inspired architecture guidance |
 
 ### JavaScript and TypeScript
 
@@ -151,22 +152,42 @@ README intentionally does not repeat its detailed guidelines or examples.
 
 ## Installation and Use
 
-Clone over SSH and install all skills:
+Clone over SSH and install all skills for Claude Code, Codex, Pi, and GitHub
+Copilot:
 
 ```bash
 git clone git@github.com:kvsankar/claude-skills.git
 cd claude-skills
-python install_skills.py
+python3 install_skills.py
 ```
 
-For a manual Linux or macOS installation:
+The installer writes personal skills to the locations documented by each agent:
+
+| Agent | Destination |
+| --- | --- |
+| [Claude Code](https://code.claude.com/docs/en/skills) | `~/.claude/skills/` |
+| [Codex](https://developers.openai.com/codex/skills) | `~/.agents/skills/` |
+| [Pi](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/skills.md) | `~/.pi/agent/skills/` |
+| [GitHub Copilot](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | `~/.copilot/skills/` |
+
+The Copilot destination serves both VS Code agent mode and GitHub Copilot CLI.
+Existing skill directories are left untouched unless `--force` is supplied.
+Useful variants include:
 
 ```bash
-cp -r *-reviewer ~/.claude/skills/
+# Preview the default all-agent installation.
+python3 install_skills.py --dry-run
+
+# Install one skill for Claude Code and Pi.
+python3 install_skills.py --agent claude --agent pi \
+  --skill python-rhodes-reviewer
+
+# Replace existing copies when updating an installation.
+python3 install_skills.py --force
 ```
 
-To install one skill, copy only its directory. Invoke a skill by name, for
-example:
+Run `python3 install_skills.py --help` for all options. Invoke a skill by name,
+for example:
 
 ```text
 Use the python-security-privacy-reviewer on this API.
@@ -203,10 +224,9 @@ evidence.
 
 ## License
 
-No repository-wide open-source license is currently granted. The repository is
-published as source-available experimental history. Individual skills provide
-source attribution in their `SOURCES.md` files; reuse or redistribution requires
-permission until an explicit license is added.
+This repository is licensed under the [MIT License](LICENSE). Linked source
+materials remain under their respective licenses; attribution details are in
+each skill's `SOURCES.md`.
 
 ## Brandon Rhodes Permission
 
@@ -222,8 +242,9 @@ permission until an explicit license is added.
 > it's interesting to see how many pieces of advice worked their way into my
 > talks over so many years.
 >
-> — Brandon Rhodes (December 2025)
+> — [Brandon Rhodes](https://rhodesmill.org/brandon/) (December 2025)
 
-The Rhodes skill was released with Brandon Rhodes' permission. Its detailed
+The Rhodes skill was released with
+[Brandon Rhodes](https://rhodesmill.org/brandon/)' permission. Its detailed
 attribution is in
 [`python-rhodes-reviewer/SOURCES.md`](python-rhodes-reviewer/SOURCES.md).

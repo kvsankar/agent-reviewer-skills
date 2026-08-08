@@ -228,7 +228,7 @@ When using this skill, you're applying:
 
 ## License
 
-The skill implementation itself is provided as-is for use with Claude Code.
+The skill implementation itself is licensed under MIT.
 
 All referenced materials (Airbnb Style Guide, ESLint rules, React docs, MDN, Prettier) are used according to their respective licenses for educational purposes.
 

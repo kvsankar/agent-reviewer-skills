@@ -2,7 +2,7 @@
 
 ## Methodology
 
-This Format/Style Refactoring Reviewer skill was created through systematic research of Brandon Rhodes' talks on Python aesthetics and code formatting, combined with established refactoring patterns from Martin Fowler's refactoring catalog and Refactoring Guru. The skill translates the philosophy of "refactor to solve style issues" into 40+ actionable guidelines with concrete before/after examples.
+This Format/Style Refactoring Reviewer skill was created through systematic research of [Brandon Rhodes](https://rhodesmill.org/brandon/)' talks on Python aesthetics and code formatting, combined with established refactoring patterns from Martin Fowler's refactoring catalog and Refactoring Guru. The skill translates the philosophy of "refactor to solve style issues" into 40+ actionable guidelines with concrete before/after examples.
 
 **Created:** January 2025
 
@@ -391,7 +391,7 @@ All guidelines were verified against:
 ### Code Examples
 - **Original examples:** Created for this skill
 - **Inspired by:** Public talks, refactoring catalogs, and educational resources
-- **License:** Provided as-is for educational use with Claude Code
+- **Skill license:** MIT
 
 ---
 

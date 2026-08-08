@@ -1,7 +1,8 @@
 ---
 name: react-reviewer
+license: MIT
 description: Reviews React code for best practices, patterns, performance, accessibility, and common pitfalls. Covers components, hooks, state management, rendering optimization, and modern React features. Keywords - React, hooks, components, state, props, performance, accessibility, testing, JSX.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

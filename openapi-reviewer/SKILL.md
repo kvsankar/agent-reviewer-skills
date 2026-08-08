@@ -1,7 +1,8 @@
 ---
 name: openapi-reviewer
+license: MIT
 description: Review OpenAPI/Swagger specifications for completeness, consistency, best practices, and API design quality. Use when user asks to review OpenAPI specs, Swagger files, API definitions, REST API design, or wants feedback on API documentation quality. Keywords - OpenAPI, Swagger, API spec, REST API, YAML, API design, endpoints, schemas.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

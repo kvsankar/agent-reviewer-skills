@@ -494,7 +494,7 @@ test('processes payment', async () => {
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public documentation, established testing principles, and community best practices.
+This skill is licensed under MIT. It is based on public documentation, established testing principles, and community best practices.
 
 ---
 

@@ -347,7 +347,7 @@ The SOURCES.md file provides detailed attribution for all 60+ guidelines, includ
 
 ## License
 
-This skill compilation is provided for educational and security improvement purposes. The standards referenced (OWASP, CWE, GDPR) are public domain or openly available.
+This skill is licensed under MIT. Referenced standards and source materials remain under their respective terms.
 
 ---
 

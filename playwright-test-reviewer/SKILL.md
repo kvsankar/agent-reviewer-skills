@@ -1,7 +1,8 @@
 ---
 name: playwright-test-reviewer
+license: MIT
 description: Review Playwright E2E and UI tests for quality, reliability, and best practices. Use when reviewing Playwright tests, page objects, locator strategies, or E2E test suites. Keywords - Playwright, E2E tests, UI tests, page object model, locators, selectors, visual regression, accessibility testing, web-first assertions.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

@@ -471,7 +471,7 @@ Avoid premature optimization:
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public performance best practices, browser specifications, and established algorithms.
+This skill is licensed under MIT. It is based on public performance best practices, browser specifications, and established algorithms.
 
 ---
 

@@ -206,7 +206,7 @@ All guidelines use the **ZEN-** prefix to clearly identify them as Zen of Python
 ### Code Examples
 - **Original examples:** Created for this skill
 - **Inspired by:** Public domain PEPs and educational resources
-- **License:** Provided as-is for educational use with Claude Code
+- **Skill license:** MIT
 
 ### The Zen of Python Text
 - **Author:** Tim Peters

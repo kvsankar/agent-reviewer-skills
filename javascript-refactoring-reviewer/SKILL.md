@@ -1,7 +1,8 @@
 ---
 name: javascript-refactoring-reviewer
+license: MIT
 description: Review JavaScript/TypeScript code for refactoring opportunities to improve readability, maintainability, testability, and performance. Use when user asks to refactor code, improve code quality, detect code smells, apply design patterns, or enhance code structure. Keywords - refactor, refactoring, code smell, clean code, improve, simplify, SOLID, DRY, maintainability, readability, JavaScript, TypeScript.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

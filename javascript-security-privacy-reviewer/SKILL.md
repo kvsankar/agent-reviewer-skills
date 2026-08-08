@@ -1,7 +1,8 @@
 ---
 name: javascript-security-privacy-reviewer
+license: MIT
 description: Review JavaScript/TypeScript code for security vulnerabilities and privacy issues. Use when user asks to review code for security flaws, check for vulnerabilities, OWASP compliance, privacy concerns, PII handling, GDPR compliance, or wants feedback on authentication, encryption, input validation, or data protection. Keywords - security, privacy, vulnerability, OWASP, PII, GDPR, encryption, authentication, injection, XSS, CSRF, JavaScript, TypeScript, Node.js.
-allowed-tools: [Read, Grep, Glob]
+allowed-tools: Read Grep Glob
 ---
 
 ## ⚠️ IMPORTANT: How to Run This Review

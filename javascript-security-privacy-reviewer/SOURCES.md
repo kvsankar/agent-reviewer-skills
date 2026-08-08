@@ -535,7 +535,7 @@ All examples were:
 ### Code Examples
 - **Original examples:** Created for this skill
 - **Inspired by:** OWASP cheat sheets, CWE examples, security research
-- **License:** Provided as-is for educational use with Claude Code
+- **Skill license:** MIT
 
 ---
 

@@ -364,7 +364,7 @@ See [SOURCES.md](./SOURCES.md) for detailed attribution.
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on official React Native, Expo, and React Navigation documentation.
+This skill is licensed under MIT. It is based on official React Native, Expo, and React Navigation documentation.
 
 ---
 

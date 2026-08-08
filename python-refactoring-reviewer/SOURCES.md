@@ -566,7 +566,7 @@ While all guidelines are based on established refactoring catalogs and principle
 - **PEP documents:** Public domain
 
 ### This Skill
-This skill compilation is provided for educational purposes. It synthesizes publicly available refactoring knowledge into a practical code review tool.
+This skill is licensed under MIT. It synthesizes publicly available refactoring knowledge into a practical code review tool; source materials remain under their respective licenses.
 
 **Created:** November 1, 2025
 **Last Updated:** November 1, 2025

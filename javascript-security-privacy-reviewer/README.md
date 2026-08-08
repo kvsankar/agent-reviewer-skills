@@ -444,7 +444,7 @@ Use multiple layers of security:
 
 ## License
 
-This skill is provided as-is for use with Claude Code. Based on public security standards (OWASP, CWE, GDPR) and best practices.
+This skill is licensed under MIT. It is based on public security standards (OWASP, CWE, GDPR) and best practices.
 
 ---
 
