@@ -17,18 +17,33 @@ agents available at the time. The project later became an evaluation of its own
 premise: whether this extra context actually finds more real problems than a
 capable agent asked to perform an ordinary code review.
 
+## AI-Assistance Disclosure
+
+This repository was itself created with substantial LLM assistance. The project
+was directed by Sankar, while Claude was the primary assistant used to research
+source material and generate the original skills. That assistance included
+summarizing sources, extracting and organizing review principles, proposing
+mnemonic IDs and illustrative examples, and drafting and refining skill
+documentation and supporting tools. Codex and other models were also used in
+later implementation and evaluation work.
+
+Each skill's `SOURCES.md` records the material on which it was based. Those
+attributions identify inputs to an AI-assisted synthesis; they do not imply that
+the source authors wrote, reviewed, or endorsed the resulting skill unless an
+explicit statement says otherwise.
+
 ## Brief History
 
 ### Building and practical use: October 2025-January 2026
 
-The work began in late October 2025 with an effort to extract Python design
-guidance from [Brandon Rhodes](https://rhodesmill.org/brandon/)' talks and
-teaching material. Its principles were organized as mnemonic IDs, explanations,
-and before-and-after examples, then packaged as a Claude Code reviewer skill.
-The approach expanded across languages and review concerns, reaching 23 skills
-by January 2026. They were used as practical review aids before the project had
-a formal benchmark. A Docker runner supported early agentic use but proved
-operationally heavy.
+The work began in late October 2025 with Claude-assisted research into Python
+design guidance from [Brandon Rhodes](https://rhodesmill.org/brandon/)' talks
+and teaching material. Its principles were organized as mnemonic IDs,
+explanations, and before-and-after examples, then packaged as a Claude Code
+reviewer skill. The approach expanded across languages and review concerns,
+reaching 23 skills by January 2026. They were used as practical review aids
+before the project had a formal benchmark. A Docker runner supported early
+agentic use but proved operationally heavy.
 
 ### Research and prototypes: December 2025-March 2026
 

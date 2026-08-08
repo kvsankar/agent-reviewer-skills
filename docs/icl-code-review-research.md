@@ -7,6 +7,12 @@
 > material advantage over regular Codex review. See the
 > [experiment conclusion](experiment-conclusion.md).
 
+> [!NOTE]
+> This research review was assembled and drafted with LLM assistance, primarily
+> Claude. Its citations identify the source material used at the time; its
+> summaries are AI-assisted synthesis rather than independently replicated
+> research findings.
+
 **Original research:** December 2025
 **Updated:** March 2026
 
