@@ -5,7 +5,7 @@
 > that motivated the experiment; it is not evidence that these particular
 > skills improve reviews. The subsequent real-code experiment did not show a
 > material advantage over regular Codex review. See the
-> [experiment conclusion](../experiment-conclusion-2026-08-08.md).
+> [experiment conclusion](experiment-conclusion.md).
 
 **Original research:** December 2025
 **Updated:** March 2026

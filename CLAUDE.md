@@ -12,9 +12,9 @@ Use the canonical documents instead of repeating their content here:
 | Question | Canonical document |
 | --- | --- |
 | What is this repository and which skills exist? | [`README.md`](README.md) |
-| What was the final result? | [`docs/experiment-conclusion-2026-08-08.md`](docs/experiment-conclusion-2026-08-08.md) |
+| What was the final result? | [`docs/experiment-conclusion.md`](docs/experiment-conclusion.md) |
 | How did the evaluation work? | [`docs/evaluation-harness.md`](docs/evaluation-harness.md) |
-| How did the project evolve? | [`docs/project-history.md`](docs/project-history.md) |
+| What research and experiments were tried? | [`docs/exploration-history.md`](docs/exploration-history.md) |
 | How did the old Docker tool work? | [`review-tool/README.md`](review-tool/README.md) |
 
 ## Repository-Specific Rules

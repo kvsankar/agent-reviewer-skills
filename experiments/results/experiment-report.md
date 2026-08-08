@@ -1,5 +1,13 @@
 # Experiment Report: Structured Skills for LLM Code Review
 
+> [!CAUTION]
+> **Historical exploratory report, not the project conclusion.** These March
+> runs used deliberately vulnerable or synthetic targets, incomplete reference
+> sets, and mostly one run per condition. Their apparent positive results did
+> not become conclusive evidence. See the chronological
+> [exploration history](../../docs/exploration-history.md) and the later
+> [real-code conclusion](../../docs/experiment-conclusion.md).
+
 **Date:** 2026-03-05 (Experiments 1-2), 2026-03-06 (Experiment 3), 2026-03-06 to 2026-03-08 (Experiments 4-6)
 **Models:** claude-sonnet-4-20250514, gpt-5.3-codex (Codex CLI)
 **Runs per condition:** 1 (Experiments 1-3, 5-6), 3 (Experiment 4)

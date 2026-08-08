@@ -92,8 +92,12 @@ in-context guidance can never help.
 The small recall difference did not translate into more useful discovery. The
 regular condition produced one more validated finding overall and five more
 distinct validated defects. The
-[experiment conclusion](docs/experiment-conclusion-2026-08-08.md) explains the
+[experiment conclusion](docs/experiment-conclusion.md) explains the
 method, local-model results, interpretation, and limitations.
+
+The [exploration history](docs/exploration-history.md) presents the research,
+prototypes, and experiments together in chronological order, with links to the
+retained detail and evidence.
 
 ## Repository Map
 
@@ -102,9 +106,9 @@ method, local-model results, interpretation, and limitations.
 | `reviewers/` | Individual reviewer skill packages and their source attribution |
 | `experiments/` | Current evaluation runners and retained evidence |
 | [`docs/evaluation-harness.md`](docs/evaluation-harness.md) | Evaluation methodology and reproduction commands |
-| [`docs/experiment-conclusion-2026-08-08.md`](docs/experiment-conclusion-2026-08-08.md) | Final decision and results |
-| [`docs/project-history.md`](docs/project-history.md) | Concise project timeline |
-| [`docs/research/icl-code-review-research.md`](docs/research/icl-code-review-research.md) | Historical research hypothesis |
+| [`docs/exploration-history.md`](docs/exploration-history.md) | Chronological index of research, prototypes, and experiments |
+| [`docs/experiment-conclusion.md`](docs/experiment-conclusion.md) | Final decision and results |
+| [`docs/icl-code-review-research.md`](docs/icl-code-review-research.md) | Detailed historical research hypothesis |
 | [`review-tool/`](review-tool/README.md) | Deprecated Docker harness retained for reproduction |
 
 ## Skill Index
@@ -218,12 +222,14 @@ against a frozen reference without tools, followed by a separate source-aware
 pass for novel findings.
 
 - Design and commands: [Evaluation Harness](docs/evaluation-harness.md)
+- Research and experiment sequence:
+  [Exploration History](docs/exploration-history.md)
 - Final A/B evidence:
   [Codex regular versus lean skill](experiments/results/codex-lean-ab-20260808/doit/final/summary.md)
 - Frozen reference:
   [Real review pool](experiments/results/real-pool-20260808/doit/reference-v1/summary.md)
 - Withdrawn synthetic pilot:
-  [Local-Model Evaluation Pilot](docs/evaluation-pilot-2026-08-08.md)
+  [Local-Model Evaluation Pilot](docs/evaluation-pilot.md)
 
 The Docker-based [review tool](review-tool/README.md) is deprecated and must not
 be extended for new evaluations.

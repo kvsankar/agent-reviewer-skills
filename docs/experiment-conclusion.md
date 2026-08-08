@@ -103,7 +103,7 @@ terminal answer all mattered. More prompt content did not solve those problems.
   [`experiments/results/real-pool-20260808/doit/reference-v1/summary.md`](../experiments/results/real-pool-20260808/doit/reference-v1/summary.md)
 - Evaluation design and commands: [Evaluation Harness](evaluation-harness.md)
 - Historical synthetic pilot, explicitly withdrawn:
-  [Local-Model Evaluation Pilot](evaluation-pilot-2026-08-08.md)
+  [Local-Model Evaluation Pilot](evaluation-pilot.md)
 
 Raw agent event streams, scratch runs, local repository symlinks, and raw Claude
 conversation exports are intentionally excluded. They are large, regenerable,

@@ -3,7 +3,7 @@
 > [!NOTE]
 > This is the reproducibility guide for a concluded experiment. The final result
 > is summarized in
-> [Experiment Conclusion](experiment-conclusion-2026-08-08.md).
+> [Experiment Conclusion](experiment-conclusion.md).
 
 This repository evaluates whether reviewer skills help models find real problems,
 especially smaller models hosted locally. It deliberately separates model review

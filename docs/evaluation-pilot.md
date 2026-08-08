@@ -1,4 +1,6 @@
-# Local-Model Evaluation Pilot: 2026-08-08
+# Local-Model Evaluation Pilot
+
+**Run date:** 8 August 2026
 
 > [!CAUTION]
 > **Withdrawn as effectiveness evidence.** This run used benchmark-authored
@@ -92,4 +94,4 @@ recovered and produced a terminal review.
 The follow-up moved to immutable real repository code, a pooled and source-aware
 reference, and a three-run regular-versus-lean comparison. It did not show a
 material skill benefit. See the
-[experiment conclusion](experiment-conclusion-2026-08-08.md).
+[experiment conclusion](experiment-conclusion.md).
