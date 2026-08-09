@@ -19,6 +19,9 @@ capable agent asked to perform an ordinary code review.
 
 ![Reviewer Skills experiment: regular and guided code reviews are pooled and checked against real code, yielding no conclusive improvement](docs/images/reviewer-skills-experiment.png)
 
+The [image-generation prompt](docs/images/reviewer-skills-experiment.prompt.md)
+is retained with the diagram.
+
 ## AI-Assistance Disclosure
 
 This repository was itself created with substantial LLM assistance. The project
