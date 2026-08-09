@@ -17,6 +17,8 @@ agents available at the time. The project later became an evaluation of its own
 premise: whether this extra context actually finds more real problems than a
 capable agent asked to perform an ordinary code review.
 
+![Reviewer Skills experiment: regular and guided code reviews are pooled and checked against real code, yielding no conclusive improvement](docs/images/reviewer-skills-experiment.png)
+
 ## AI-Assistance Disclosure
 
 This repository was itself created with substantial LLM assistance. The project
