@@ -18,7 +18,7 @@
     "upstream": "git@github-kvsankar:pydoit/doit.git",
     "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
   },
-  "skill": "/home/sankar/code/kvsankar/claude-skills/python-rhodes-reviewer/SKILL.md",
+  "skill": "reviewers/python-rhodes-reviewer/SKILL.md",
   "tools": [
     "read",
     "bash",

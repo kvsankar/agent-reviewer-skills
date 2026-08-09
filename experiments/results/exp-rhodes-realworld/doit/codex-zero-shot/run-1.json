@@ -1,5 +1,5 @@
 {
-  "output": "## Findings (highest severity first)\n\n### 1. `KWARG_OVERRIDE_INJECTION`\nLocation: [action.py:79](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L79)\n\n**Problematic code**\n```python\nif key not in bound_args.arguments:\n    kwargs[key] = meta_args[key]()\n\n...\n\nif key in func_sig.parameters:\n    if key not in bound_args.arguments:\n        kwargs[key] = opt_args[key]\n```\n\n**Improved code**\n```python\nif key in func_sig.parameters and key not in bound_args.argumen...",
+  "output": "## Findings (highest severity first)\n\n### 1. `KWARG_OVERRIDE_INJECTION`\nLocation: [action.py:79](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L79)\n\n**Problematic code**\n```python\nif key not in bound_args.arguments:\n    kwargs[key] = meta_args[key]()\n\n...\n\nif key in func_sig.parameters:\n    if key not in bound_args.arguments:\n        kwargs[key] = opt_args[key]\n```\n\n**Improved code**\n```python\nif key in func_sig.parameters and key not in bound_args.argumen...",
   "duration_seconds": 224.8694417476654,
   "model": "gpt-5.3-codex",
   "findings": [],

@@ -13,7 +13,7 @@
     "upstream": "git@github-kvsankar:pydoit/doit.git",
     "commit": "1f9cbbce78a93f96a35abf2db5425361e2abf142"
   },
-  "skill": "/home/sankar/code/kvsankar/claude-skills/experiments/skills/python-rhodes-reviewer-lean/SKILL.md",
+  "skill": "experiments/skills/python-rhodes-reviewer-lean/SKILL.md",
   "permissions": "Codex yolo mode in a disposable copy; this is not an OS security boundary",
   "codex_version": "codex-cli 0.147.0"
 }

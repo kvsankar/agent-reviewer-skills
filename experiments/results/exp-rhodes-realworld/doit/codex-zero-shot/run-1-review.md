@@ -1,7 +1,7 @@
 ## Findings (highest severity first)
 
 ### 1. `KWARG_OVERRIDE_INJECTION`
-Location: [action.py:79](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L79)
+Location: [action.py:79](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L79)
 
 **Problematic code**
 ```python
@@ -35,7 +35,7 @@ Current logic can overwrite user-provided kwargs, which is surprising and violat
 ---
 
 ### 2. `STD_STREAM_RESTORE_GAP`
-Location: [action.py:469](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L469)
+Location: [action.py:469](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L469)
 
 **Problematic code**
 ```python
@@ -75,7 +75,7 @@ If `_prepare_kwargs()` raises, streams remain redirected globally, breaking late
 ---
 
 ### 3. `CALLABLE_ACTION_REEVALUATED`
-Location: [action.py:283](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L283)
+Location: [action.py:283](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L283)
 
 **Problematic code**
 ```python
@@ -107,7 +107,7 @@ If `self._action` is callable, it may run multiple times per execution, causing 
 ---
 
 ### 4. `DEVNULL_FILE_DESCRIPTOR_LEAK`
-Location: [action.py:225](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L225)
+Location: [action.py:225](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L225)
 
 **Problematic code**
 ```python
@@ -125,7 +125,7 @@ The opened handle is never closed. Repeated tasks can leak file descriptors.
 ---
 
 ### 5. `MREPORTER_SIGNATURE_MISMATCH`
-Location: [runner.py:318](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L318), [runner.py:236](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L236)
+Location: [runner.py:318](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L318), [runner.py:236](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L236)
 
 **Problematic code**
 ```python
@@ -153,7 +153,7 @@ def rep_method(obj):
 ---
 
 ### 6. `THREAD_RUNNER_DOUBLE_TEARDOWN`
-Location: [runner.py:524](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L524), [runner.py:563](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L563)
+Location: [runner.py:524](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L524), [runner.py:563](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L563)
 
 **Problematic code**
 ```python
@@ -176,7 +176,7 @@ if job is None:
 ---
 
 ### 7. `ASSERT_USED_FOR_RUNTIME_VALIDATION`
-Location: [runner.py:158](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L158), [runner.py:492](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/runner.py#L492)
+Location: [runner.py:158](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L158), [runner.py:492](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/runner.py#L492)
 
 **Problematic code**
 ```python
@@ -200,7 +200,7 @@ if len(proc_list) <= self.free_proc:
 ---
 
 ### 8. `EXACT_TYPE_CHECKS`
-Location: [action.py:417](/home/sankar/sankar/projects/claude-skills/experiments/repos/doit-repo/doit/action.py#L417)
+Location: [action.py:417](https://github.com/pydoit/doit/blob/1f9cbbce78a93f96a35abf2db5425361e2abf142/doit/action.py#L417)
 
 **Problematic code**
 ```python

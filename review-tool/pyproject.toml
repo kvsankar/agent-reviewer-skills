@@ -1,12 +1,12 @@
 [project]
-name = "claude-skills-reviewer"
+name = "agent-reviewer-skills-reviewer"
 version = "1.0.0"
-description = "Agentic code review tool using AI providers (Claude, OpenAI, Gemini) with Claude Code skills"
+description = "Agentic code review tool using AI providers with agent reviewer skills"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 authors = [
-    { name = "Claude Code Skills Contributors" }
+    { name = "Agent Reviewer Skills Contributors" }
 ]
 
 dependencies = [

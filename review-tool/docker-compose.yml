@@ -19,7 +19,7 @@ version: '3.8'
 services:
   reviewer:
     build:
-      context: ..  # Build from parent directory (claude-skills/)
+      context: ..  # Build from parent directory (agent-reviewer-skills/)
       dockerfile: review-tool/Dockerfile
     image: claude-reviewer:latest
     container_name: claude-reviewer

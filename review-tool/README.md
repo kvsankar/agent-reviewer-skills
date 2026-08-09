@@ -42,7 +42,7 @@ AI-powered code review using Claude with specialized review skills. No API keys 
 
 ```bash
 git clone <repository-url>
-cd claude-skills/review-tool
+cd agent-reviewer-skills/review-tool
 
 # Authenticate with Claude (one-time)
 claude login

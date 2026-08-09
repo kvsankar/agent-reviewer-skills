@@ -152,8 +152,8 @@ The installer supports Windows, WSL, macOS, and Linux and requires Python 3.10
 or newer. Clone the repository over SSH:
 
 ```bash
-git clone git@github.com:kvsankar/claude-skills.git
-cd claude-skills
+git clone git@github.com:kvsankar/agent-reviewer-skills.git
+cd agent-reviewer-skills
 ```
 
 On macOS, Linux, or WSL, run:

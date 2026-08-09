@@ -383,7 +383,7 @@ This skill is licensed under MIT. It synthesizes publicly available security and
 
 **Created**: November 1, 2025
 **Last Updated**: November 1, 2025
-**Maintainer**: Claude Skills Collection
+**Maintainer**: Agent Reviewer Skills Collection
 
 ---
 

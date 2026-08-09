@@ -318,6 +318,6 @@ To report Django security issues:
 
 **Last Updated:** 2025
 **Skill Version:** 1.0
-**Maintained by:** Claude Code Skills Collection
+**Maintained by:** Agent Reviewer Skills Collection
 
 This skill respects and acknowledges the extensive work of the Django community, Django Software Foundation, and all contributors to the ecosystem.

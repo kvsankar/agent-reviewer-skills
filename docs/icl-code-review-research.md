@@ -18,7 +18,8 @@
 
 ## 1. Our Approach
 
-The claude-skills project uses **structured before/after code examples** embedded directly in skill prompts. Each SKILL.md contains:
+The agent-reviewer-skills project uses **structured before/after code
+examples** embedded directly in skill prompts. Each `SKILL.md` contains:
 
 - 40-70+ guidelines with mnemonic IDs (e.g., SQL-INJECT, PII-LOG)
 - Before/after code pairs showing the anti-pattern and the fix
