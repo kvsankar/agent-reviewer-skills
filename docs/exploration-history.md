@@ -16,7 +16,7 @@ those weaknesses.
 | --- | --- | --- | --- | --- |
 | Curated in-context review guidance | Test whether principles, mnemonic IDs, and before-and-after examples could help frontier coding agents perform focused reviews. | Oct 2025-Jan 2026 | Produced 23 AI-assisted reviewer skills, researched and drafted primarily with Claude, that were used as practical aids. Their usefulness was not measured during this phase. | [Disclosure](../README.md#ai-assistance-disclosure), [skill index](../README.md#skill-index) |
 | Docker-based agentic review runner | Make Claude reviews repeatable and isolated across repositories and reviewer perspectives. | Nov-Dec 2025 | Worked as an execution harness, including through an Ubuntu VM when WSL Docker was troublesome, but was operationally heavy and was later deprecated. | [Deprecated review tool](../review-tool/README.md) |
-| Multi-agent review orchestration research | Explore how a coding agent could review a repository larger than one context window without losing cross-file findings. | Dec 2025 | Recommended partitioning by domain or concern, using fresh agent contexts, and aggregating findings in a final pass. It remained a design note rather than a measured result and was superseded by the simpler Pi and Codex harnesses. | [Later evaluation harness](evaluation-harness.md) |
+| Multi-agent review orchestration research | Explore how a coding agent could review a repository larger than one context window without losing cross-file findings. | Dec 2025 | Recommended partitioning by domain or concern, using fresh agent contexts, and aggregating findings in a final pass. It remained a design note rather than a measured result and was superseded by the simpler Pi and Codex harnesses. | [Research sources](#multi-agent-orchestration-sources), [later evaluation harness](evaluation-harness.md) |
 | In-context-learning and industry research | Find evidence that examples improve code review and identify how comparable tools select and structure guidance. | Dec 2025; updated Mar 2026 | The literature suggested that example selection, compact context, decomposition, and hybrid static-analysis approaches mattered. It did not establish that this repository's large static skills improved agentic reviews. | [In-context-learning research](icl-code-review-research.md) |
 | Embedding-based guideline retrieval | Select only the guidelines most relevant to the code under review. | Dec 2025-Mar 2026 | Embeddings matched surface-level code patterns but did not reliably select architectural guidance such as functional-core/imperative-shell. The prototype was abandoned. | [Retrieval assessment](icl-code-review-research.md#5-failed-experiment-embedding-based-guideline-retrieval-mar-2026) |
 | Security baseline and prompt ablations | Compare zero-shot, generic, full-skill, principles-only, IDs-only, trimmed, and hybrid prompts. | 5-6 Mar 2026 | Some variants appeared to improve recall, but the runs had weak ground-truth matching, deliberately vulnerable targets, and substantial single-run variance. These results became exploratory evidence, not the project conclusion. | [Experiments 1-3](../experiments/results/experiment-report.md#1-experiment-design) |
@@ -25,6 +25,18 @@ those weaknesses.
 | Real-code local-model pilot | Test whether Qwen3 Coder 30B or Devstral Small 2 benefited from guidance while reviewing a pinned real repository. | 8 Aug 2026 | Neither model produced validated evidence of improvement; some guided Devstral agentic runs did not produce usable final reviews. The sample was too small for a universal claim about local models. | [Local-model result](experiment-conclusion.md#local-models) |
 | Pooled reference and revised finding union | Avoid treating a single baseline review as complete ground truth by validating the union of baseline and experimental findings. | 8 Aug 2026 | Anonymous, source-aware adjudication produced a frozen reference and then incorporated valid novel findings from both A/B conditions. This exposed useful discoveries that baseline-only scoring would have missed. | [Method](evaluation-harness.md#discovery-and-reference-construction), [reference](../experiments/results/real-pool-20260808/doit/reference-v1/summary.md) |
 | Regular Codex versus lean skill | Test the strongest remaining hypothesis: a compact list of mnemonic IDs plus one or two sentences might help even if the full skill did not. | 8 Aug 2026 | Three runs per condition showed no material advantage. The lean skill had slightly higher frozen-reference recall, but one fewer validated hit and five fewer distinct validated defects. | [Final conclusion](experiment-conclusion.md), [A/B evidence](../experiments/results/codex-lean-ab-20260808/doit/final/summary.md) |
+
+### Multi-agent Orchestration Sources
+
+The December 2025 architecture exploration consulted Anthropic's
+[Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) and
+[engineering article on building agents](https://claude.com/blog/building-agents-with-the-claude-agent-sdk),
+along with the open-source
+[PR-Agent](https://github.com/The-PR-Agent/pr-agent),
+[Kodus](https://github.com/kodustech/kodus-ai), and
+[wshobson/agents](https://github.com/wshobson/agents) projects. These sources
+informed the orchestration design; they were not evidence that this
+repository's reviewer skills improved review quality.
 
 ## Overall Progression
 
