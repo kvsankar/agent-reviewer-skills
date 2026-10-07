@@ -19,8 +19,8 @@ capable agent asked to perform an ordinary code review.
 
 ![agent-reviewer-skills: 23 reviewer skills, research prototypes and four experiment families, ending in no conclusive improvement](docs/images/agent-reviewer-skills-infographic.png)
 
-The [image-generation prompt](docs/images/reviewer-skills-experiment.prompt.md)
-is retained with the diagram.
+The [infographic source](docs/images/agent-reviewer-skills-infographic.html)
+is kept with the image.
 
 ## AI-Assistance Disclosure
 
