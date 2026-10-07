@@ -1,0 +1,146 @@
+<!doctype html>
+<!-- Infographic source. Render with the project-infographic skill:
+     render.py agent-reviewer-skills-infographic.html agent-reviewer-skills-infographic.png
+     Facts come from README.md; update both together. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="infographic.css">
+<style>
+  .flow { grid-template-columns: 1fr 48px 1.4fr 48px 1fr; }
+  .core-grid { display: grid; grid-template-rows: 1fr auto auto; gap: 10px; flex: 1; min-height: 0; }
+  .steps { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+  .tiles { grid-template-columns: 1fr; }
+</style>
+</head>
+<body>
+
+<header class="title">
+  <h1>agent-reviewer-skills</h1>
+  <p>Can in-context guidance improve agentic code review?</p>
+</header>
+
+<main class="flow">
+
+  <section class="zone input">
+    <h2>Skills and research</h2>
+    <div class="sub">
+      <h4>23 reviewer skills</h4>
+      <div class="tiles">
+        <div class="tile"><i data-icon="code"></i><div><b>Python</b><span>refactoring, functional, Zen, testing, security, performance, Rhodes</span></div></div>
+        <div class="tile"><i data-icon="braces"></i><div><b>JavaScript and TypeScript</b><span>testing, refactoring, functional, security, performance, React, React Native</span></div></div>
+        <div class="tile"><i data-icon="puzzle"></i><div><b>Frameworks and cross-language</b><span>agile requirements, Django, OpenAPI, database schema, code authenticity, Playwright, Appium</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <i data-icon="book-search"></i>
+      <div><h3>In-context learning</h3>
+        <p>literature pointed to example selection, compact context and hybrid static analysis</p></div>
+    </div>
+    <div class="card">
+      <i data-icon="filter"></i>
+      <div><h3>Relevance retrieval</h3>
+        <p>embeddings matched surface patterns, not architectural guidance; prototype abandoned</p></div>
+    </div>
+    <div class="card">
+      <i data-icon="workflow"></i>
+      <div><h3>Review orchestration</h3>
+        <p>multi-agent design note and a Docker runner; both set aside as too heavy</p></div>
+    </div>
+    <div class="note"><i data-icon="bot"></i><span><b>Installer:</b> Claude Code, Codex, Pi, GitHub Copilot</span></div>
+  </section>
+
+  <div class="arrow"><i data-icon="arrow-right"></i></div>
+
+  <section class="zone core">
+    <h2>Key experiments</h2>
+    <div class="core-grid">
+      <div class="steps">
+        <div class="step">
+          <div class="head"><span class="num">1</span><i data-icon="sliders-horizontal"></i></div><h3>Prompt ablations</h3>
+          <p><b>Tested</b> zero-shot, generic, full skill, principles only, IDs only, trimmed and hybrid prompts on security code</p>
+          <p><b>Found</b> apparent gains for compact guidance, but large run-to-run variance and weak references</p>
+        </div>
+        <div class="step">
+          <div class="head"><span class="num">2</span><i data-icon="flask-conical"></i></div><h3>Rhodes evaluations</h3>
+          <p><b>Tested</b> the code-quality skill on synthetic examples and real doit code, several runs, a second model</p>
+          <p><b>Found</b> synthetic results distorted by answer leakage; real reviews changed emphasis only</p>
+          <span class="badge">synthetic withdrawn</span>
+        </div>
+        <div class="step">
+          <div class="head"><span class="num">3</span><i data-icon="cpu"></i></div><h3>Local-model pilot</h3>
+          <p><b>Tested</b> Qwen3 Coder and Devstral through Pi and Ollama on a pinned real repository</p>
+          <p><b>Found</b> no validated improvement; some guided runs produced no usable final review</p>
+        </div>
+        <div class="step">
+          <div class="head"><span class="num">4</span><i data-icon="git-compare"></i></div><h3>Final real-code A/B</h3>
+          <p><b>Tested</b> regular Codex review against a lean skill of mnemonic IDs, three runs each</p>
+          <p><b>Found</b> no material advantage: slightly higher recall, fewer distinct validated defects</p>
+          <span class="badge">strongest closing test</span>
+        </div>
+      </div>
+      <div class="sub">
+        <h4>Evaluation subjects</h4>
+        <div class="chips">
+          <span class="chip">direct Ollama review <small>non-agentic</small></span>
+          <span class="chip">Pi with Ollama <small>agentic</small></span>
+          <span class="chip">Codex <small>hosted agentic</small></span>
+          <span class="chip">pinned real repository <small>doit</small></span>
+        </div>
+      </div>
+      <div class="sub">
+        <h4>Final evidence method</h4>
+        <div class="chips">
+          <span class="chip">real code only</span>
+          <span class="chip">pooled frozen reference</span>
+          <span class="chip">revised finding union</span>
+          <span class="chip">blind matching</span>
+          <span class="chip">source-aware adjudication</span>
+          <span class="chip">Claude as judge</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="arrow"><i data-icon="arrow-right"></i></div>
+
+  <section class="zone output">
+    <h2>Result</h2>
+    <div class="card">
+      <i data-icon="scale"></i>
+      <div><h3>No conclusive improvement</h3>
+        <p>no branch produced conclusive evidence that the skills found more useful issues</p></div>
+    </div>
+    <div class="card">
+      <i data-icon="waypoints"></i>
+      <div><h3>Across every branch</h3>
+        <p>full skills, compact IDs, short guidance, retrieval, frontier agents, tested local models</p></div>
+    </div>
+    <div class="card">
+      <i data-icon="calendar-days"></i>
+      <div><h3>A dated result</h3>
+        <p>not a claim that in-context guidance can never help; models and agents change</p></div>
+    </div>
+    <div class="sub">
+      <h4>Retained in the repository</h4>
+      <div class="tiles">
+        <div class="tile"><i data-icon="library"></i><div><b>Skills and sources</b><span>each skill lists the material it was built from</span></div></div>
+        <div class="tile"><i data-icon="folder-check"></i><div><b>Evidence</b><span>final A/B, frozen reference; synthetic pilot marked withdrawn</span></div></div>
+        <div class="tile"><i data-icon="file-text"></i><div><b>Conclusion documents</b><span>exploration history, experiment conclusion, evaluation harness</span></div></div>
+        <div class="tile"><i data-icon="container"></i><div><b>Docker harness</b><span>deprecated, kept for reproduction only</span></div></div>
+      </div>
+    </div>
+    <div class="note"><i data-icon="archive"></i><span><b>Completed experiment.</b> No new skills in scope.</span></div>
+  </section>
+
+</main>
+
+<footer class="strip">
+  <span class="item"><i data-icon="hammer"></i>1 Build: 23 skills used as review aids</span>
+  <span class="item"><i data-icon="book-open"></i>2 Research: literature and prototypes</span>
+  <span class="item"><i data-icon="flask-conical"></i>3 Evaluate: several branches, real code</span>
+  <span class="item"><i data-icon="archive"></i>4 Close: retain the evidence</span>
+</footer>
+
+</body>
+</html>

@@ -17,7 +17,7 @@ agents available at the time. The project later became an evaluation of its own
 premise: whether this extra context actually finds more real problems than a
 capable agent asked to perform an ordinary code review.
 
-![Reviewer Skills experiment: regular and guided code reviews are pooled and checked against real code, yielding no conclusive improvement](docs/images/reviewer-skills-experiment.png)
+![agent-reviewer-skills: 23 reviewer skills, research prototypes and four experiment families, ending in no conclusive improvement](docs/images/agent-reviewer-skills-infographic.png)
 
 The [image-generation prompt](docs/images/reviewer-skills-experiment.prompt.md)
 is retained with the diagram.
