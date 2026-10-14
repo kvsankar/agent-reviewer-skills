@@ -1,5 +1,11 @@
 # Reviewer Skills: In-Context Guidance for Code Review
 
+<!-- markdownlint-disable MD033 -->
+<p align="center">
+  <img src="docs/images/agent-reviewer-skills-hero.jpg" alt="Two scholars examine a manuscript with a magnifying lens beside a nearly level balance scale" width="50%" />
+</p>
+<!-- markdownlint-enable MD033 -->
+
 ## Introduction
 
 This repository records an experiment in using specialized, in-context guidance
